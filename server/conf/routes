@@ -1,0 +1,30 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Home page
+GET     /                           controllers.Application.index
+
+# Map static resources from the /public folder to the /assets URL path
+GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+
+# Keywords
+GET        /keywords                           controllers.KeywordController.index
+
+# Modeler
+GET        /modeler                           controllers.Modeler.index
+
+# REST APIs
+# Model
+GET        /api/models                         controllers.ModelController.list
+GET        /api/model/:name/:ver               controllers.ModelController.get(name: String, ver: String)
+POST       /api/model                          controllers.ModelController.create
+DELETE     /api/model/:name/:ver               controllers.ModelController.delete(name: String, ver: String)
+PATCH      /api/model/:name/:ver               controllers.ModelController.update(name: String, ver: String)
+
+GET        /api/model/:name/:ver/instances     controllers.ModelItemController.list(name: String, ver: String)
+GET        /api/model/:name/:ver/instance/:id  controllers.ModelItemController.get(name: String, ver: String, id: Int)
+POST       /api/model/:name/:ver/instance      controllers.ModelItemController.create(name: String, ver: String)
+DELETE     /api/model/:name/:ver/instance/:id  controllers.ModelItemController.delete(name: String, ver: String, id: Int)
+PATCH      /api/model/:name/:ver/instance/:id  controllers.ModelItemController.update(name: String, ver: String, id: Int)
+

@@ -30,3 +30,7 @@ shared/.jvm
 .cache
 .target
 bin/
+
+# idea
+modeler.ipr
+modeler.iws

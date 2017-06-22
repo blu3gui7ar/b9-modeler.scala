@@ -35,10 +35,8 @@ lazy val server = (project in file("server")).settings(
 lazy val client = (project in file("client")).settings(
   scalaVersion := scalaV,
   // This is an application with a main method
-  scalaJSUseMainModuleInitializer := true,
+//  scalaJSUseMainModuleInitializer := true,
   mainClass in Compile := Some("b9.ModelerApp"),
-  // persistLauncher := true,
-  // persistLauncher in Test := false,
   libraryDependencies ++= Seq(
     "com.github.japgolly.scalajs-react" %%% "core" % "1.0.0",
 //    "com.github.japgolly.scalajs-react" %%% "ext-monocle" % "1.0.0",
@@ -52,6 +50,7 @@ lazy val client = (project in file("client")).settings(
   npmDependencies in Compile ++= Seq(
     "react" -> "15.5.4",
     "react-dom" -> "15.5.4",
+    "d3-hierarchy" -> "1.1.4",
     "font-awesome" -> "4.7.0",
     "bulma" -> "0.4.1"
   ), npmDevDependencies in Compile += "expose-loader" -> "0.7.1"

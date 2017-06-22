@@ -9,8 +9,8 @@ object WsApi extends fastparse.WhitespaceApi.Wrapper({
 })
 
 object MetaParser {
-  import fastparse.noApi._
   import WsApi._
+  import fastparse.noApi._
 
   //Basic
   val digits = "0123456789"
@@ -78,7 +78,7 @@ object MetaParser {
 //  val MultiChoices = P( "[" ~/ ValueTerm.rep(sep = ",") ~ "]").map(MetaAst.MultiChoicesR)
 //  val SingleChoice = P( "<" ~/ ValueTerm.rep(sep = ",") ~ ">").map(MetaAst.SingleChoiceR)
 
-  val Meta = P(Semis.? ~ "meta" ~/ BlockExpr ~ Semis.?)
+  val Meta = P(Semis.? ~ "Meta" ~/ BlockExpr ~ Semis.?).map(MetaAst.Root(_))
   val BlockExpr : P[Seq[MetaAst.AstNode]] = P(Semis.? ~ "{" ~/ Block ~ "}")
   val Block = {
     val BlockEnd = P(Semis.? ~ &("}"))
@@ -95,51 +95,24 @@ object MetaParser {
   }
 
   def main(args: Array[String]): Unit = {
-    val sample =
-      """
-        |meta {
-        |  %DEFAULT = String :: Text
-        |  %DATE = String :: Text | /[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])/
-        |  %CHECK = [String] :: Checkbox
-        |  %RADIO = String :: Radio
-        |  %BOOL = Boolean :: Radio $ true, false
-        |  %SELECT = String :: Select
-        |  %HREF = String :: Text | /(https?|mail|ftps?|sftp):\/\/.*/
-        |
-        |  processor: String
-        |  tpl
-        |  pattern
-        |  size: Size
-        |  time: Time
-        |  urlRoot
-        |  imgs: [Img] | [1,]
-        |  effect: Effect
-        |
-        |  Size { height: Int; weight: Int }
-        |  Time { start: %DATE; end: %DATE }
-        |  Img {
-        |    id: Int | (0, 100000)
-        |    enable: %LANGS
-        |    time: %DATE
-        |    title: Nl
-        |    url
-        |    active: %BOOL
-        |    type: %SELECT $ link, shuffle
-        |    areas: [Area]
-        |  }
-        |  %LANGS = %CHECK $ en,de,fr,es,se,no,it,pt,da,fi,ru,nl | [1,4]
-        |  Nl { en; de; fr; es; se; no; it; pt; da; fi; ru; nl }
-        |  Effect { type; event; auto: %BOOL; time: %DATE }
-        |  Area {
-        |    title: Nl
-        |    shape
-        |    hotspots: Nl
-        |    href: HREF
-        |  }
-        |}
-      """.stripMargin
 
-    val rs = Meta.parse(sample)
-    print(rs)
+//    val dataJs = upickle.json.read(Sample.data)
+//    val rs = Meta.parse(Sample.meta)
+//    import TreeExtractor._
+//    print(rs match {
+//      case Success(meta, _) => {
+//        implicit val macros = MetaAst.macros(meta)
+//        implicit val types = MetaAst.types(meta)
+//        meta.tree("meta", Some(dataJs))
+//      }
+//      case _ => ""
+//    })
+
+//    val d = QExpr.merge(
+//      MetaAst.AttrDef(Some(MetaAst.MacroRef("ABC")), Some(MetaAst.TypeRef("XYZ")), None, None, None),
+//      MetaAst.AttrDef(Some(MetaAst.MacroRef("DEf")), None, Some(MetaAst.Widget("Input")), None, None)
+//    )
+//
+//    print(d)
   }
 }

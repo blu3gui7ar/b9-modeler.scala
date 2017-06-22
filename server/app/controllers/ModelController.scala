@@ -24,9 +24,9 @@ class ModelController @Inject()(components: ControllerComponents,
 //  )
   implicit val modelFormat = Json.format[Model]
 
-  def index = Action {
-    Ok(views.html.index(SharedMessages.itWorks))
-  }
+//  def index = Action {
+//    Ok(views.html.index(SharedMessages.itWorks))
+//  }
 
   def list = Action.async {
     val rs = modelDAO.all()

@@ -18,6 +18,7 @@ case class State(graph: GraphState)
 case class DisplayFromAction(node: TN) extends Action
 case class RemoveFromAction(node: TN, parent: TN) extends Action
 case class EditAction(node: TN) extends Action
+case class FoldAction(node: TN) extends Action
 case class ActiveAction(node: TN) extends Action
 //case class AddNode(path: Seq[String], node: TreeNode) extends Action
 //case class ActivateNode(path: Seq[String]) extends Action

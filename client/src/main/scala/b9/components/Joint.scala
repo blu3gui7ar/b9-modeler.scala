@@ -22,9 +22,14 @@ object Joint {
     val activeRW = ModelerCircuit.zoomTo(_.graph.activeNode)
     val editingRW = ModelerCircuit.zoomTo(_.graph.editingNode)
 
-    def transform(x: Double, y: Double) = s"translate($x, $y)"
+    def click(pn: ModelProxy[TN])(e: ReactMouseEvent): Callback = {
+      if (e.altKey)
+        pn.dispatchCB(FoldAction(pn()))
+      else
+        pn.dispatchCB(EditAction(pn()))
+    }
 
-    def textClick() = Callback {}
+    def transform(x: Double, y: Double) = s"translate($x, $y)"
 
     def isActive(tn: TN): Boolean = activeRW().map(_ == tn).getOrElse(false)
 
@@ -58,13 +63,13 @@ object Joint {
         onDoubleClick --> p.n.dispatchCB(DisplayFromAction(tn)),
         <.circle(
           ^.r := 6,
-          onClick --> p.n.dispatchCB(EditAction(tn))
+          onClick ==> click(p.n),
         ),
         <.text(
           ^.x := 15,
           ^.y := 3,
           ^.textAnchor := "start",
-          onClick --> textClick(),
+          onClick --> Callback.empty,
           tn.data.map(_.name).getOrElse("unkonwn"): String
         ),
         ParentButton(-41, -25, p.onUp.getOrElse(Callback.empty)).when(p.onUp.isDefined && canGoParent(tn)),
@@ -80,5 +85,6 @@ object Joint {
     .renderBackend[Backend]
     .build
 
-  def apply(tn: ModelProxy[TN], onUp: Option[Callback] = None, onRemove: Option[Callback] = None) = component(Props(tn, onUp, onRemove))
+  def apply(tn: ModelProxy[TN], onUp: Option[Callback] = None, onRemove: Option[Callback] = None) =
+    component(Props(tn, onUp, onRemove))
 }

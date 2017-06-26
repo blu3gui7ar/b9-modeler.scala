@@ -1,6 +1,6 @@
 package b9
 
-import diode.ActionResult.ModelUpdate
+import diode.ActionResult.{ModelUpdate, NoChange}
 import diode.react.ReactConnector
 import diode.{ActionHandler, Circuit, ModelRW}
 import facades.d3js.Hierarchy
@@ -47,19 +47,16 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
       t
     }
 
-    def apply(node: TN): TN = tree(node)
-//    def apply(node: TN): TN = tree(node.count().sort((a: TN, b: TN) =>
-//        (b.value.getOrElse(0.0) - a.value.getOrElse(0.0)).toInt))
+    def apply[N](node: IdNode[N]): IdNode[N] = tree(node)
 
-    def gather(node: TN): TN = {
-      val x = (width - left - right) / 2 + left
-      val y = (height - top - bottom) / 2  + top
-
-      node.eachBefore { n: TN =>
-        n.x = x.toDouble
-        n.y = y.toDouble
+    def gather[N](node: IdNode[N], x: Double, y: Double): IdNode[N] =
+      node.eachBefore { n: IdNode[N] =>
+        n.x = x
+        n.y = y
       }
-    }
+
+    def gather[N](node: IdNode[N]): IdNode[N] =
+      gather(node, (width - left - right) / 2 + left, (height - top - bottom) / 2  + top)
   }
 
   def relocate(node: TN): TN = {
@@ -97,6 +94,23 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
     idx
   }
 
+  def rehierarchy(root: TN, tree: TN) : TN = {
+    tree.eachBefore(_.display = false)
+    val empty = js.Array[TN]()
+    val rhroot = Hierarchy.hierarchy[TN, IdNode[TN]](root, {n => if(n.fold.getOrElse(false)) empty else n.children.getOrElse(empty) }: js.Function1[TN, js.Array[TN]])
+    (layout(rhroot) eachBefore { n: IdNode[TN] =>
+      n.data.toOption match {
+        case Some(rn) => {
+          rn.x = n.x
+          rn.y = n.y
+          rn.display = true
+        }
+        case _ =>
+      }
+    })
+    .data.getOrElse(root)
+  }
+
   protected def init(root: TreeNode) : TN = {
     import js.JSConverters._
     val hroot = Hierarchy.hierarchy[TreeNode, TN](root, {n => n.children.toJSArray}: js.Function1[TreeNode, js.Array[TreeNode]])
@@ -112,8 +126,22 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
 
   class ModelerActionHandler[M](modelRW: ModelRW[M, GraphState]) extends ActionHandler(modelRW) {
     override def handle  = {
-      case DisplayFromAction(node) =>
-        ModelUpdate(modelRW.zoomTo(_.displayRoot).updated(relocate(node)))
+      case DisplayFromAction(node) => {
+        val tree = modelRW.zoom(_.tree)
+        ModelUpdate(modelRW.zoomTo(_.displayRoot).updated(rehierarchy(node, tree())))
+      }
+      case FoldAction(node) => {
+        if (node.children.map(_.nonEmpty).getOrElse(false)) {
+          //direct update is not right
+          val fold = !node.fold.getOrElse(false)
+          node.fold = fold
+          val tree = modelRW.zoom(_.tree)
+          val droot = modelRW.zoom(_.displayRoot)
+          val rhroot = rehierarchy(droot(), tree())
+          if (fold) layout.gather(node, node.x.getOrElse(0.0), node.y.getOrElse(0.0))
+          ModelUpdate(modelRW.zoomTo(_.displayRoot).updated(rhroot))
+        } else NoChange
+      }
       case EditAction(node) =>
         ModelUpdate(modelRW.zoomTo(_.editingNode).updated(Some(node)))
       case ActiveAction(node) =>

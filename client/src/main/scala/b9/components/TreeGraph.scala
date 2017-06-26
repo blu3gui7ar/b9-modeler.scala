@@ -5,6 +5,7 @@ import b9._
 import diode.react.ModelProxy
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.svg_<^._
+import meta.TreeNode
 
 import scala.collection.mutable
 
@@ -12,6 +13,8 @@ import scala.collection.mutable
   * Created by blu3gui7ar on 2017/5/24.
   */
 object TreeGraph {
+  type TN = IdNode[TreeNode]
+
   case class Props(
                     model: ModelProxy[GraphState],
 
@@ -31,15 +34,25 @@ object TreeGraph {
     def breadcrums(top: Int): TagMod = Seq("one", "two", "three")
       .zipWithIndex.toTagMod { case (n, i) => BreadCrum(0, top + 15 * i, n) }
 
-    def joints(root: ModelProxy[TN], droot: ModelProxy[TN]): Seq[ModelProxy[TN]] = {
-      val rdroot = droot()
-      def jointsAcc(_tn: ModelProxy[TN], coll: mutable.MutableList[ModelProxy[TN]], display: Boolean = false): Unit = {
-        val rtn = _tn()
-        val shouldDisplay: Boolean = display || rtn == rdroot
-        rtn.display = shouldDisplay
+    def joints(root: ModelProxy[TN]): Seq[ModelProxy[TN]] = {
+      def jointsAcc(_tn: ModelProxy[TN], coll: mutable.MutableList[ModelProxy[TN]]): Unit = {
         coll += (_tn)
         _tn().children map {
-          _.toArray.zipWithIndex.foreach { case (_, idx) => jointsAcc(_tn.zoom(_.children.get.apply(idx)), coll, shouldDisplay) }
+          _.toArray.zipWithIndex.foreach { case (_, idx) => jointsAcc(_tn.zoom(_.children.get.apply(idx)), coll) }
+        }
+      }
+
+      type ZoomFunc = TN => TN
+      def zoomFuncAcc(rtn: TN, f: ZoomFunc, coll: mutable.MutableList[ZoomFunc]): Unit ={
+        coll += f
+        rtn.children map {
+          _.toArray.zipWithIndex.foreach {
+            case (child, idx) => {
+              val g: ZoomFunc = _.children.get.apply(idx)
+              val cf = f compose  g
+              zoomFuncAcc(child, cf, coll)
+            }
+          }
         }
       }
       val coll = new mutable.MutableList[ModelProxy[TN]]
@@ -54,7 +67,7 @@ object TreeGraph {
           (rtn.parent map { parent =>
             Path(
               id = parent.id.getOrElse(0).toString + "-" + rtn.id.getOrElse(0).toString,
-              display = parent.display.getOrElse(false) && rtn.display.getOrElse(false),
+              display = parent.display.getOrElse(true) && rtn.display.getOrElse(true),
               sx = parent.x.getOrElse(0),
               sy = parent.y.getOrElse(0),
               tx = rtn.x.getOrElse(0),
@@ -69,8 +82,7 @@ object TreeGraph {
 
     def render(p: Props) = {
       val root = p.model.zoom(_.tree)
-      val displayRoot = p.model.zoom(_.displayRoot)
-      val tns = joints(root, displayRoot)
+      val tns = joints(root)
       <.svg(
         ^.width := p.width.toString, //[BUG] https://github.com/japgolly/scalajs-react/issues/388
         ^.height:= p.height.toString,

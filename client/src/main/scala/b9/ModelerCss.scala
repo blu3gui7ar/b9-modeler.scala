@@ -8,10 +8,6 @@ import b9.CssSettings._
 object ModelerCss extends StyleSheet.Inline {
   import dsl._
 
-  val animation = style (
-    transition := "all 0.5s ease"
-  )
-
   val checkbox = style(
     addClassName("form-switch")
   )

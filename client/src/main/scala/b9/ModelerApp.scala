@@ -1,5 +1,6 @@
 package b9
 
+import b9.CssSettings._
 import b9.components.TreeGraph
 import japgolly.scalajs.react._
 import org.scalajs.dom
@@ -24,26 +25,13 @@ object ModelerApp extends js.JSApp {
 
   def main(): Unit = {
     require()
+    ModelerCss.addToDocument()
     init(dom.document.getElementById(Apps.ModelerApp))
   }
 
-  def joints(root: TreeNode): Seq[TreeNode] = {
-    val children = root.children
-    Seq(root) ++ children.map(joints(_)).flatten
-  }
-
-
   def init(ele: Element): Unit = {
     import japgolly.scalajs.react.vdom.Implicits._
-
-    //    val reader: ModelRO[CaseNode] = ModelerCircuit.zoom({ r =>
-    //      println(r)
-    //      r.tree
-    //    })
-    //    println(reader())
-
-    val modelerConnection = ModelerCircuit.connect(s => joints(s.tree))
-
+    val modelerConnection = ModelerCircuit.connect(s => s.graph)
     val c = modelerConnection(p => TreeGraph(p, 700, 500))
     c.renderIntoDOM(ele)
   }

@@ -1,8 +1,9 @@
 package facades.d3js
 
 
+import facades.d3js.treeModule.{Node, TreeGenerator}
 import scala.scalajs.js
-import scala.scalajs.js.annotation.{JSImport, ScalaJSDefined}
+import scala.scalajs.js.annotation.JSImport
 
 /**
   * Created by blu3gui7ar on 2017/5/27.
@@ -11,56 +12,47 @@ import scala.scalajs.js.annotation.{JSImport, ScalaJSDefined}
 @JSImport("d3-hierarchy", JSImport.Namespace)
 @js.native
 object Hierarchy extends js.Object {
-  def hierarchy[N](data: N, getChildren: js.UndefOr[js.Function1[N, js.Array[N]]] = js.undefined) : N = js.native
+  def hierarchy[D, N <: Node[D, N]](data: D, getChildren: js.UndefOr[js.Function1[D, js.Array[D]]] = js.undefined) : N = js.native
 
   def tree(): TreeGenerator = js.native
 }
 
 @js.native
-trait TreeGenerator extends js.Object {
-  def apply[Node](root: Node): Unit = js.native
-  def size(size: js.Array[Double]): Unit = js.native
-}
-
-@ScalaJSDefined
 trait Link[Node] extends js.Object {
-  def source:Node
-  def target:Node
+  var source: js.UndefOr[Node] = js.native
+  var target: js.UndefOr[Node] = js.native
 }
 
-@ScalaJSDefined
-class SimpleLink[Node](sourceNode:Node,targetNode:Node) extends Link[Node] {
-  def source = sourceNode
-  def target = targetNode
-}
+@js.native
+trait BaseNode[D, N <: BaseNode[D, N]] extends js.Object {
+  def data: js.UndefOr[D] = js.native
+  var depth: js.UndefOr[Int] = js.native
+  def height: js.UndefOr[Int] = js.native
+  var parent: js.UndefOr[N] = js.native
+  def children: js.UndefOr[js.Array[N]] = js.native
+  var value: js.UndefOr[Double] = js.native
 
-@ScalaJSDefined
-trait BaseNode[N <: BaseNode[N]] extends js.Object {
-  var data: js.UndefOr[js.Any] = js.undefined
-  var depth: js.UndefOr[Int] = js.undefined
-  var height: js.UndefOr[Int] = js.undefined
-  var parent: js.UndefOr[N] = js.undefined
-  var value: js.UndefOr[Double] = js.undefined
+  def ancestors(): js.Array[N] = js.native
+  def descendants(): js.Array[N] = js.native
+  def leaves(): js.Array[N] = js.native
+  def links(): js.Array[Link[N]] = js.native
+  def count(): N = js.native
+  def sort(compare: js.Function2[N,N,Integer]): N = js.native
 
-  def children: js.Array[N]
-  def children_(c: js.Array[N]): Unit
-
-  def ancestors: js.UndefOr[js.Array[N]] = js.undefined
-  def descendants: js.UndefOr[js.Array[N]] = js.undefined
-  def leaves: js.UndefOr[js.Array[N]] = js.undefined
-  def links: js.UndefOr[js.Array[Link[N]]] = js.undefined
+  def eachAfter(callback: js.Function1[N, Unit]): N = js.native
+  def eachBefore(callback: js.Function1[N, Unit]): N = js.native
 }
 
 package treeModule {
-  @ScalaJSDefined
-  trait Node[N <: Node[N]] extends BaseNode[N] {
-//    protected var _x: js.UndefOr[Double] = js.undefined
-    def x: Double
-    def x_(x: Double): Unit
-
-//    protected var _y: js.UndefOr[Double] = js.undefined
-    def y: Double
-    def y_(y: Double): Unit
+  @js.native
+  trait TreeGenerator extends js.Object {
+    def apply[N](root: N): N = js.native
+    def size(size: js.Array[Double]): Unit = js.native
+  }
+  @js.native
+  trait Node[D, N <: Node[D, N]] extends BaseNode[D, N] {
+    var x: js.UndefOr[Double] = js.native
+    var y: js.UndefOr[Double] = js.native
   }
 }
 

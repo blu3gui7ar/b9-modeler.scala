@@ -35,7 +35,7 @@ lazy val server = (project in file("server")).settings(
 lazy val client = (project in file("client")).settings(
   scalaVersion := scalaV,
   // This is an application with a main method
-//  scalaJSUseMainModuleInitializer := true,
+//  scalaJSUseMainModuleInitializer := true,// no need for scalajs-bundler
   mainClass in Compile := Some("b9.ModelerApp"),
   libraryDependencies ++= Seq(
     "com.github.japgolly.scalajs-react" %%% "core" % "1.0.0",
@@ -47,10 +47,12 @@ lazy val client = (project in file("client")).settings(
     "com.github.japgolly.scalacss" %%% "ext-react" % "0.5.3",
     "org.scala-js" %%% "scalajs-dom" % "0.9.1"
   ),
+  enableReloadWorkflow := true,
   npmDependencies in Compile ++= Seq(
     "react" -> "15.5.4",
     "react-dom" -> "15.5.4",
-    "d3-hierarchy" -> "1.1.4",
+    "d3-hierarchy" -> "1.1.5",
+    "d3-shape" -> "1.2.0",
     "font-awesome" -> "4.7.0",
     "bulma" -> "0.4.1"
   ), npmDevDependencies in Compile += "expose-loader" -> "0.7.1"

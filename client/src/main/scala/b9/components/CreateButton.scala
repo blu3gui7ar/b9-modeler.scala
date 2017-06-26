@@ -1,8 +1,11 @@
 package b9.components
 
+import b9.ModelerCss
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.HtmlAttrs.onClick
 import japgolly.scalajs.react.vdom.svg_<^._
-import japgolly.scalajs.react.vdom.HtmlAttrs.{className, onClick}
+
+import scalacss.ScalaCssReact._
 
 /**
   * Created by blu3gui7ar on 2017/5/24.
@@ -17,20 +20,18 @@ object CreateButton {
                     click: Callback
                   )
 
-  case class State()
-
-  class Backend($ : BackendScope[Props, State]) {
+  class Backend($ : BackendScope[Props, Unit]) {
 
     def transform(x: Int, y: Int) = s"translate($x, $y)"
 
     def mark(name: String) =  name.headOption.getOrElse('?').toUpper.toString
 
-    def classes(valid: Boolean) = s"graph-btn graph-btn-add ${if(valid) "graph-btn-disabled"}"
-
-    def render(p: Props, s: State) = {
+    def render(p: Props) = {
       <.g(
         ^.transform := transform(p.x, p.y),
-        className := classes(p.valid),
+        ModelerCss.button,
+        ModelerCss.buttonAdd,
+        ModelerCss.buttonDisabled.when(!p.valid),
         onClick --> p.click,
         <.circle(
           ^.r := 12,
@@ -47,7 +48,6 @@ object CreateButton {
   }
 
   private val component = ScalaComponent.builder[Props]("CreateButton")
-    .initialState(State())
     .renderBackend[Backend]
     .build
 

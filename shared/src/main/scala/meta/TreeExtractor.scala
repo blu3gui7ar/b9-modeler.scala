@@ -1,16 +1,15 @@
-package b9
+package meta
 
 import meta.MetaAst._
 import upickle.Js
 /**
   * Created by blu3gui7ar on 2017/6/1.
   */
+case class TreeNode(name: String, children: Seq[TreeNode], x: Double = 0, y: Double = 0, fold: Boolean = false)
 
 trait TreeExtractor {
   def tree(name: String, value: Option[Js.Value]): Option[TreeNode]
 }
-
-case class TreeNode(name: String, children: Seq[TreeNode], x: Double = 0, y: Double = 0)
 
 object TreeExtractor {
   val Empty = create("empty", Seq.empty)

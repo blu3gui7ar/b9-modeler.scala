@@ -1,19 +1,20 @@
 package b9.components
 
 
-import b9.TreeNode
+import b9._
 import diode.react.ModelProxy
-import facades.d3js.treeModule.Node
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.svg_<^._
+
+import scala.collection.mutable
 
 /**
   * Created by blu3gui7ar on 2017/5/24.
   */
 object TreeGraph {
-
   case class Props(
-                    joints: ModelProxy[Seq[TreeNode]],
+                    model: ModelProxy[GraphState],
+
                     width: Double,
                     height: Double,
 
@@ -23,37 +24,88 @@ object TreeGraph {
                     bottom: Int = 10
                   )
 
-  case class State()
-
-  class Backend($ : BackendScope[Props, State]) {
+  class Backend($ : BackendScope[Props, Unit]) {
 
     def transform(x: Int, y: Int) = s"translate($x, $y)"
 
-    def breadcrums(top: Int) = Seq("one", "two", "three")
+    def breadcrums(top: Int): TagMod = Seq("one", "two", "three")
       .zipWithIndex.toTagMod { case (n, i) => BreadCrum(0, top + 15 * i, n) }
 
-    def joints(nodes: Seq[TreeNode]) = nodes.map({ node =>
-      Joint.Props(node.x, node.y, node.name, Map.empty)
-    }).toTagMod(Joint(_))
+    def joints(root: ModelProxy[TN], droot: ModelProxy[TN]): Seq[ModelProxy[TN]] = {
+      val rdroot = droot()
+      def jointsAcc(_tn: ModelProxy[TN], coll: mutable.MutableList[ModelProxy[TN]], display: Boolean = false): Unit = {
+        val rtn = _tn()
+        val shouldDisplay: Boolean = display || rtn == rdroot
+        rtn.display = shouldDisplay
+        coll += (_tn)
+        _tn().children map {
+          _.toArray.zipWithIndex.foreach { case (_, idx) => jointsAcc(_tn.zoom(_.children.get.apply(idx)), coll, shouldDisplay) }
+        }
+      }
+      val coll = new mutable.MutableList[ModelProxy[TN]]
+      jointsAcc(root, coll)
+      coll
+    }
 
-    def render(p: Props, s: State) = {
+    def links(tns: Seq[ModelProxy[TN]]) = {
+      def tolink(tn: ModelProxy[TN]): Option[Path] = {
+        val rtn = tn()
+        if (rtn.parent != null)
+          (rtn.parent map { parent =>
+            Path(
+              id = parent.id.getOrElse(0).toString + "-" + rtn.id.getOrElse(0).toString,
+              display = parent.display.getOrElse(false) && rtn.display.getOrElse(false),
+              sx = parent.x.getOrElse(0),
+              sy = parent.y.getOrElse(0),
+              tx = rtn.x.getOrElse(0),
+              ty = rtn.y.getOrElse(0)
+            )
+          }).toOption
+        else
+          None
+      }
+      tns.map(tolink(_)).flatten
+    }
+
+    def render(p: Props) = {
+      val root = p.model.zoom(_.tree)
+      val displayRoot = p.model.zoom(_.displayRoot)
+      val tns = joints(root, displayRoot)
       <.svg(
         ^.width := p.width.toString, //[BUG] https://github.com/japgolly/scalajs-react/issues/388
         ^.height:= p.height.toString,
         <.g(
           ^.transform := transform(p.left, p.top),
           breadcrums(p.top),
-          joints(p.joints())
+          links(tns).toTagMod(Link(_)),
+          tns.toTagMod { tn  =>
+            val node = tn()
+            val onUp = node.parent.toOption match {
+              case Some(null) => None
+              case Some(parent) => Some(tn.dispatchCB(DisplayFromAction(parent)))
+              case _ => None
+            }
+            val onRemove = node.parent.toOption match {
+              case Some(null) => None
+              case Some(parent) => Some(tn.dispatchCB(RemoveFromAction(node, parent)))
+              case _ => None
+            }
+            Joint(tn, onUp, onRemove)
+          }
         )
       )
     }
   }
 
   private val component = ScalaComponent.builder[Props]("TreeGraph")
-      .initialState(State())
-      .renderBackend[Backend]
-      .build
+    .renderBackend[Backend]
+    .componentDidMount { scope =>
+      Callback {
+          val p = scope.props.model.zoom(_.tree)
+          p.dispatchCB(DisplayFromAction(p())).async.runNow()
+      }
+    }
+    .build
 
-  def apply(joints: ModelProxy[Seq[TreeNode]], width: Double, height: Double) = component(Props(joints, width, height))
-
+  def apply(model: ModelProxy[GraphState], width: Double, height: Double) = component(Props(model, width, height))
 }

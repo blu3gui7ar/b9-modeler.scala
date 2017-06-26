@@ -1,8 +1,11 @@
 package b9.components
 
+import b9.ModelerCss
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.HtmlAttrs.{className, onClick}
 import japgolly.scalajs.react.vdom.svg_<^._
+
+import scalacss.ScalaCssReact._
 
 /**
   * Created by blu3gui7ar on 2017/5/24.
@@ -22,22 +25,20 @@ object Button {
                     name: String,
                     x: Int,
                     y: Int,
-                    valid: Boolean,
                     click: Callback
                   )
 
-  case class State()
-
-  class Backend($ : BackendScope[Props, State]) {
+  class Backend($ : BackendScope[Props, Unit]) {
 
     def transform(x: Int, y: Int) = s"translate($x, $y)"
 
-    def classes(name: String, valid: Boolean) = s"graph-btn graph-btn-$name ${if(valid) "graph-btn-disabled"}"
-
-    def render(p: Props, s: State) = {
+    def render(p: Props) = {
       <.g(
         ^.transform := transform(p.x, p.y),
-        className := classes(p.name, p.valid),
+        ModelerCss.button,
+        ModelerCss.buttonParent.when(p.name == PARENT),
+        ModelerCss.buttonEdit.when(p.name == EDIT),
+        ModelerCss.buttonRemove.when(p.name == REMOVE),
         onClick --> p.click,
         <.path(^.d := ICONS.getOrElse(p.name, "")),
         <.circle(
@@ -51,7 +52,6 @@ object Button {
   }
 
   private val component = ScalaComponent.builder[Props]("EditButton")
-    .initialState(State())
     .renderBackend[Backend]
     .build
 
@@ -59,13 +59,13 @@ object Button {
 }
 
 object ParentButton {
-  def apply(x: Int, y: Int, valid: Boolean, click: Callback) = Button(Button.Props(Button.PARENT, x, y, valid, click))
+  def apply(x: Int, y: Int, click: Callback) = Button(Button.Props(Button.PARENT, x, y, click))
 }
 
 object EditButton {
-  def apply(x: Int, y: Int, valid: Boolean, click: Callback) = Button(Button.Props(Button.EDIT, x, y, valid, click))
+  def apply(x: Int, y: Int, click: Callback) = Button(Button.Props(Button.EDIT, x, y, click))
 }
 
 object RemoveButton {
-  def apply(x: Int, y: Int, valid: Boolean, click: Callback) = Button(Button.Props(Button.REMOVE, x, y, valid, click))
+  def apply(x: Int, y: Int, click: Callback) = Button(Button.Props(Button.REMOVE, x, y, click))
 }

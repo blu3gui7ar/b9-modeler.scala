@@ -1,7 +1,7 @@
 package b9
 
 import fastparse.core.Parsed.Success
-import meta.{MetaAst, MetaParser}
+import meta.{MetaAst, MetaParser, TreeExtractor}
 
 /**
   * Created by blu3gui7ar on 2017/6/1.
@@ -69,6 +69,7 @@ object Sample {
       |
       |}
     """.stripMargin
+
 
   def tree() = {
     val dataJs = upickle.json.read(Sample.data)

@@ -37,6 +37,8 @@ object Joint {
 
     def isFolded(tn: TN): Boolean = tn.data.map(_.fold).getOrElse(false)
 
+    def isMoving(tn: TN): Boolean = tn.display != tn.nextDisplay
+
     def canGoParent(tn: TN): Boolean = displayRootRW() == tn
 
     def canRemove(tn: TN): Boolean = isActive(tn)
@@ -57,10 +59,11 @@ object Joint {
         ModelerCss.jointEditing.when(isEditing(tn)),
         ModelerCss.jointFolded.when(isFolded(tn)),
         ModelerCss.hidden.unless(tn.display.getOrElse(true)),
+        ModelerCss.moving.when(isMoving(tn)),
         b9.keyAttr := tn.id.getOrElse(-1).toString,
         ^.transform := transform(tn.y.getOrElse(0.0), tn.x.getOrElse(0.0)),
         onMouseOver --> p.n.dispatchCB(ActiveAction(tn)),
-        onDoubleClick --> p.n.dispatchCB(DisplayFromAction(tn)),
+        onDoubleClick --> p.n.dispatchCB(GoDownAction(tn)),
         <.circle(
           ^.r := 6,
           onClick ==> click(p.n),

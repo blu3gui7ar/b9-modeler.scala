@@ -8,6 +8,10 @@ import b9.CssSettings._
 object ModelerCss extends StyleSheet.Inline {
   import dsl._
 
+  val delay = 500
+
+  val trans = s"all ${delay}ms ease"
+
   val checkbox = style(
     addClassName("form-switch")
   )
@@ -21,7 +25,7 @@ object ModelerCss extends StyleSheet.Inline {
   )
 
   val link = style (
-    transition := "all 0.5s ease",
+    transition := trans,
 
     svgFill := none,
     svgStroke.grey(204),
@@ -29,7 +33,7 @@ object ModelerCss extends StyleSheet.Inline {
   )
 
   val joint = style (
-    transition := "all 0.5s ease",
+    transition := trans,
 
     position.relative,
     display.inlineBlock,
@@ -47,7 +51,7 @@ object ModelerCss extends StyleSheet.Inline {
   )
 
   val button = style (
-    transition := "all 0.5s ease",
+    transition := trans,
     opacity(0),
     //    transitionProperty := "all",
     //    transitionDuration(FiniteDuration(500, TimeUnit.MILLISECONDS)),
@@ -118,7 +122,12 @@ object ModelerCss extends StyleSheet.Inline {
   )
 
   val hidden = style (
-    display.none
+    display.none,
+    opacity(0.1)
+  )
+
+  val moving = style (
+    opacity(0.1)
   )
 
 }

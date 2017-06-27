@@ -15,6 +15,7 @@ package object b9 {
     var id: js.UndefOr[Int] = js.native
     var fold: js.UndefOr[Boolean] = js.native
     var display: js.UndefOr[Boolean] = js.native
+    var nextDisplay: js.UndefOr[Boolean] = js.native
     var diffDescendants: js.UndefOr[Int] = js.native
   }
 //  type TN = facades.d3js.treeModule.Node[TreeNode]

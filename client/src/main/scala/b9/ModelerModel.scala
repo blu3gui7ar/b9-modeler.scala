@@ -15,7 +15,10 @@ case class GraphState(
 case class State(graph: GraphState)
 
 
-case class DisplayFromAction(node: TN) extends Action
+case class FlushDisplayAction(node: TN) extends Action
+case class FlushHierarchyAction(node: TN) extends Action
+case class GoUpAction(node: TN) extends Action
+case class GoDownAction(node: TN) extends Action
 case class RemoveFromAction(node: TN, parent: TN) extends Action
 case class EditAction(node: TN) extends Action
 case class FoldAction(node: TN) extends Action

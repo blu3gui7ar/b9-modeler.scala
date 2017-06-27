@@ -1,17 +1,20 @@
 package b9
 
-import diode.ActionResult.{ModelUpdate, NoChange}
-import diode.react.ReactConnector
-import diode.{ActionHandler, Circuit, ModelRW}
+import diode.ActionResult.{ModelUpdate, ModelUpdateEffect, NoChange}
+import diode.react.{ModelProxy, ReactConnector}
+import diode._
 import facades.d3js.Hierarchy
 import meta.TreeNode
 
+import scala.concurrent.Promise
 import scala.scalajs.js
+import scala.scalajs.js.timers._
 
 /**
   * Created by blu3gui7ar on 2017/6/24.
   */
 object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
+  import scala.concurrent.ExecutionContext.Implicits.global
   type TN = IdNode[TreeNode]
 
 //  protected def syncPos(tn: TN): TreeNode = {
@@ -49,14 +52,30 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
 
     def apply[N](node: IdNode[N]): IdNode[N] = tree(node)
 
-    def gather[N](node: IdNode[N], x: Double, y: Double): IdNode[N] =
+    def gather[N](node: IdNode[N], x: Double, y: Double)(filter: (IdNode[N] => Boolean) = { _: IdNode[N] => true }): IdNode[N] =
       node.eachBefore { n: IdNode[N] =>
-        n.x = x
-        n.y = y
+        if (filter(n)) {
+          n.x = x
+          n.y = y
+        }
       }
 
     def gather[N](node: IdNode[N]): IdNode[N] =
-      gather(node, (width - left - right) / 2 + left, (height - top - bottom) / 2  + top)
+      gather(node, (width - left - right) / 2 + left, (height - top - bottom) / 2 + top)()
+
+    def compact[N](treeRoot: IdNode[N], displayRoot: IdNode[N])(f: IdNode[N] => Boolean = { n: IdNode[N] => n.display.getOrElse(true) }): IdNode[N] =
+      treeRoot.eachBefore { n: IdNode[N] =>
+        if (!f(n)) {
+          val parent = n.parent.getOrElse(displayRoot)
+          if (parent != null) {
+            n.x = parent.x
+            n.y = parent.y
+          } else {
+            n.x = displayRoot.x
+            n.y = displayRoot.y
+          }
+        }
+      }
   }
 
   def relocate(node: TN): TN = {
@@ -94,21 +113,45 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
     idx
   }
 
-  def rehierarchy(root: TN, tree: TN) : TN = {
-    tree.eachBefore(_.display = false)
+  def applyDisplay(treeRoot: TN) = {
+    treeRoot.eachBefore { n: TN =>
+      n.display = n.nextDisplay
+    }
+  }
+
+  def actionEffect(action: Action, timeout: Int = 0) = Effect {
+    val p = Promise[Action]()
+    setTimeout(timeout) { // animation
+      p.success(action)
+    }
+    p.future
+  }
+
+  def redisplay(treeRoot: TN, displayRoot: TN): TN = {
+    treeRoot.eachBefore { n: TN =>
+      val nextDisplay = (n == displayRoot) ||
+        (n.parent.toOption match {
+          case Some(null) => false
+          case None => false
+          case Some(parent) => parent.nextDisplay.getOrElse(false) && !parent.fold.getOrElse(false)
+        })
+
+      n.nextDisplay = nextDisplay
+    }
+  }
+
+  def rehierarchy(treeRoot: TN, displayRoot: TN) : TN = {
     val empty = js.Array[TN]()
-    val rhroot = Hierarchy.hierarchy[TN, IdNode[TN]](root, {n => if(n.fold.getOrElse(false)) empty else n.children.getOrElse(empty) }: js.Function1[TN, js.Array[TN]])
+    val rhroot = Hierarchy.hierarchy[TN, IdNode[TN]](displayRoot, {n => if(n.fold.getOrElse(false)) empty else n.children.getOrElse(empty) }: js.Function1[TN, js.Array[TN]])
     (layout(rhroot) eachBefore { n: IdNode[TN] =>
       n.data.toOption match {
         case Some(rn) => {
           rn.x = n.x
           rn.y = n.y
-          rn.display = true
         }
         case _ =>
       }
-    })
-    .data.getOrElse(root)
+    }).data.getOrElse(displayRoot)
   }
 
   protected def init(root: TreeNode) : TN = {
@@ -126,20 +169,70 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
 
   class ModelerActionHandler[M](modelRW: ModelRW[M, GraphState]) extends ActionHandler(modelRW) {
     override def handle  = {
-      case DisplayFromAction(node) => {
-        val tree = modelRW.zoom(_.tree)
-        ModelUpdate(modelRW.zoomTo(_.displayRoot).updated(rehierarchy(node, tree())))
+      case FlushDisplayAction(node) => {
+        val tree = modelRW.zoom(_.tree).value
+        ModelUpdate(modelRW.zoomTo(_.displayRoot).updated {
+          applyDisplay(tree)
+          node
+        })
+      }
+      case FlushHierarchyAction(node) => {
+        val tree = modelRW.zoom(_.tree).value
+        val displayRoot = modelRW.zoom(_.displayRoot).value
+        ModelUpdate(modelRW.zoomTo(_.displayRoot).updated {
+          rehierarchy(tree, displayRoot)
+          layout.compact(tree, displayRoot)(_.display.getOrElse(true))
+          node
+        })
+      }
+      case GoDownAction(node) => {
+        val tree = modelRW.zoom(_.tree).value
+        ModelUpdateEffect(
+          modelRW.zoomTo(_.displayRoot).updated {
+            redisplay(tree, node)
+            rehierarchy(tree, node)
+            layout.compact(tree, node)(_.nextDisplay.getOrElse(true))
+            node
+          },
+          actionEffect(FlushDisplayAction(node), ModelerCss.delay)
+        )
+      }
+      case GoUpAction(node) => {
+        val tree = modelRW.zoom(_.tree).value
+        ModelUpdateEffect(
+          modelRW.zoomTo(_.displayRoot).updated {
+            redisplay(tree, node)
+            applyDisplay(tree)
+            node
+          },
+          actionEffect(FlushHierarchyAction(node))
+        )
       }
       case FoldAction(node) => {
         if (node.children.map(_.nonEmpty).getOrElse(false)) {
           //direct update is not right
           val fold = !node.fold.getOrElse(false)
           node.fold = fold
-          val tree = modelRW.zoom(_.tree)
-          val droot = modelRW.zoom(_.displayRoot)
-          val rhroot = rehierarchy(droot(), tree())
-          if (fold) layout.gather(node, node.x.getOrElse(0.0), node.y.getOrElse(0.0))
-          ModelUpdate(modelRW.zoomTo(_.displayRoot).updated(rhroot))
+          val tree = modelRW.zoom(_.tree).value
+          val displayRoot = modelRW.zoom(_.displayRoot).value
+          if (fold)
+            ModelUpdateEffect(
+              modelRW.zoomTo(_.displayRoot).updated {
+                redisplay(tree, displayRoot)
+                rehierarchy(tree, displayRoot)
+                layout.compact(tree, displayRoot)(_.nextDisplay.getOrElse(true))
+                displayRoot
+              },
+              actionEffect(FlushDisplayAction(displayRoot), ModelerCss.delay)
+            )
+          else
+            ModelUpdateEffect(
+              modelRW.zoomTo(_.displayRoot).updated {
+                redisplay(tree, displayRoot)
+                applyDisplay(tree)
+              },
+              actionEffect(FlushHierarchyAction(displayRoot))
+            )
         } else NoChange
       }
       case EditAction(node) =>

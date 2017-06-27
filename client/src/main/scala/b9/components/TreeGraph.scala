@@ -60,6 +60,8 @@ object TreeGraph {
       coll
     }
 
+    def isMoving(tn: TN): Boolean = tn.display != tn.nextDisplay
+
     def links(tns: Seq[ModelProxy[TN]]) = {
       def tolink(tn: ModelProxy[TN]): Option[Path] = {
         val rtn = tn()
@@ -68,6 +70,7 @@ object TreeGraph {
             Path(
               id = parent.id.getOrElse(0).toString + "-" + rtn.id.getOrElse(0).toString,
               display = parent.display.getOrElse(true) && rtn.display.getOrElse(true),
+              moving = isMoving(rtn),
               sx = parent.x.getOrElse(0),
               sy = parent.y.getOrElse(0),
               tx = rtn.x.getOrElse(0),
@@ -94,7 +97,7 @@ object TreeGraph {
             val node = tn()
             val onUp = node.parent.toOption match {
               case Some(null) => None
-              case Some(parent) => Some(tn.dispatchCB(DisplayFromAction(parent)))
+              case Some(parent) => Some(tn.dispatchCB(GoUpAction(parent)))
               case _ => None
             }
             val onRemove = node.parent.toOption match {
@@ -114,7 +117,7 @@ object TreeGraph {
     .componentDidMount { scope =>
       Callback {
           val p = scope.props.model.zoom(_.tree)
-          p.dispatchCB(DisplayFromAction(p())).async.runNow()
+          p.dispatchCB(GoUpAction(p())).async.runNow()
       }
     }
     .build

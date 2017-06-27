@@ -1,8 +1,8 @@
 package b9
 
 import diode.ActionResult.{ModelUpdate, ModelUpdateEffect, NoChange}
-import diode.react.{ModelProxy, ReactConnector}
 import diode._
+import diode.react.ReactConnector
 import facades.d3js.Hierarchy
 import meta.TreeNode
 
@@ -210,7 +210,7 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
       }
       case FoldAction(node) => {
         if (node.children.map(_.nonEmpty).getOrElse(false)) {
-          //direct update is not right
+          //TODO: direct update is not right
           val fold = !node.fold.getOrElse(false)
           node.fold = fold
           val tree = modelRW.zoom(_.tree).value

@@ -24,7 +24,7 @@ object Joint {
 
     def click(pn: ModelProxy[TN])(e: ReactMouseEvent): Callback = {
       if (e.altKey)
-        pn.dispatchCB(FoldAction(pn()))
+        pn.dispatchCB(GoDownAction(pn()))
       else
         pn.dispatchCB(EditAction(pn()))
     }
@@ -63,10 +63,10 @@ object Joint {
         b9.keyAttr := tn.id.getOrElse(-1).toString,
         ^.transform := transform(tn.y.getOrElse(0.0), tn.x.getOrElse(0.0)),
         onMouseOver --> p.n.dispatchCB(ActiveAction(tn)),
-        onDoubleClick --> p.n.dispatchCB(GoDownAction(tn)),
+        onDoubleClick --> p.n.dispatchCB(FoldAction(tn)),
         <.circle(
           ^.r := 6,
-          onClick ==> click(p.n),
+          onClick ==> click(p.n)
         ),
         <.text(
           ^.x := 15,

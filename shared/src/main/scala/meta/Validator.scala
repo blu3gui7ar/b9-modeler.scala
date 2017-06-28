@@ -15,11 +15,21 @@ object Validator {
     override def validate(value: Option[Js.Value]): Boolean = ???
   }
 
-  implicit class ListRefValidator(r: ListRef)(implicit macros: Map[String, Macro], types: Map[String, Type]) extends Validator {
+  implicit class ListDefValidator(r: ListDef)(implicit macros: Map[String, Macro], types: Map[String, Type]) extends Validator {
     override def validate(value: Option[Js.Value]): Boolean = value exists {
       case l : Js.Arr => {
-        val typeDef = types.get(r.ref.name)
-        l.value.forall(child => typeDef.exists(_.validate(Some(child))))
+        r.ref match {
+          case subl : ListDef => {
+            l.value match {
+              case ll: Seq[Js.Value] => ll.forall(child => subl.validate(Some(child)))
+              case _ => false
+            }
+          }
+          case t : TypeRef => {
+            val typeDef = types.get(t.name)
+            l.value.forall(child => typeDef.exists(_.validate(Some(child))))
+          }
+        }
       }
       case _ => false
     }
@@ -34,7 +44,7 @@ object Validator {
       val expanded = expand(attr.definition, macros)
       val typeValid = expanded.t.forall({
         case t: TypeRef => t.validate(value)
-        case l: ListRef => l.validate(value)
+        case l: ListDef => l.validate(value)
       })
       val restrictValid = expanded.restricts.forall(_.forall(_.validate(value)))
       typeValid && restrictValid

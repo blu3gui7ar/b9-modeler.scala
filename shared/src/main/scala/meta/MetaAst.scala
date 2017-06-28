@@ -5,7 +5,8 @@ package meta
   */
 object MetaAst {
   sealed abstract class AstNode
-  sealed abstract class AstNodeWithMembers(val name: String, val members: Seq[AstNode]) extends AstNode
+  sealed abstract class TypeDef extends AstNode
+  sealed abstract class AstNodeWithMembers(val name: String, val members: Seq[AstNode]) extends TypeDef
 
   case class Ident(ident: String) extends AstNode
 
@@ -34,7 +35,8 @@ object MetaAst {
 
   sealed abstract class Reference extends AstNode
   case class TypeRef(name: String) extends Reference
-  case class ListRef(ref: TypeRef) extends Reference
+
+  case class ListDef(ref: Reference) extends TypeDef
 
 
   def expand(attrDef: AttrDef, macros: Map[String, Macro]): AttrDef = {

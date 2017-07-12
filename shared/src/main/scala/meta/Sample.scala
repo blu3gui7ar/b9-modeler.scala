@@ -1,7 +1,7 @@
-package b9
+package meta
 
 import fastparse.core.Parsed.Success
-import meta.{MetaAst, MetaParser, TreeExtractor}
+import meta.MetaAst.Root
 
 /**
   * Created by blu3gui7ar on 2017/6/1.
@@ -18,6 +18,9 @@ object Sample {
       |  %BOOL = Boolean :: Radio $ true, false
       |  %SELECT = String :: Select
       |  %HREF = String :: Text | /(https?|mail|ftps?|sftp):\/\/.*/
+      |  String {}
+      |  Boolean {}
+      |  Int {}
       |
       |  processor: String
       |  tpl
@@ -70,8 +73,7 @@ object Sample {
       |}
     """.stripMargin
 
-
-  def tree() = {
+  def tree(): (Root, TreeNode) = {
     val dataJs = upickle.json.read(Sample.data)
     val rs = MetaParser.Meta.parse(Sample.meta)
     import TreeExtractor._
@@ -80,9 +82,18 @@ object Sample {
       case Success(meta, _) => {
         implicit val macros = MetaAst.macros(meta)
         implicit val types = MetaAst.types(meta)
-        meta.tree("meta", Some(dataJs))
+        meta.tree("meta", Some(dataJs), RootAttrDef) map {
+          (meta, _)
+        }
       }
       case _ => None
-    }).getOrElse(Empty)
+    }).getOrElse((Root(Seq.empty), emptyTree))
+  }
+
+  def main(args: Array[String]): Unit = {
+    tree() match { case(meta, data) =>
+      println(meta)
+      println(data)
+    }
   }
 }

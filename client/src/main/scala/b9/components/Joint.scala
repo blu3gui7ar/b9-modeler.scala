@@ -5,7 +5,9 @@ import diode.react.ModelProxy
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.HtmlAttrs.{onClick, onDoubleClick, onMouseOver}
 import japgolly.scalajs.react.vdom.svg_<^._
-import meta.TreeNode
+import meta.MetaAst.{Attr, AttrDef, TypeRef}
+import meta.{MetaAst, TreeNode}
+import upickle.Js
 
 import scalacss.ScalaCssReact._
 
@@ -21,6 +23,7 @@ object Joint {
     val displayRootRW = ModelerCircuit.zoomTo(_.graph.displayRoot)
     val activeRW = ModelerCircuit.zoomTo(_.graph.activeNode)
     val editingRW = ModelerCircuit.zoomTo(_.graph.editingNode)
+    val metaRO = ModelerCircuit.zoom(_.graph.meta)
 
     def click(pn: ModelProxy[TN])(e: ReactMouseEvent): Callback = {
       if (e.altKey)
@@ -45,14 +48,40 @@ object Joint {
 
     def canEdit(tn: TN): Boolean = true
 
-//    def creates(buttons: Map[String, Boolean]) = buttons.zipWithIndex.toTagMod {
-//      case ((name, valid), idx) => CreateButton(name, 18 + 30 * idx, 10, valid, create)
-//    }
+    def creates(pn: ModelProxy[TN]): TagMod  = {
+      val node = pn()
+
+      if (node.data == null || node.data.isEmpty) TagMod()
+      else {
+        val metaRoot = metaRO()
+        val types = MetaAst.types(metaRoot)
+
+        val children = node.data.toOption flatMap { _.meta.t } flatMap {
+          case TypeRef(t) => {
+            val v = node.data.get.value
+            val obj = v match {
+              case o: Js.Obj => o.obj
+              case _ => Map.empty[String, Js.Value]
+            }
+            types.get(t) map {
+              _.members collect {
+                case Attr(name, _) if !obj.contains(name) => name
+              }
+            }
+          }
+          case _ => None
+        }
+        children.getOrElse(Seq.empty).zipWithIndex.toTagMod {
+          case (name, idx) => CreateButton(name, 18 + 30 * idx, 10, true, pn.dispatchCB(CreateAction(pn(), name)))
+        }
+      }
+    }
 
     def hasParent(tn: TN): Boolean = (tn.parent.isDefined && tn.parent != null)
 
     def render(p: Props) = {
       val tn = p.n()
+      val meta = tn.data.map(_.meta)
       <.g(
         ModelerCss.joint,
         ModelerCss.jointActive.when(isActive(tn)),
@@ -77,8 +106,8 @@ object Joint {
         ),
         ParentButton(-41, -25, p.onUp.getOrElse(Callback.empty)).when(p.onUp.isDefined && canGoParent(tn)),
         RemoveButton(-42, 10, p.onRemove.getOrElse(Callback.empty)).when(p.onRemove.isDefined),
-        EditButton(-12, 10, p.n.dispatchCB(EditAction(tn))).when(canEdit(tn))
-        //        creates(p.buttons)
+        EditButton(-12, 10, p.n.dispatchCB(EditAction(tn))).when(canEdit(tn)),
+        creates(p.n)
       )
     }
   }

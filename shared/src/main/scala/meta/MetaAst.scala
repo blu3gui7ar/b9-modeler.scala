@@ -4,9 +4,10 @@ package meta
   * Created by blu3gui7ar on 2017/4/27.
   */
 object MetaAst {
+  val DEFAULT = "%DEFAULT"
+
   sealed abstract class AstNode
-  sealed abstract class TypeDef extends AstNode
-  sealed abstract class AstNodeWithMembers(val name: String, val members: Seq[AstNode]) extends TypeDef
+  sealed abstract class AstNodeWithMembers(val name: String, val members: Seq[AstNode]) extends AstNode
 
   case class Ident(ident: String) extends AstNode
 
@@ -33,13 +34,19 @@ object MetaAst {
 
   case class MacroRef(name: String) extends AstNode
 
-  sealed abstract class Reference extends AstNode
+  sealed trait Reference extends AstNode
   case class TypeRef(name: String) extends Reference
-
-  case class ListDef(ref: Reference) extends TypeDef
-
+  case class ListRef(ref: Reference) extends Reference
 
   def expand(attrDef: AttrDef, macros: Map[String, Macro]): AttrDef = {
+    val default = macros.get(DEFAULT) map { m => MacroRef(m.name)}
+    attrDef match {
+      case AttrDef(None, _, _, _, _) => expand0(attrDef.copy(m = default), macros)
+      case AttrDef(m, _, _, _, _) => expand0(attrDef, macros)
+    }
+  }
+
+  protected def expand0(attrDef: AttrDef, macros: Map[String, Macro]): AttrDef = {
     attrDef match {
       case AttrDef(None, _, _, _, _) => attrDef
       case AttrDef(m, _, _, _, _) => {
@@ -49,7 +56,7 @@ object MetaAst {
         } yield merge(md.definition, attrDef)
         merged match {
           case None => attrDef
-          case Some(mdef) => expand(mdef, macros)
+          case Some(mdef) => expand0(mdef, macros)
         }
       }
     }
@@ -63,7 +70,10 @@ object MetaAst {
     (defRefined.restricts ++ defMacro.restricts).reduceLeftOption((a, _) => a)
   )
 
-  def macros(r: Root) = r.members.filter(_.isInstanceOf[Macro]).map(_.asInstanceOf[Macro]).map((m) => (m.name, m)).toMap
+  def macros(r: Root) = r.members collect { case m: Macro => (m.name, m) } toMap
 
-  def types(r: Root) = r.members.filter(_.isInstanceOf[Type]).map(_.asInstanceOf[Type]).map((t) => (t.name, t)).toMap
+  def types(r: Root): Map[String, AstNodeWithMembers] = {
+    val types: Seq[(String, AstNodeWithMembers)] = r.members collect { case t: AstNodeWithMembers => (t.name, t) }
+    types.toMap + (r.name -> r)
+  }
 }

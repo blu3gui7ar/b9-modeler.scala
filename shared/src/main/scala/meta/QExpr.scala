@@ -12,7 +12,7 @@ object QExpr {
   implicit class ReferenceToQExpr(ref: Reference) extends QExpr {
     def expr() = ref match {
       case TypeRef(n) => n
-      case ListDef(TypeRef(n)) => s"Seq[$n]"
+      case ListRef(n) => s"Seq[${n.expr()}]"
     }
   }
   implicit class AttrToQExpr(attr: Attr)(implicit macros: Map[String, Macro]) extends QExpr {

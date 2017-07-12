@@ -14,26 +14,28 @@ import scala.scalajs.js.timers._
   * Created by blu3gui7ar on 2017/6/24.
   */
 object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
+
   import scala.concurrent.ExecutionContext.Implicits.global
+
   type TN = IdNode[TreeNode]
 
-//  protected def syncPos(tn: TN): TreeNode = {
-//    tn.data.map( n =>
-//      if (tn.x.map(_ != n.x).getOrElse(true) || tn.y.map(_ != n.y).getOrElse(true)) {
-//        if (tn.diffDescendants.map(_ > 1).getOrElse(false)) {
-//          val nc: js.Array[TreeNode] = tn.children.map(_.map(syncPos(_))).getOrElse(Empty)
-//          n.copy(x = tn.x.getOrElse(n.x), y = tn.y.getOrElse(n.y), children = nc)
-//        }
-//        else n.copy(x = tn.x.getOrElse(n.x), y = tn.y.getOrElse(n.y))
-//      } else {
-//        if (tn.diffDescendants.map(_ > 0).getOrElse(false)) {
-//          val nc: js.Array[TreeNode] = tn.children.map(_.map(syncPos(_))).getOrElse(Empty)
-//          n.copy(children = nc)
-//        }
-//        else n
-//      }
-//    ).getOrElse(TreeExtractor.Empty)
-//  }
+  //  protected def syncPos(tn: TN): TreeNode = {
+  //    tn.data.map( n =>
+  //      if (tn.x.map(_ != n.x).getOrElse(true) || tn.y.map(_ != n.y).getOrElse(true)) {
+  //        if (tn.diffDescendants.map(_ > 1).getOrElse(false)) {
+  //          val nc: js.Array[TreeNode] = tn.children.map(_.map(syncPos(_))).getOrElse(Empty)
+  //          n.copy(x = tn.x.getOrElse(n.x), y = tn.y.getOrElse(n.y), children = nc)
+  //        }
+  //        else n.copy(x = tn.x.getOrElse(n.x), y = tn.y.getOrElse(n.y))
+  //      } else {
+  //        if (tn.diffDescendants.map(_ > 0).getOrElse(false)) {
+  //          val nc: js.Array[TreeNode] = tn.children.map(_.map(syncPos(_))).getOrElse(Empty)
+  //          n.copy(children = nc)
+  //        }
+  //        else n
+  //      }
+  //    ).getOrElse(TreeExtractor.Empty)
+  //  }
 
   object layout {
     val width = 700
@@ -83,31 +85,33 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
     val dn = node.eachBefore { n: TN =>
       n.depth = n.parent.toOption match {
         case Some(null) => 0
-        case Some(parent) => if(n == node) 0 else parent.depth.getOrElse(0) + 1
+        case Some(parent) => if (n == node) 0 else parent.depth.getOrElse(0) + 1
         case None => 0
       }
     }
     layout(dn)
 
     //count diff nodes
-//    node.eachAfter { n: TN =>
-//      val v: Int = n.data.map(d => {
-//        if (n.x.map(_ == d.x).getOrElse(false) && n.y.map(_ == d.y).getOrElse(false)) 0
-//        else 1
-//      }).getOrElse(0)
-//
-//      n.diffDescendants = v + n.children.map(_.map(_.diffDescendants.getOrElse(0)).fold(0)(_ + _)).getOrElse(0)
-//    }
+    //    node.eachAfter { n: TN =>
+    //      val v: Int = n.data.map(d => {
+    //        if (n.x.map(_ == d.x).getOrElse(false) && n.y.map(_ == d.y).getOrElse(false)) 0
+    //        else 1
+    //      }).getOrElse(0)
+    //
+    //      n.diffDescendants = v + n.children.map(_.map(_.diffDescendants.getOrElse(0)).fold(0)(_ + _)).getOrElse(0)
+    //    }
   }
 
 
   protected var idx: Int = 0
+
   def reindex(node: TN): TN = {
     idx = 0
     node.eachBefore { n: TN =>
       n.id = nextIdx()
     }
   }
+
   def nextIdx(): Int = {
     idx += 1
     idx
@@ -140,9 +144,9 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
     }
   }
 
-  def rehierarchy(treeRoot: TN, displayRoot: TN) : TN = {
+  def rehierarchy(treeRoot: TN, displayRoot: TN): TN = {
     val empty = js.Array[TN]()
-    val rhroot = Hierarchy.hierarchy[TN, IdNode[TN]](displayRoot, {n => if(n.fold.getOrElse(false)) empty else n.children.getOrElse(empty) }: js.Function1[TN, js.Array[TN]])
+    val rhroot = Hierarchy.hierarchy[TN, IdNode[TN]](displayRoot, { n => if (n.fold.getOrElse(false)) empty else n.children.getOrElse(empty) }: js.Function1[TN, js.Array[TN]])
     (layout(rhroot) eachBefore { n: IdNode[TN] =>
       n.data.toOption match {
         case Some(rn) => {
@@ -154,21 +158,24 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
     }).data.getOrElse(displayRoot)
   }
 
-  protected def init(root: TreeNode) : TN = {
+  protected def init(root: TreeNode): TN = {
     import js.JSConverters._
-    val hroot = Hierarchy.hierarchy[TreeNode, TN](root, {n => n.children.toJSArray}: js.Function1[TreeNode, js.Array[TreeNode]])
+    val hroot = Hierarchy.hierarchy[TreeNode, TN](root, { n => n.children.toJSArray }: js.Function1[TreeNode, js.Array[TreeNode]])
     layout.gather(reindex(hroot))
   }
 
-  override protected def initialModel: State = {
-    val r = init(Sample.tree())
-    State(GraphState(r, r, r, None, None))
-  }
+  override protected def initialModel: State =
+    meta.Sample.tree() match {
+      case (meta, tree: TreeNode) => {
+        val r = init(tree)
+        State(GraphState(meta, r, r, r, None, None))
+      }
+    }
 
   override protected def actionHandler: ModelerCircuit.HandlerFunction = new ModelerActionHandler(ModelerCircuit.zoomTo(s => s.graph))
 
   class ModelerActionHandler[M](modelRW: ModelRW[M, GraphState]) extends ActionHandler(modelRW) {
-    override def handle  = {
+    override def handle = {
       case FlushDisplayAction(node) => {
         val tree = modelRW.zoom(_.tree).value
         ModelUpdate(modelRW.zoomTo(_.displayRoot).updated {
@@ -239,6 +246,7 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
         ModelUpdate(modelRW.zoomTo(_.editingNode).updated(Some(node)))
       case ActiveAction(node) =>
         ModelUpdate(modelRW.zoomTo(_.activeNode).updated(Some(node)))
+
     }
   }
 }

@@ -48,10 +48,6 @@ object MetaParser {
     P( first ~/ rest ).!
   }
 
-  var ListTypeTerm = {
-    P("[" ~/ TypeTerm ~ "]")
-  }
-
   val Attr = P( IdentTerm.! ~/ ":".? ~/ AttrDef).map {
     case (ident, attrdef) => MetaAst.Attr(ident, attrdef)
   }
@@ -61,7 +57,9 @@ object MetaParser {
   }
 
   var MacroDesc = MacroTerm.map(MetaAst.MacroRef)
-  val TypeDesc : P[MetaAst.Reference] = P( (TypeTerm.map(MetaAst.TypeRef) | NoCut(ListTypeTerm.map((t) => MetaAst.ListRef(MetaAst.TypeRef(t)))) ))
+  val TypeDesc : P[MetaAst.Reference] = P( TypeTerm.map(MetaAst.TypeRef) |
+    NoCut("[" ~/ TypeDesc ~ "]").map((t) => MetaAst.ListRef(t)))
+
   val WidgetDesc = P( "::" ~/ StringIn("Text", "Checkbox", "Radio", "Select", "TextArea").!).map(MetaAst.Widget)
   val ValueDesc = P( "$" ~/ ValueTerm.rep(1, sep = ","))
   val Restrictions = P( "|" ~/ Restriction.rep(1, sep = ","))

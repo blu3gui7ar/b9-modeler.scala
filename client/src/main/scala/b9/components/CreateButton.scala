@@ -33,13 +33,14 @@ object CreateButton {
         ModelerCss.buttonAdd,
         ModelerCss.buttonDisabled.when(!p.valid),
         onClick --> p.click,
+        <.title(p.name),
         <.circle(
           ^.r := 12,
           ^.cx := 7,
           ^.cy := 12
         ),
         <.text(
-          ^.x := 3,
+          ^.x := 6,
           ^.y := 17,
           mark(p.name)
         )

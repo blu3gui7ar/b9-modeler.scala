@@ -5,13 +5,14 @@ lazy val sharedJs = shared.js
 
 enablePlugins(DockerPlugin)
 
+scalacOptions ++= Seq("-feature")
 
 lazy val server = (project in file("server")).settings(
   scalaVersion := scalaV,
   scalaJSProjects := Seq(client),
   pipelineStages in Assets := Seq(scalaJSPipeline),
   // pipelineStages := Seq(digest, gzip),
-  // triggers sbtalaJSPipeline when using compile or continuous compilation
+  // triggers scalaJSPipeline when using compile or continuous compilation
   compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
   libraryDependencies ++= Seq(
     "com.typesafe.play" %% "play-slick" % "3.0.0-M3",

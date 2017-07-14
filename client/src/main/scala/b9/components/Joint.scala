@@ -5,10 +5,11 @@ import diode.react.ModelProxy
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.HtmlAttrs.{onClick, onDoubleClick, onMouseOver}
 import japgolly.scalajs.react.vdom.svg_<^._
-import meta.MetaAst.{Attr, AttrDef, TypeRef}
-import meta.{MetaAst, TreeNode}
+import meta.MetaAst.{Attr, AttrDef, ListRef, TypeRef}
+import meta.{MetaAst, TreeExtractor, TreeNode}
 import upickle.Js
 
+import scala.scalajs.js
 import scalacss.ScalaCssReact._
 
 /**
@@ -56,23 +57,31 @@ object Joint {
         val metaRoot = metaRO()
         val types = MetaAst.types(metaRoot)
 
-        val children = node.data.toOption flatMap { _.meta.t } flatMap {
-          case TypeRef(t) => {
-            val v = node.data.get.value
-            val obj = v match {
-              case o: Js.Obj => o.obj
-              case _ => Map.empty[String, Js.Value]
-            }
-            types.get(t) map {
-              _.members collect {
-                case Attr(name, _) if !obj.contains(name) => name
+        val children = node.data.toOption flatMap { tn =>
+          val meta = tn.meta
+          meta.t flatMap {
+            case TypeRef(t) => {
+              val cs = node.children.getOrElse(js.Array()) flatMap {
+                _.data.toOption map { _.name }
+              }
+//              val v = node.data.get.value
+//              val obj = v match {
+//                case o: Js.Obj => o.obj
+//                case _ => Map.empty[String, Js.Value]
+//              }
+              types.get(t) map {
+                _.members collect {
+                  case Attr(name, adef) if !cs.contains(name) => (name, adef)
+                }
               }
             }
+            case ListRef(l) => Some(Seq(("[]", meta.copy(t = Some(l)))))
+            case _ => None
           }
-          case _ => None
         }
+
         children.getOrElse(Seq.empty).zipWithIndex.toTagMod {
-          case (name, idx) => CreateButton(name, 18 + 30 * idx, 10, true, pn.dispatchCB(CreateAction(pn(), name)))
+          case ((name, meta), idx) => CreateButton(name, 18 + 30 * idx, 10, true, pn.dispatchCB(CreateAction(pn(), name, meta)))
         }
       }
     }

@@ -1,7 +1,8 @@
 import meta.TreeNode
+import japgolly.scalajs.react.vdom.all._
 
 import scala.scalajs.js
-import japgolly.scalajs.react.vdom.all._
+import scala.scalajs.js.annotation.ScalaJSDefined
 
 
 /**
@@ -18,9 +19,15 @@ package object b9 {
     var nextDisplay: js.UndefOr[Boolean] = js.native
     var diffDescendants: js.UndefOr[Int] = js.native
   }
+
 //  type TN = facades.d3js.treeModule.Node[TreeNode]
   type TN = IdNode[TreeNode]
   type LN = facades.d3js.Link[TN]
+
+  @ScalaJSDefined
+  class RealNode(val data: TreeNode, val parent: TN, val x: js.UndefOr[Double], val y: js.UndefOr[Double],
+                 val id: js.UndefOr[Int]) extends js.Object
+
 
   val keyAttr = VdomAttr("key")
 }

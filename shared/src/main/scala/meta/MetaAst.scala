@@ -42,7 +42,7 @@ object MetaAst {
     val default = macros.get(DEFAULT) map { m => MacroRef(m.name)}
     attrDef match {
       case AttrDef(None, _, _, _, _) => expand0(attrDef.copy(m = default), macros)
-      case AttrDef(m, _, _, _, _) => expand0(attrDef, macros)
+      case _ => expand0(attrDef, macros)
     }
   }
 

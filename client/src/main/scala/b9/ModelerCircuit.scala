@@ -4,7 +4,7 @@ import diode.ActionResult.{ModelUpdate, ModelUpdateEffect, NoChange}
 import diode._
 import diode.react.ReactConnector
 import facades.d3js.Hierarchy
-import meta.TreeNode
+import meta.{TreeExtractor, TreeNode}
 
 import scala.concurrent.Promise
 import scala.scalajs.js
@@ -144,9 +144,11 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
     }
   }
 
-  def rehierarchy(treeRoot: TN, displayRoot: TN): TN = {
+  def rehierarchy(treeRoot: TN, displayRoot: TN, displayCheck: (TN) => Boolean = {_.display.getOrElse(true)}): TN = {
     val empty = js.Array[TN]()
-    val rhroot = Hierarchy.hierarchy[TN, IdNode[TN]](displayRoot, { n => if (n.fold.getOrElse(false)) empty else n.children.getOrElse(empty) }: js.Function1[TN, js.Array[TN]])
+    val rhroot = Hierarchy.hierarchy[TN, IdNode[TN]](displayRoot, { n =>
+      if (n.fold.getOrElse(false)) empty else n.children.getOrElse(empty).filter(displayCheck)
+    }: js.Function1[TN, js.Array[TN]])
     (layout(rhroot) eachBefore { n: IdNode[TN] =>
       n.data.toOption match {
         case Some(rn) => {
@@ -246,7 +248,50 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
         ModelUpdate(modelRW.zoomTo(_.editingNode).updated(Some(node)))
       case ActiveAction(node) =>
         ModelUpdate(modelRW.zoomTo(_.activeNode).updated(Some(node)))
-
+      case CreateAction(node, name, meta) =>  {
+        //TODO: direct update is not right
+        val newTN = TreeExtractor.create(name, Seq.empty, meta)
+        val newChild = new RealNode(newTN, node, node.x, node.y, nextIdx()).asInstanceOf[TN]
+        import js.JSConverters._
+        if (node.children.isDefined) {
+          node.children.get += newChild
+        } else {
+          node.children = Seq(newChild).toJSArray
+        }
+        val displayRoot = modelRW.zoom(_.displayRoot).value
+        val tree = modelRW.zoom(_.tree).value
+        ModelUpdateEffect(
+          modelRW.zoomTo(_.displayRoot).updated {
+            redisplay(tree, displayRoot)
+            applyDisplay(tree)
+          },
+          actionEffect(FlushHierarchyAction(displayRoot))
+        )
+      }
+      case RemoveFromAction(node, parent) => {
+        val displayRoot = modelRW.zoom(_.displayRoot).value
+        val tree = modelRW.zoom(_.tree).value
+        ModelUpdateEffect(
+          modelRW.zoomTo(_.displayRoot).updated {
+            node.nextDisplay = false
+            rehierarchy(tree, displayRoot, {_.nextDisplay.getOrElse(true)})
+            layout.compact(tree, displayRoot)(_.nextDisplay.getOrElse(true))
+            displayRoot
+          },
+          actionEffect(FlushRemoveFromAction(node, parent), ModelerCss.delay)
+        )
+      }
+      case FlushRemoveFromAction(node, parent) => {
+        val displayRoot = modelRW.zoom(_.displayRoot).value
+        ModelUpdate(
+          modelRW.zoomTo(_.displayRoot).updated {
+            if (parent.children.isDefined) {
+              parent.children.get -= node
+            }
+            displayRoot
+          }
+        )
+      }
     }
   }
 }

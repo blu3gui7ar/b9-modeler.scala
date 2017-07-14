@@ -31,7 +31,7 @@ object TreeExtractor {
             l.value match {
               case ll: Seq[Js.Value] => {
                 Some(create(name,
-                  ll.zipWithIndex.flatMap(child => subl.tree(name + '[' + child._2 + ']', Some(child._1), meta)),
+                  ll.zipWithIndex.flatMap(child => subl.tree(name + '[' + child._2 + ']', Some(child._1), meta.copy(t = Some(subl)))),
                   meta,
                   l
                 ))
@@ -39,11 +39,11 @@ object TreeExtractor {
               case _ => None
             }
           }
-          case t : TypeRef => {
-            val typeDef = types.get(t.name)
+          case tr : TypeRef => {
+            val typeDef = types.get(tr.name)
             typeDef.map { td: AstNodeWithMembers =>
               create(name,
-                l.value.zipWithIndex.flatMap(child => td.tree(name + '[' + child._2 + ']', Some(child._1), meta)),
+                l.value.zipWithIndex.flatMap(child => td.tree(name + '[' + child._2 + ']', Some(child._1), meta.copy(t = Some(tr)))),
                 meta,
                 l
               )

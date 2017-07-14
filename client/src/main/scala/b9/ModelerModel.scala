@@ -1,5 +1,6 @@
 package b9
 
+import b9.short.TN
 import diode.Action
 import meta.MetaAst
 import meta.MetaAst.AttrDef

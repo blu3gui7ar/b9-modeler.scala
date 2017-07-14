@@ -1,5 +1,6 @@
 package b9
 
+import b9.short.{IdNode, RealNode, TN}
 import diode.ActionResult.{ModelUpdate, ModelUpdateEffect, NoChange}
 import diode._
 import diode.react.ReactConnector
@@ -16,8 +17,6 @@ import scala.scalajs.js.timers._
 object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
 
   import scala.concurrent.ExecutionContext.Implicits.global
-
-  type TN = IdNode[TreeNode]
 
   //  protected def syncPos(tn: TN): TreeNode = {
   //    tn.data.map( n =>

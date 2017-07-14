@@ -2,10 +2,10 @@ package b9.components
 
 
 import b9._
+import b9.short.TN
 import diode.react.ModelProxy
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.svg_<^._
-import meta.TreeNode
 
 import scala.collection.mutable
 
@@ -13,8 +13,6 @@ import scala.collection.mutable
   * Created by blu3gui7ar on 2017/5/24.
   */
 object TreeGraph {
-  type TN = IdNode[TreeNode]
-
   case class Props(
                     model: ModelProxy[GraphState],
 
@@ -80,7 +78,7 @@ object TreeGraph {
         else
           None
       }
-      tns.map(tolink(_)).flatten
+      tns.flatMap(tolink(_))
     }
 
     def render(p: Props) = {

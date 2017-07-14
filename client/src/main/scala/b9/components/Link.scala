@@ -1,6 +1,7 @@
 package b9.components
 
 
+import b9.short.keyAttr
 import b9.ModelerCss
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.svg_<^._
@@ -28,7 +29,7 @@ object Link {
 
     def render(p: Props) = {
       <.path(
-        b9.keyAttr := p.path.id,
+        keyAttr := p.path.id,
         ModelerCss.link,
         ModelerCss.hidden.unless(p.path.display),
         ModelerCss.moving.when(p.path.moving),

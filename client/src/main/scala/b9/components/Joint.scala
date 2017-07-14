@@ -1,12 +1,13 @@
 package b9.components
 
 import b9._
+import b9.short.{TN, keyAttr}
 import diode.react.ModelProxy
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.HtmlAttrs.{onClick, onDoubleClick, onMouseOver}
 import japgolly.scalajs.react.vdom.svg_<^._
+import meta.MetaAst
 import meta.MetaAst.{Attr, ListRef, TypeRef}
-import meta.{MetaAst, TreeNode}
 
 import scala.scalajs.js
 import scalacss.ScalaCssReact._
@@ -15,8 +16,6 @@ import scalacss.ScalaCssReact._
   * Created by blu3gui7ar on 2017/5/25.
   */
 object Joint {
-  type TN = IdNode[TreeNode]
-
   case class Props(n: ModelProxy[TN], onUp: Option[Callback], onRemove: Option[Callback])
 
   class Backend($: BackendScope[Props, Unit]) {
@@ -98,7 +97,7 @@ object Joint {
         ModelerCss.jointFolded.when(isFolded(tn)),
         ModelerCss.hidden.unless(tn.display.getOrElse(true)),
         ModelerCss.moving.when(isMoving(tn)),
-        b9.keyAttr := tn.id.getOrElse(-1).toString,
+        keyAttr := tn.id.getOrElse(-1).toString,
         ^.transform := transform(tn.y.getOrElse(0.0), tn.x.getOrElse(0.0)),
         onMouseOver --> p.n.dispatchCB(ActiveAction(tn)),
         onDoubleClick --> p.n.dispatchCB(FoldAction(tn)),

@@ -29,7 +29,7 @@ trait BaseNode[D, N <: BaseNode[D, N]] extends js.Object {
   var depth: js.UndefOr[Int] = js.native
   def height: js.UndefOr[Int] = js.native
   var parent: js.UndefOr[N] = js.native
-  def children: js.UndefOr[js.Array[N]] = js.native
+  var children: js.UndefOr[js.Array[N]] = js.native
   var value: js.UndefOr[Double] = js.native
 
   def ancestors(): js.Array[N] = js.native

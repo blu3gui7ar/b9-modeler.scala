@@ -29,9 +29,3 @@ case class EditAction(node: TN) extends Action
 case class FoldAction(node: TN) extends Action
 case class ActiveAction(node: TN) extends Action
 case class CreateAction(node: TN, name: String, meta: AttrDef) extends Action
-//case class AddNode(path: Seq[String], node: TreeNode) extends Action
-//case class ActivateNode(path: Seq[String]) extends Action
-//case class DeleteNode(path: Seq[String]) extends Action
-//case class EditNode(path: Seq[String], node: TreeNode) extends Action
-//case class FoldNode(path: Seq[String]) extends Action
-

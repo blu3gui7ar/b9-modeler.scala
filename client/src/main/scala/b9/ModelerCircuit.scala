@@ -1,6 +1,6 @@
 package b9
 
-import b9.short.{IdNode, RealNode, TN}
+import b9.short.{RealNode, TN}
 import diode.ActionResult.{ModelUpdate, ModelUpdateEffect, NoChange}
 import diode._
 import diode.react.ReactConnector
@@ -36,91 +36,6 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
   //    ).getOrElse(TreeExtractor.Empty)
   //  }
 
-  object layout {
-    val width = 700
-    val left = 50
-    val right = 200
-
-    val height = 500
-    val top = 10
-    val bottom = 10
-
-    val tree = {
-      val t = Hierarchy.tree()
-      t.size(js.Array(height - top - bottom, width - left - right))
-      t
-    }
-
-    def apply[N](node: IdNode[N]): IdNode[N] = tree(node)
-
-    def gather[N](node: IdNode[N], x: Double, y: Double)(filter: (IdNode[N] => Boolean) = { _: IdNode[N] => true }): IdNode[N] =
-      node.eachBefore { n: IdNode[N] =>
-        if (filter(n)) {
-          n.x = x
-          n.y = y
-        }
-      }
-
-    def gather[N](node: IdNode[N]): IdNode[N] =
-      gather(node, (width - left - right) / 2 + left, (height - top - bottom) / 2 + top)()
-
-    def compact[N](treeRoot: IdNode[N], displayRoot: IdNode[N])(f: IdNode[N] => Boolean = { n: IdNode[N] => n.display.getOrElse(true) }): IdNode[N] =
-      treeRoot.eachBefore { n: IdNode[N] =>
-        if (!f(n)) {
-          val parent = n.parent.getOrElse(displayRoot)
-          if (parent != null) {
-            n.x = parent.x
-            n.y = parent.y
-          } else {
-            n.x = displayRoot.x
-            n.y = displayRoot.y
-          }
-        }
-      }
-  }
-
-  def relocate(node: TN): TN = {
-    //rebuild depth
-    val dn = node.eachBefore { n: TN =>
-      n.depth = n.parent.toOption match {
-        case Some(null) => 0
-        case Some(parent) => if (n == node) 0 else parent.depth.getOrElse(0) + 1
-        case None => 0
-      }
-    }
-    layout(dn)
-
-    //count diff nodes
-    //    node.eachAfter { n: TN =>
-    //      val v: Int = n.data.map(d => {
-    //        if (n.x.map(_ == d.x).getOrElse(false) && n.y.map(_ == d.y).getOrElse(false)) 0
-    //        else 1
-    //      }).getOrElse(0)
-    //
-    //      n.diffDescendants = v + n.children.map(_.map(_.diffDescendants.getOrElse(0)).fold(0)(_ + _)).getOrElse(0)
-    //    }
-  }
-
-
-  protected var idx: Int = 0
-
-  def reindex(node: TN): TN = {
-    idx = 0
-    node.eachBefore { n: TN =>
-      n.id = nextIdx()
-    }
-  }
-
-  def nextIdx(): Int = {
-    idx += 1
-    idx
-  }
-
-  def applyDisplay(treeRoot: TN) = {
-    treeRoot.eachBefore { n: TN =>
-      n.display = n.nextDisplay
-    }
-  }
 
   def actionEffect(action: Action, timeout: Int = 0) = Effect {
     val p = Promise[Action]()
@@ -130,39 +45,11 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
     p.future
   }
 
-  def redisplay(treeRoot: TN, displayRoot: TN): TN = {
-    treeRoot.eachBefore { n: TN =>
-      val nextDisplay = (n == displayRoot) ||
-        (n.parent.toOption match {
-          case Some(null) => false
-          case None => false
-          case Some(parent) => parent.nextDisplay.getOrElse(false) && !parent.fold.getOrElse(false)
-        })
-
-      n.nextDisplay = nextDisplay
-    }
-  }
-
-  def rehierarchy(treeRoot: TN, displayRoot: TN, displayCheck: (TN) => Boolean = {_.display.getOrElse(true)}): TN = {
-    val empty = js.Array[TN]()
-    val rhroot = Hierarchy.hierarchy[TN, IdNode[TN]](displayRoot, { n =>
-      if (n.fold.getOrElse(false)) empty else n.children.getOrElse(empty).filter(displayCheck)
-    }: js.Function1[TN, js.Array[TN]])
-    (layout(rhroot) eachBefore { n: IdNode[TN] =>
-      n.data.toOption match {
-        case Some(rn) => {
-          rn.x = n.x
-          rn.y = n.y
-        }
-        case _ =>
-      }
-    }).data.getOrElse(displayRoot)
-  }
 
   protected def init(root: TreeNode): TN = {
     import js.JSConverters._
     val hroot = Hierarchy.hierarchy[TreeNode, TN](root, { n => n.children.toJSArray }: js.Function1[TreeNode, js.Array[TreeNode]])
-    layout.gather(reindex(hroot))
+    Layout.gather(Idx.reindex(hroot))
   }
 
   override protected def initialModel: State =
@@ -176,6 +63,7 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
   override protected def actionHandler: ModelerCircuit.HandlerFunction = new ModelerActionHandler(ModelerCircuit.zoomTo(s => s.graph))
 
   class ModelerActionHandler[M](modelRW: ModelRW[M, GraphState]) extends ActionHandler(modelRW) {
+    import Layout._
     override def handle = {
       case FlushDisplayAction(node) => {
         val tree = modelRW.zoom(_.tree).value
@@ -189,7 +77,7 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
         val displayRoot = modelRW.zoom(_.displayRoot).value
         ModelUpdate(modelRW.zoomTo(_.displayRoot).updated {
           rehierarchy(tree, displayRoot)
-          layout.compact(tree, displayRoot)(_.display.getOrElse(true))
+          compact(tree, displayRoot)(_.display.getOrElse(true))
           node
         })
       }
@@ -199,7 +87,7 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
           modelRW.zoomTo(_.displayRoot).updated {
             redisplay(tree, node)
             rehierarchy(tree, node)
-            layout.compact(tree, node)(_.nextDisplay.getOrElse(true))
+            compact(tree, node)(_.nextDisplay.getOrElse(true))
             node
           },
           actionEffect(FlushDisplayAction(node), ModelerCss.delay)
@@ -228,7 +116,7 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
               modelRW.zoomTo(_.displayRoot).updated {
                 redisplay(tree, displayRoot)
                 rehierarchy(tree, displayRoot)
-                layout.compact(tree, displayRoot)(_.nextDisplay.getOrElse(true))
+                compact(tree, displayRoot)(_.nextDisplay.getOrElse(true))
                 displayRoot
               },
               actionEffect(FlushDisplayAction(displayRoot), ModelerCss.delay)
@@ -250,7 +138,7 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
       case CreateAction(node, name, meta) =>  {
         //TODO: direct update is not right
         val newTN = TreeExtractor.create(name, Seq.empty, meta)
-        val newChild = new RealNode(newTN, node, node.x, node.y, nextIdx()).asInstanceOf[TN]
+        val newChild = new RealNode(newTN, node, node.x, node.y, Idx.next()).asInstanceOf[TN]
         import js.JSConverters._
         if (node.children.isDefined) {
           node.children.get += newChild
@@ -274,7 +162,7 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
           modelRW.zoomTo(_.displayRoot).updated {
             node.nextDisplay = false
             rehierarchy(tree, displayRoot, {_.nextDisplay.getOrElse(true)})
-            layout.compact(tree, displayRoot)(_.nextDisplay.getOrElse(true))
+            compact(tree, displayRoot)(_.nextDisplay.getOrElse(true))
             displayRoot
           },
           actionEffect(FlushRemoveFromAction(node, parent), ModelerCss.delay)

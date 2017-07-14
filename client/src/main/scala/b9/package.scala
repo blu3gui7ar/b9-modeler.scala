@@ -20,7 +20,6 @@ package object b9 {
       var diffDescendants: js.UndefOr[Int] = js.native
     }
 
-    //  type TN = facades.d3js.treeModule.Node[TreeNode]
     type TN = IdNode[TreeNode]
     type LN = facades.d3js.Link[TN]
 

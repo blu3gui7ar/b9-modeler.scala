@@ -5,9 +5,8 @@ import diode.react.ModelProxy
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.HtmlAttrs.{onClick, onDoubleClick, onMouseOver}
 import japgolly.scalajs.react.vdom.svg_<^._
-import meta.MetaAst.{Attr, AttrDef, ListRef, TypeRef}
-import meta.{MetaAst, TreeExtractor, TreeNode}
-import upickle.Js
+import meta.MetaAst.{Attr, ListRef, TypeRef}
+import meta.{MetaAst, TreeNode}
 
 import scala.scalajs.js
 import scalacss.ScalaCssReact._
@@ -75,7 +74,9 @@ object Joint {
                 }
               }
             }
-            case ListRef(l) => Some(Seq(("[]", meta.copy(t = Some(l)))))
+            case ListRef(l) => Some(Seq(
+              (node.data.map(_.name).getOrElse("") + "[?]", meta.copy(t = Some(l)))
+            ))
             case _ => None
           }
         }
@@ -90,7 +91,6 @@ object Joint {
 
     def render(p: Props) = {
       val tn = p.n()
-      val meta = tn.data.map(_.meta)
       <.g(
         ModelerCss.joint,
         ModelerCss.jointActive.when(isActive(tn)),

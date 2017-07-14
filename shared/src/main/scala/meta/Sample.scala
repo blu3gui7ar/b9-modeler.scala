@@ -28,7 +28,7 @@ object Sample {
       |  size: Size
       |  time: Time
       |  urlRoot
-      |  imgs: [Img] | [1,]
+      |  imgs: [[Img]] | [1,]
       |  effect: Effect
       |
       |  Size { height: Int; width: Int }
@@ -65,9 +65,19 @@ object Sample {
       |   "width": 30
       |  },
       |  "imgs": [
+      |  [
       |    {
       |      "id": 123
+      |    },
+      |    {
+      |      "id": 789
       |    }
+      |  ],
+      |  [
+      |    {
+      |      "id": 456
+      |    }
+      |  ]
       |  ]
       |
       |}

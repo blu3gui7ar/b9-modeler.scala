@@ -32,79 +32,38 @@ object TreeGraph {
     def breadcrums(top: Int): TagMod = Seq("one", "two", "three")
       .zipWithIndex.toTagMod { case (n, i) => BreadCrum(0, top + 15 * i, n) }
 
-    def joints(root: ModelProxy[TN]): Seq[ModelProxy[TN]] = {
-      def jointsAcc(_tn: ModelProxy[TN], coll: mutable.MutableList[ModelProxy[TN]]): Unit = {
-        coll += (_tn)
-        _tn().children map {
-          _.toArray.zipWithIndex.foreach { case (_, idx) => jointsAcc(_tn.zoom(_.children.get.apply(idx)), coll) }
-        }
-      }
-
+    def joints(rtn: ModelProxy[TN]): Seq[TagMod] = {
       type ZoomFunc = TN => TN
-      def zoomFuncAcc(rtn: TN, f: ZoomFunc, coll: mutable.MutableList[ZoomFunc]): Unit ={
-        coll += f
-        rtn.children map {
-          _.toArray.zipWithIndex.foreach {
+      def jointsAcc(tn: ModelProxy[TN], f: ZoomFunc, coll: mutable.MutableList[TagMod]): Unit = {
+        tn().children map { children =>
+          children.toArray.zipWithIndex.foreach {
             case (child, idx) => {
               val g: ZoomFunc = _.children.get.apply(idx)
-              val cf = f compose  g
-              zoomFuncAcc(child, cf, coll)
+              val cf = g compose f
+              jointsAcc(tn.zoom(g), cf, coll)
             }
           }
         }
+
+        //        val modelerConnection = ModelerCircuit.connect(s => f(s.graph.tree))
+        //        coll += modelerConnection(Joint(_))
+        coll += Joint(tn)
       }
-      val coll = new mutable.MutableList[ModelProxy[TN]]
-      jointsAcc(root, coll)
+      val coll = mutable.MutableList[TagMod]()
+      jointsAcc(rtn, identity[TN], coll)
       coll
     }
 
-    def isMoving(tn: TN): Boolean = tn.display != tn.nextDisplay
-
-    def links(tns: Seq[ModelProxy[TN]]) = {
-      def tolink(tn: ModelProxy[TN]): Option[Path] = {
-        val rtn = tn()
-        if (rtn.parent != null)
-          (rtn.parent map { parent =>
-            Path(
-              id = parent.id.getOrElse(0).toString + "-" + rtn.id.getOrElse(0).toString,
-              display = parent.display.getOrElse(true) && rtn.display.getOrElse(true),
-              moving = isMoving(rtn),
-              sx = parent.x.getOrElse(0),
-              sy = parent.y.getOrElse(0),
-              tx = rtn.x.getOrElse(0),
-              ty = rtn.y.getOrElse(0)
-            )
-          }).toOption
-        else
-          None
-      }
-      tns.flatMap(tolink(_))
-    }
-
     def render(p: Props) = {
+      println("render")
       val root = p.model.zoom(_.tree)
-      val tns = joints(root)
       <.svg(
         ^.width := p.width.toString, //[BUG] https://github.com/japgolly/scalajs-react/issues/388
         ^.height:= p.height.toString,
         <.g(
           ^.transform := transform(p.left, p.top),
           breadcrums(p.top),
-          links(tns).toTagMod(Link(_)),
-          tns.toTagMod { tn  =>
-            val node = tn()
-            val onUp = node.parent.toOption match {
-              case Some(null) => None
-              case Some(parent) => Some(tn.dispatchCB(GoUpAction(parent)))
-              case _ => None
-            }
-            val onRemove = node.parent.toOption match {
-              case Some(null) => None
-              case Some(parent) => Some(tn.dispatchCB(RemoveFromAction(node, parent)))
-              case _ => None
-            }
-            Joint(tn, onUp, onRemove)
-          }
+          TagMod(joints(root): _*)
         )
       )
     }

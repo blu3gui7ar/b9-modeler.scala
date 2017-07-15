@@ -13,8 +13,8 @@ case class GraphState(
                        tree: TN,
                        displayRoot: TN,
                        relocateSource: TN,
-                       activeNode: Option[TN],
-                       editingNode: Option[TN]
+                       activeNode: TN,
+                       editingNode: TN
                      )
 case class State(graph: GraphState)
 

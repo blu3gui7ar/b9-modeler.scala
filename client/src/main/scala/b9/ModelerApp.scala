@@ -31,8 +31,12 @@ object ModelerApp extends js.JSApp {
 
   def init(ele: Element): Unit = {
     import japgolly.scalajs.react.vdom.Implicits._
+
     val modelerConnection = ModelerCircuit.connect(s => s.graph)
-    val c = modelerConnection(p => TreeGraph(p, 700, 500))
-    c.renderIntoDOM(ele)
+    val sc = modelerConnection(p => TreeGraph(p, 700, 500))
+    sc.renderIntoDOM(ele)
+
+//    val dc = ModelerCircuit.wrap(_.graph)(TreeGraph(_, 700, 500))
+//    dc.renderIntoDOM(ele)
   }
 }

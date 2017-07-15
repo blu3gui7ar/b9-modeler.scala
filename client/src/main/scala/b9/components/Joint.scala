@@ -1,7 +1,7 @@
 package b9.components
 
 import b9._
-import b9.short.{TN, keyAttr}
+import b9.short.{TN, keyAttr, emptyTagMod}
 import diode.react.ModelProxy
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.HtmlAttrs.{onClick, onDoubleClick, onMouseOver}
@@ -16,12 +16,12 @@ import scalacss.ScalaCssReact._
   * Created by blu3gui7ar on 2017/5/25.
   */
 object Joint {
-  case class Props(n: ModelProxy[TN], onUp: Option[Callback], onRemove: Option[Callback])
+  case class Props(n: ModelProxy[TN])
 
   class Backend($: BackendScope[Props, Unit]) {
-    val displayRootRW = ModelerCircuit.zoomTo(_.graph.displayRoot)
-    val activeRW = ModelerCircuit.zoomTo(_.graph.activeNode)
-    val editingRW = ModelerCircuit.zoomTo(_.graph.editingNode)
+    val displayRootRO = ModelerCircuit.zoom(_.graph.displayRoot)
+    val activeRO = ModelerCircuit.zoom(_.graph.activeNode)
+    val editingRO = ModelerCircuit.zoom(_.graph.editingNode)
     val metaRO = ModelerCircuit.zoom(_.graph.meta)
 
     def click(pn: ModelProxy[TN])(e: ReactMouseEvent): Callback = {
@@ -33,15 +33,15 @@ object Joint {
 
     def transform(x: Double, y: Double) = s"translate($x, $y)"
 
-    def isActive(tn: TN): Boolean = activeRW().map(_ == tn).getOrElse(false)
+    def isActive(tn: TN): Boolean = activeRO() eq tn
 
-    def isEditing(tn: TN): Boolean = editingRW().map(_ == tn).getOrElse(false)
+    def isEditing(tn: TN): Boolean = editingRO() eq tn
 
     def isFolded(tn: TN): Boolean = tn.data.map(_.fold).getOrElse(false)
 
     def isMoving(tn: TN): Boolean = tn.display != tn.nextDisplay
 
-    def canGoParent(tn: TN): Boolean = displayRootRW() == tn
+    def canGoParent(tn: TN): Boolean = displayRootRO() eq tn
 
     def canRemove(tn: TN): Boolean = isActive(tn)
 
@@ -50,7 +50,7 @@ object Joint {
     def creates(pn: ModelProxy[TN]): TagMod  = {
       val node = pn()
 
-      if (node.data == null || node.data.isEmpty) TagMod()
+      if (node.data == null || node.data.isEmpty) emptyTagMod
       else {
         val metaRoot = metaRO()
         val types = MetaAst.types(metaRoot)
@@ -88,34 +88,63 @@ object Joint {
 
     def hasParent(tn: TN): Boolean = (tn.parent.isDefined && tn.parent != null)
 
+    def parentBtn(proxy: ModelProxy[TN]): TagMod = proxy().parent.toOption match {
+      case Some(null) => emptyTagMod
+      case Some(parent) => ParentButton(-41, -25, proxy.dispatchCB(GoUpAction(parent)))
+      case _ => emptyTagMod
+    }
+
+    def removeBtn(proxy: ModelProxy[TN]): TagMod = proxy().parent.toOption match {
+      case Some(null) => emptyTagMod
+      case Some(parent) => RemoveButton(-42, 10, proxy.dispatchCB(RemoveFromAction(proxy(), parent)))
+      case _ => emptyTagMod
+    }
+
+    def link(rtn: TN): TagMod = rtn.parent.toOption match {
+      case Some(null) => emptyTagMod
+      case Some(parent) => Link(Path(
+          id = parent.id.getOrElse(0).toString + "-" + rtn.id.getOrElse(0).toString,
+          display = parent.display.getOrElse(true) && rtn.display.getOrElse(true),
+          moving = isMoving(rtn),
+          sx = parent.x.getOrElse(0),
+          sy = parent.y.getOrElse(0),
+          tx = rtn.x.getOrElse(0),
+          ty = rtn.y.getOrElse(0)
+        ))
+      case _ => emptyTagMod
+    }
+
     def render(p: Props) = {
       val tn = p.n()
       <.g(
-        ModelerCss.joint,
-        ModelerCss.jointActive.when(isActive(tn)),
-        ModelerCss.jointEditing.when(isEditing(tn)),
-        ModelerCss.jointFolded.when(isFolded(tn)),
-        ModelerCss.hidden.unless(tn.display.getOrElse(true)),
-        ModelerCss.moving.when(isMoving(tn)),
-        keyAttr := tn.id.getOrElse(-1).toString,
-        ^.transform := transform(tn.y.getOrElse(0.0), tn.x.getOrElse(0.0)),
-        onMouseOver --> p.n.dispatchCB(ActiveAction(tn)),
-        onDoubleClick --> p.n.dispatchCB(FoldAction(tn)),
-        <.circle(
-          ^.r := 6,
-          onClick ==> click(p.n)
-        ),
-        <.text(
-          ^.x := 15,
-          ^.y := 3,
-          ^.textAnchor := "start",
-          onClick --> Callback.empty,
-          tn.data.map(_.name).getOrElse("unkonwn"): String
-        ),
-        ParentButton(-41, -25, p.onUp.getOrElse(Callback.empty)).when(p.onUp.isDefined && canGoParent(tn)),
-        RemoveButton(-42, 10, p.onRemove.getOrElse(Callback.empty)).when(p.onRemove.isDefined),
-        EditButton(-12, 10, p.n.dispatchCB(EditAction(tn))).when(canEdit(tn)),
-        creates(p.n)
+        link(tn),
+        <.g(
+          ModelerCss.joint,
+          ModelerCss.jointActive.when(isActive(tn)),
+          ModelerCss.jointEditing.when(isEditing(tn)),
+          ModelerCss.jointFolded.when(isFolded(tn)),
+          ModelerCss.hidden.unless(tn.display.getOrElse(true)),
+          ModelerCss.moving.when(isMoving(tn)),
+          keyAttr := tn.id.getOrElse(-1).toString,
+          ^.transform := transform(tn.y.getOrElse(0.0), tn.x.getOrElse(0.0)),
+          onDoubleClick --> p.n.dispatchCB(FoldAction(tn)),
+          <.circle(
+            ^.r := 6,
+            onMouseOver --> p.n.dispatchCB(ActiveAction(tn)),
+            onClick ==> click(p.n)
+          ),
+          <.text(
+            ^.x := 15,
+            ^.y := 3,
+            ^.textAnchor := "start",
+            onClick --> Callback.empty,
+            tn.data.map(_.name).getOrElse("unkonwn"): String
+          ),
+          parentBtn(p.n).when(canGoParent(tn)),
+          removeBtn(p.n),
+          EditButton(-12, 10, p.n.dispatchCB(EditAction(tn))).when(canEdit(tn)),
+          creates(p.n)
+        )
       )
     }
   }
@@ -125,6 +154,5 @@ object Joint {
     .renderBackend[Backend]
     .build
 
-  def apply(tn: ModelProxy[TN], onUp: Option[Callback] = None, onRemove: Option[Callback] = None) =
-    component(Props(tn, onUp, onRemove))
+  def apply(tn: ModelProxy[TN]) = component(Props(tn))
 }

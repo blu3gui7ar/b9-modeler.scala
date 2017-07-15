@@ -56,7 +56,8 @@ object ModelerCss extends StyleSheet.Inline {
     //    transitionProperty := "all",
     //    transitionDuration(FiniteDuration(500, TimeUnit.MILLISECONDS)),
     //    transitionTimingFunction.ease
-    cursor.pointer
+    cursor.pointer,
+    display.none
   )
 
   val buttonDisabled = style (

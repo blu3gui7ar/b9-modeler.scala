@@ -105,4 +105,23 @@ object Layout {
       }
     }).data.getOrElse(displayRoot)
   }
+
+
+/*  protected def syncPos(tn: TN): TreeNode = {
+    tn.data.map( n =>
+      if (tn.x.map(_ != n.x).getOrElse(true) || tn.y.map(_ != n.y).getOrElse(true)) {
+        if (tn.diffDescendants.map(_ > 1).getOrElse(false)) {
+          val nc: js.Array[TreeNode] = tn.children.map(_.map(syncPos(_))).getOrElse(Empty)
+          n.copy(x = tn.x.getOrElse(n.x), y = tn.y.getOrElse(n.y), children = nc)
+        }
+        else n.copy(x = tn.x.getOrElse(n.x), y = tn.y.getOrElse(n.y))
+      } else {
+        if (tn.diffDescendants.map(_ > 0).getOrElse(false)) {
+          val nc: js.Array[TreeNode] = tn.children.map(_.map(syncPos(_))).getOrElse(Empty)
+          n.copy(children = nc)
+        }
+        else n
+      }
+    ).getOrElse(TreeExtractor.Empty)
+  }*/
 }

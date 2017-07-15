@@ -18,25 +18,6 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  //  protected def syncPos(tn: TN): TreeNode = {
-  //    tn.data.map( n =>
-  //      if (tn.x.map(_ != n.x).getOrElse(true) || tn.y.map(_ != n.y).getOrElse(true)) {
-  //        if (tn.diffDescendants.map(_ > 1).getOrElse(false)) {
-  //          val nc: js.Array[TreeNode] = tn.children.map(_.map(syncPos(_))).getOrElse(Empty)
-  //          n.copy(x = tn.x.getOrElse(n.x), y = tn.y.getOrElse(n.y), children = nc)
-  //        }
-  //        else n.copy(x = tn.x.getOrElse(n.x), y = tn.y.getOrElse(n.y))
-  //      } else {
-  //        if (tn.diffDescendants.map(_ > 0).getOrElse(false)) {
-  //          val nc: js.Array[TreeNode] = tn.children.map(_.map(syncPos(_))).getOrElse(Empty)
-  //          n.copy(children = nc)
-  //        }
-  //        else n
-  //      }
-  //    ).getOrElse(TreeExtractor.Empty)
-  //  }
-
-
   def actionEffect(action: Action, timeout: Int = 0) = Effect {
     val p = Promise[Action]()
     setTimeout(timeout) { // animation
@@ -56,7 +37,7 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
     meta.Sample.tree() match {
       case (meta, tree: TreeNode) => {
         val r = init(tree)
-        State(GraphState(meta, r, r, r, None, None))
+        State(GraphState(meta, r, r, r, r, r))
       }
     }
 
@@ -131,10 +112,18 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
             )
         } else NoChange
       }
-      case EditAction(node) =>
-        ModelUpdate(modelRW.zoomTo(_.editingNode).updated(Some(node)))
-      case ActiveAction(node) =>
-        ModelUpdate(modelRW.zoomTo(_.activeNode).updated(Some(node)))
+      case EditAction(node) => {
+        val editRW = modelRW.zoomTo(_.editingNode)
+        if (editRW() ne node)
+          ModelUpdate(editRW.updated(node))
+        else NoChange
+      }
+      case ActiveAction(node) => {
+        val activeRW = modelRW.zoomTo(_.activeNode)
+        if (activeRW() ne node)
+          ModelUpdate(activeRW.updated(node))
+        else NoChange
+      }
       case CreateAction(node, name, meta) =>  {
         //TODO: direct update is not right
         val newTN = TreeExtractor.create(name, Seq.empty, meta)

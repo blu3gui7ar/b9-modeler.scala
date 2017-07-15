@@ -1,3 +1,4 @@
+import japgolly.scalajs.react.vdom.TagMod
 import japgolly.scalajs.react.vdom.all.VdomAttr
 import meta.TreeNode
 
@@ -30,5 +31,8 @@ package object b9 {
 
     val keyAttr = VdomAttr("key")
 
+    val emptyTagMod = TagMod()
+
+    val console = js.Dynamic.global.console
   }
 }

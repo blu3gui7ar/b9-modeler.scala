@@ -110,15 +110,17 @@ object ModelerCss extends StyleSheet.Inline {
     )
   )
 
-  val jointEditing = style (
-    unsafeChild("> circle")(
-      svgFill := red
-    )
-  )
-
   val jointFolded = style (
     unsafeChild("> circle")(
       svgFill := lightsteelblue
+    )
+  )
+
+  //order matters
+  val jointEditing = style (
+    unsafeChild("> circle")(
+      //(svgFill := red).important //use order instead of important
+      svgFill := red
     )
   )
 

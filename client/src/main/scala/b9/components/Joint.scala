@@ -28,7 +28,7 @@ object Joint {
       if (e.altKey)
         pn.dispatchCB(GoDownAction(pn()))
       else
-        pn.dispatchCB(EditAction(pn()))
+        Callback.empty
     }
 
     def transform(x: Double, y: Double) = s"translate($x, $y)"
@@ -37,7 +37,7 @@ object Joint {
 
     def isEditing(tn: TN): Boolean = editingRO() eq tn
 
-    def isFolded(tn: TN): Boolean = tn.data.map(_.fold).getOrElse(false)
+    def isFolded(tn: TN): Boolean = tn.fold.getOrElse(false)
 
     def isMoving(tn: TN): Boolean = tn.display != tn.nextDisplay
 

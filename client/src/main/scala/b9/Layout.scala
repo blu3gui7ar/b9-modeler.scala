@@ -77,24 +77,22 @@ object Layout {
     }
   }
 
-  def redisplay(treeRoot: TN, displayRoot: TN): TN = {
-    treeRoot.eachBefore { n: TN =>
-      val nextDisplay = (n == displayRoot) ||
-        (n.parent.toOption match {
-          case Some(null) => false
-          case None => false
-          case Some(parent) => parent.nextDisplay.getOrElse(false) && !parent.fold.getOrElse(false)
-        })
-
-      n.nextDisplay = nextDisplay
-    }
+  def redisplay(treeRoot: TN, displayRoot: TN): TN = treeRoot.eachBefore { n: TN =>
+    n.nextDisplay = (n == displayRoot) ||
+      (n.parent.toOption match {
+        case Some(null) => false
+        case None => false
+        case Some(parent) => parent.nextDisplay.getOrElse(false) && !parent.fold.getOrElse(false)
+      })
   }
 
   def rehierarchy(treeRoot: TN, displayRoot: TN, displayCheck: (TN) => Boolean = {_.display.getOrElse(true)}): TN = {
     val empty = js.Array[TN]()
-    val rhroot = Hierarchy.hierarchy[TN, IdNode[TN]](displayRoot, { n =>
-      if (n.fold.getOrElse(false)) empty else n.children.getOrElse(empty).filter(displayCheck)
-    }: js.Function1[TN, js.Array[TN]])
+    val rhroot = Hierarchy.hierarchy[TN, IdNode[TN]](displayRoot,
+      { n =>
+        if (n.fold.getOrElse(false)) empty else n.children.getOrElse(empty).filter(displayCheck)
+      }: js.Function1[TN, js.Array[TN]]
+    )
     (apply(rhroot) eachBefore { n: IdNode[TN] =>
       n.data.toOption match {
         case Some(rn) => {

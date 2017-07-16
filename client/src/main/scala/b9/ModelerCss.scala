@@ -21,6 +21,7 @@ object ModelerCss extends StyleSheet.Inline {
   )
 
   val breadcrum = style (
+    cursor.pointer,
     font := "bold 16px cursive"
   )
 

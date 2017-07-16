@@ -63,13 +63,14 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
         })
       }
       case GoDownAction(node) => {
-        val tree = modelRW.zoom(_.tree).value
+        val proxy = modelRW.zoomTo(_.tree)
+        val tree = proxy()
         ModelUpdateEffect(
-          modelRW.zoomTo(_.displayRoot).updated {
+          proxy.updated {
             redisplay(tree, node)
             rehierarchy(tree, node)
             compact(tree, node)(_.nextDisplay.getOrElse(true))
-            node
+            tree
           },
           actionEffect(FlushDisplayAction(node), ModelerCss.delay)
         )

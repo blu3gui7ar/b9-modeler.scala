@@ -29,8 +29,10 @@ object TreeGraph {
 
     def transform(x: Int, y: Int) = s"translate($x, $y)"
 
-    def breadcrums(top: Int): TagMod = Seq("one", "two", "three")
-      .zipWithIndex.toTagMod { case (n, i) => BreadCrum(0, top + 15 * i, n) }
+    def breadcrums(displayRoot: ModelProxy[TN], top: Int): TagMod = displayRoot().ancestors().reverseInPlace().zipWithIndex.toTagMod {
+      case (n, i) => BreadCrum(0, top + 15 * i, n.data.map(_.name).getOrElse("unknown"),
+        displayRoot.dispatchCB(GoUpAction(n)))
+    }
 
     def joints(rtn: ModelProxy[TN]): Seq[TagMod] = {
       type ZoomFunc = TN => TN
@@ -55,14 +57,14 @@ object TreeGraph {
     }
 
     def render(p: Props) = {
-      println("render")
       val root = p.model.zoom(_.tree)
+      val displayRoot = p.model.zoom(_.displayRoot)
       <.svg(
         ^.width := p.width.toString, //[BUG] https://github.com/japgolly/scalajs-react/issues/388
         ^.height:= p.height.toString,
         <.g(
           ^.transform := transform(p.left, p.top),
-          breadcrums(p.top),
+          breadcrums(displayRoot, p.top),
           TagMod(joints(root): _*)
         )
       )

@@ -3,6 +3,7 @@ package b9.components
 import b9.ModelerCss
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.svg_<^._
+import japgolly.scalajs.react.vdom.HtmlAttrs.onClick
 import scalacss.ScalaCssReact._
 
 
@@ -14,7 +15,8 @@ object BreadCrum {
   case class Props(
                     x: Int,
                     y: Int,
-                    name: String
+                    name: String,
+                    onClick: Callback
                   )
 
   private val component = ScalaComponent.builder[Props]("BreadCrum")
@@ -23,10 +25,11 @@ object BreadCrum {
         ^.x := p.x,
         ^.y := p.y,
         ModelerCss.breadcrum,
-        p.name
+        p.name,
+        onClick --> p.onClick
       )
     )
     .build
 
-  def apply(x: Int, y: Int, name: String) = component(Props(x, y, name))
+  def apply(x: Int, y: Int, name: String, onClick: Callback) = component(Props(x, y, name, onClick))
 }

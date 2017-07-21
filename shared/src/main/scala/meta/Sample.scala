@@ -30,6 +30,7 @@ object Sample {
       |  urlRoot
       |  imgs: [[Img]] | [1,]
       |  effect: Effect
+      |  mark: <Mark> | [1,]
       |
       |  Size { height: Int; width: Int }
       |  Time { start: %DATE; end: %DATE }
@@ -52,6 +53,11 @@ object Sample {
       |    hotspots: Nl
       |    href: HREF
       |  }
+      |
+      |  Mark {
+      |    location
+      |    url
+      |  }
       |}
     """.stripMargin
 
@@ -65,21 +71,30 @@ object Sample {
       |   "width": 30
       |  },
       |  "imgs": [
-      |  [
-      |    {
-      |      "id": 123
-      |    },
-      |    {
-      |      "id": 789
-      |    }
+      |    [
+      |      {
+      |        "id": 123
+      |      },
+      |      {
+      |        "id": 789
+      |      }
+      |    ],
+      |    [
+      |      {
+      |        "id": 456
+      |      }
+      |    ]
       |  ],
-      |  [
-      |    {
-      |      "id": 456
+      |  "mark": {
+      |    "m1": {
+      |      "location": "header",
+      |      "url": "/hhh"
+      |    },
+      |    "m2": {
+      |      "location": "body",
+      |      "url": "/bbb"
       |    }
-      |  ]
-      |  ]
-      |
+      |  }
       |}
     """.stripMargin
 

@@ -1,13 +1,13 @@
 package b9.components
 
 import b9._
-import b9.short.{TN, keyAttr, emptyTagMod}
+import b9.short.{TN, emptyTagMod, keyAttr}
 import diode.react.ModelProxy
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.HtmlAttrs.{onClick, onDoubleClick, onMouseOver}
 import japgolly.scalajs.react.vdom.svg_<^._
 import meta.MetaAst
-import meta.MetaAst.{Attr, ListRef, TypeRef}
+import meta.MetaAst.{Attr, ListRef, MapRef, TypeRef}
 
 import scala.scalajs.js
 import scalacss.ScalaCssReact._
@@ -76,6 +76,9 @@ object Joint {
             case ListRef(l) => Some(Seq(
               (node.data.map(_.name).getOrElse("") + "[?]", meta.copy(t = Some(l)))
             ))
+            case MapRef(m) => Some(Seq(
+              (node.data.map(_.name).getOrElse("") + "[?]", meta.copy(t = Some(m)))
+            ))
             case _ => None
           }
         }
@@ -130,7 +133,7 @@ object Joint {
           onDoubleClick --> p.n.dispatchCB(FoldAction(tn)),
           <.circle(
             ^.r := 6,
-            onMouseOver --> p.n.dispatchCB(ActiveAction(tn)),
+            (onMouseOver --> p.n.dispatchCB(ActiveAction(tn))).when(!isActive(tn)),
             onClick ==> click(p.n)
           ),
           <.text(

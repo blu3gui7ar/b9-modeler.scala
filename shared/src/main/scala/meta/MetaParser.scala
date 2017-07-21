@@ -57,8 +57,11 @@ object MetaParser {
   }
 
   var MacroDesc = MacroTerm.map(MetaAst.MacroRef)
-  val TypeDesc : P[MetaAst.Reference] = P( TypeTerm.map(MetaAst.TypeRef) |
-    NoCut("[" ~/ TypeDesc ~ "]").map((t) => MetaAst.ListRef(t)))
+  val TypeDesc : P[MetaAst.Reference] = P(
+      TypeTerm.map(MetaAst.TypeRef) |
+      NoCut("[" ~/ TypeDesc ~ "]").map(t => MetaAst.ListRef(t)) |
+      NoCut("<" ~/ TypeDesc ~ ">").map(t => MetaAst.MapRef(t))
+    )
 
   val WidgetDesc = P( "::" ~/ StringIn("Text", "Checkbox", "Radio", "Select", "TextArea").!).map(MetaAst.Widget)
   val ValueDesc = P( "$" ~/ ValueTerm.rep(1, sep = ","))

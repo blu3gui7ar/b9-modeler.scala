@@ -37,6 +37,7 @@ object MetaAst {
   sealed trait Reference extends AstNode
   case class TypeRef(name: String) extends Reference
   case class ListRef(ref: Reference) extends Reference
+  case class MapRef(ref: Reference) extends Reference
 
   def expand(attrDef: AttrDef, macros: Map[String, Macro]): AttrDef = {
     val default = macros.get(DEFAULT) map { m => MacroRef(m.name)}

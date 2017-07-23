@@ -5,7 +5,8 @@ import diode.ActionResult.{ModelUpdate, ModelUpdateEffect, NoChange}
 import diode._
 import diode.react.ReactConnector
 import facades.d3js.Hierarchy
-import meta.{TreeExtractor, TreeNode}
+import meta.{MetaAst, TreeExtractor, TreeNode}
+import upickle.Js
 
 import scala.concurrent.Promise
 import scala.scalajs.js
@@ -35,8 +36,15 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
 
   override protected def initialModel: State =
     meta.Sample.tree() match {
-      case (meta, tree: TreeNode) => {
+      case (meta: MetaAst.Root, tree: TreeNode) => {
         val r = init(tree)
+
+        import JsonExpr._
+        implicit val macros = MetaAst.macros(meta)
+        implicit val types = MetaAst.types(meta)
+        val d: Option[TN] = Some(r)
+        println(meta.json(d))
+
         State(GraphState(meta, r, r, r, r, r))
       }
     }

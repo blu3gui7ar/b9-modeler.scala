@@ -72,7 +72,7 @@ object TreeExtractor {
               case ll: Seq[(String, Js.Value)] => {
                 Some(create(name,
                   ll flatMap { case (key, child) =>
-                    subl.tree(name + "[" + key + "]", Some(child), meta.copy(t = Some(subl)))
+                    subl.tree(key, Some(child), meta.copy(t = Some(subl)))
                   },
                   meta,
                   m
@@ -86,7 +86,7 @@ object TreeExtractor {
             typeDef.map { td: AstNodeWithMembers =>
               create(name,
                 m.value flatMap { case (key, child) =>
-                  td.tree(name + "[" + key + "]", Some(child), meta.copy(t = Some(tr)))
+                  td.tree(key, Some(child), meta.copy(t = Some(tr)))
                 },
                 meta,
                 m
@@ -106,7 +106,7 @@ object TreeExtractor {
     }
   }
 
-  implicit class TypeExtractor(t: AstNodeWithMembers)(implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]) extends TreeExtractor {
+  implicit class AstNodeWithMembersExtractor(t: AstNodeWithMembers)(implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]) extends TreeExtractor {
     def tree(name: String, value: Option[Js.Value], meta: AttrDef) : Option[TreeNode] = value collect {
       case obj : Js.Obj => create(name,
         t.members.filter(_.isInstanceOf[Attr]).flatMap({ m =>

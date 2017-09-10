@@ -1,10 +1,8 @@
-package b9.components
+package b9.components.graph
 
-import b9.ModelerCss
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.svg_<^._
 import japgolly.scalajs.react.vdom.HtmlAttrs.onClick
-import scalacss.ScalaCssReact._
+import japgolly.scalajs.react.vdom.svg_<^._
 
 
 /**
@@ -13,23 +11,18 @@ import scalacss.ScalaCssReact._
 object BreadCrum {
 
   case class Props(
-                    x: Int,
-                    y: Int,
                     name: String,
                     onClick: Callback
                   )
 
   private val component = ScalaComponent.builder[Props]("BreadCrum")
     .render_P( p =>
-      <.text(
-        ^.x := p.x,
-        ^.y := p.y,
-        ModelerCss.breadcrum,
+      <.tspan(
         p.name,
         onClick --> p.onClick
       )
     )
     .build
 
-  def apply(x: Int, y: Int, name: String, onClick: Callback) = component(Props(x, y, name, onClick))
+  def apply(name: String, onClick: Callback) = component(Props(name, onClick))
 }

@@ -1,4 +1,4 @@
-package b9.components
+package b9.components.graph
 
 import b9.ModelerCss
 import japgolly.scalajs.react._

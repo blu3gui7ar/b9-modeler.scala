@@ -1,7 +1,7 @@
 package meta
 
-import fastparse.core.Parsed.Success
 import meta.MetaAst.Root
+import upickle.Js
 
 /**
   * Created by blu3gui7ar on 2017/6/1.
@@ -30,7 +30,7 @@ object Sample {
       |  urlRoot
       |  imgs: [[Img]] | [1,]
       |  effect: Effect
-      |  mark: <Mark> | [1,]
+      |  marks: <Mark> | [1,]
       |
       |  Size { height: Int; width: Int }
       |  Time { start: %DATE; end: %DATE }
@@ -85,7 +85,7 @@ object Sample {
       |      }
       |    ]
       |  ],
-      |  "mark": {
+      |  "marks": {
       |    "m1": {
       |      "location": "header",
       |      "url": "/hhh"
@@ -98,25 +98,19 @@ object Sample {
       |}
     """.stripMargin
 
-  def tree(): (Root, TreeNode) = {
-    val dataJs = upickle.json.read(Sample.data)
-    val rs = MetaParser.Meta.parse(Sample.meta)
-    import TreeExtractor._
+  def tree(): (Root, TreeNode, Js.Value) = {
+    val ds = new MetaSource(meta)
+    import ds._
 
-    (rs match {
-      case Success(meta, _) => {
-        implicit val macros = MetaAst.macros(meta)
-        implicit val types = MetaAst.types(meta)
-        meta.tree("meta", Some(dataJs), RootAttrDef) map {
-          (meta, _)
-        }
-      }
-      case _ => None
-    }).getOrElse((Root(Seq.empty), emptyTree))
+    val dataJs = upickle.json.read(data)
+    import TreeExtractor._
+    val tree = ds.meta.tree("meta", Some(dataJs), RootAttrDef)
+
+    (ds.meta, tree.getOrElse(TreeExtractor.emptyTree), dataJs)
   }
 
   def main(args: Array[String]): Unit = {
-    tree() match { case(meta, data) =>
+    tree() match { case(meta, data, json) =>
       println(meta)
       println(data)
     }

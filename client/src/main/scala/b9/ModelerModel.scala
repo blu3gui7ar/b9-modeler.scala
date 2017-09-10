@@ -4,6 +4,7 @@ import b9.short.TN
 import diode.Action
 import meta.MetaAst
 import meta.MetaAst.AttrDef
+import upickle.Js
 
 /**
   * Created by blu3gui7ar on 2017/5/23.
@@ -14,7 +15,8 @@ case class GraphState(
                        displayRoot: TN,
                        relocateSource: TN,
                        activeNode: TN,
-                       editingNode: TN
+                       editingNode: TN,
+                       json: Js.Value
                      )
 case class State(graph: GraphState)
 

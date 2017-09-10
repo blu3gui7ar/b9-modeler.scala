@@ -5,4 +5,5 @@ package shared
   */
 object Apps {
   val ModelerApp = "appmodeler"
+  val EditorApp = "appeditor"
 }

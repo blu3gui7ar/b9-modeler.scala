@@ -1,4 +1,4 @@
-package b9.components
+package b9.components.graph
 
 import b9._
 import b9.short.{TN, emptyTagMod, keyAttr}

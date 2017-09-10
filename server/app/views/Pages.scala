@@ -41,6 +41,7 @@ object Pages {
       ),
       body()(
         div(id := shared.Apps.ModelerApp),
+        div(id := shared.Apps.EditorApp),
         for { srcUrl <- bundleUrl("client") } yield script(
           `type` := "text/javascript",
           src := srcUrl

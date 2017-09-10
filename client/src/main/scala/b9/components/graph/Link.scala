@@ -1,8 +1,7 @@
-package b9.components
+package b9.components.graph
 
-
-import b9.short.keyAttr
 import b9.ModelerCss
+import b9.short.keyAttr
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.svg_<^._
 

@@ -1,7 +1,7 @@
-package b9.components
-
+package b9.components.graph
 
 import b9._
+import scalacss.ScalaCssReact._
 import b9.short.TN
 import diode.react.ModelProxy
 import japgolly.scalajs.react._
@@ -29,9 +29,20 @@ object TreeGraph {
 
     def transform(x: Int, y: Int) = s"translate($x, $y)"
 
-    def breadcrums(displayRoot: ModelProxy[TN], top: Int): TagMod = displayRoot().ancestors().reverseInPlace().zipWithIndex.toTagMod {
-      case (n, i) => BreadCrum(0, top + 15 * i, n.data.map(_.name).getOrElse("unknown"),
-        displayRoot.dispatchCB(GoUpAction(n)))
+    def breadcrums(displayRoot: ModelProxy[TN], top: Int): TagMod = {
+      val levels = displayRoot().ancestors().reverseInPlace().toTagMod { n =>
+        BreadCrum(
+          n.data.map(_.name).getOrElse("unknown") + "> ",
+          displayRoot.dispatchCB(GoUpAction(n))
+        )
+      }
+
+      <.text(
+        ^.x := 0,
+        ^.y := top,
+        ModelerCss.breadcrum,
+        levels
+      )
     }
 
     def joints(rtn: ModelProxy[TN]): Seq[TagMod] = {

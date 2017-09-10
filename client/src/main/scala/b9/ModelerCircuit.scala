@@ -36,7 +36,7 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
 
   override protected def initialModel: State =
     meta.Sample.tree() match {
-      case (meta: MetaAst.Root, tree: TreeNode) => {
+      case (meta: MetaAst.Root, tree: TreeNode, json: Js.Value) => {
         val r = init(tree)
 
         import JsonExpr._
@@ -45,7 +45,7 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
         val d: Option[TN] = Some(r)
         println(meta.json(d))
 
-        State(GraphState(meta, r, r, r, r, r))
+        State(GraphState(meta, r, r, r, r, r, json))
       }
     }
 

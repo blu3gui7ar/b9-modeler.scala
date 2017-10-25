@@ -1,47 +1,54 @@
 package b9.components.editor
 
-import b9._
+import java.util.UUID
+
+import b9.short.TN
+import b9.ModelerCircuit
 import diode.react.ModelProxy
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import meta.{MetaAst, TreeExtractor}
 
-/**
-  * Created by blu3gui7ar on 2017/5/24.
-  */
 object Editor {
-  case class Props(model: ModelProxy[GraphState])
+  def apply(tn: ModelProxy[TN]) = component(Props(tn))
 
-  class Backend($ : BackendScope[Props, Unit]) {
+  case class Props(n: ModelProxy[TN])
 
-    def render(p: Props) = {
-      val root = p.model.zoom(_.tree)
-      val displayRoot = p.model.zoom(_.displayRoot)
-      val meta = p.model.zoom(_.meta).value
+  class Backend($: BackendScope[Props, Unit]) {
+    val displayRootRO = ModelerCircuit.zoom(_.graph.displayRoot)
+    val activeRO = ModelerCircuit.zoom(_.graph.activeNode)
+    val editingRO = ModelerCircuit.zoom(_.graph.editingNode)
+    val metaRO = ModelerCircuit.zoom(_.graph.meta)
 
-      import JsonExpr._
-      implicit val macros = MetaAst.macros(meta)
-      implicit val types = MetaAst.types(meta)
-      val jsStr = meta.json(Some(root.value))
-      val json = upickle.json.read(jsStr.getOrElse("{}"))
-      import EditorExtractor._
-      val tagMod = meta.editor("meta", Some(json), TreeExtractor.RootAttrDef).getOrElse(b9.short.emptyTagMod)
-      <.div(
-        "Editor DIV",
-        tagMod
-      )
-    }
+    def render(p: Props): VdomTag = {
+      val tn = p.n()
+      tn.data.map { data =>
+        <.div(
+          <.span(data.name),
+          <.span(" : "),
+          tn.children map { children =>
+            if (children.isEmpty) {
+              data.meta.widget flatMap { widget =>
+                WidgetRegistry(widget.name)
+              } map {
+                _.render(uuid, data.meta, data.value)
+              } getOrElse (EmptyVdom)
+            } else {
+               children.zipWithIndex.map {
+                case (child, idx) => {
+                  Editor(p.n.zoom(_.children.get.apply(idx)))
+                }
+              } toTagMod
+            }
+          } getOrElse(EmptyVdom)
+        )
+      }
+    } getOrElse(<.div())
   }
 
-  private val component = ScalaComponent.builder[Props]("AstNodeWithMembersEditor")
+  def uuid() = UUID.randomUUID().toString
+
+  private val component = ScalaComponent.builder[Props]("Editor")
     .renderBackend[Backend]
-    .componentDidMount { scope =>
-      Callback {
-          val p = scope.props.model.zoom(_.tree)
-          p.dispatchCB(GoUpAction(p())).async.runNow()
-      }
-    }
     .build
 
-  def apply(model: ModelProxy[GraphState]) = component(Props(model))
 }

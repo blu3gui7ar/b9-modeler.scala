@@ -3,7 +3,10 @@ package b9.components.editor
 object WidgetRegistry {
   protected var registry = Map[String, Widget](
     EmptyWidget.name -> EmptyWidget,
-    TextWidget.name -> TextWidget
+    TextWidget.name -> TextWidget,
+    CheckboxWidget.name -> CheckboxWidget,
+    RadioWidget.name -> RadioWidget,
+    SelectWidget.name -> SelectWidget,
   )
 
   def register(name: String, widget: Widget): Unit = {

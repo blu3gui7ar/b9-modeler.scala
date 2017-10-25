@@ -36,7 +36,7 @@ object ModelerApp extends js.JSApp {
     //    val dc = ModelerCircuit.wrap(_.graph)(TreeGraph(_, 700, 500))
     //    dc.renderIntoDOM(ele)
 
-    modelerConnection(p => Editor(p))
+    modelerConnection(p => Editor(p.zoom(_.displayRoot)))
       .renderIntoDOM(editorEle)
   }
 }

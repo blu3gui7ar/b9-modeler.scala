@@ -31,8 +31,6 @@ package object b9 {
 
     val keyAttr = VdomAttr("key")
 
-    val emptyTagMod = TagMod()
-
     val console = js.Dynamic.global.console
   }
 }

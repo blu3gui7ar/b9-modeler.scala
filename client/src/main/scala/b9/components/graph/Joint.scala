@@ -1,7 +1,7 @@
 package b9.components.graph
 
 import b9._
-import b9.short.{TN, emptyTagMod, keyAttr}
+import b9.short.{TN, keyAttr}
 import diode.react.ModelProxy
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.HtmlAttrs.{onClick, onDoubleClick, onMouseOver}
@@ -50,7 +50,7 @@ object Joint {
     def creates(pn: ModelProxy[TN]): TagMod  = {
       val node = pn()
 
-      if (node.data == null || node.data.isEmpty) emptyTagMod
+      if (node.data == null || node.data.isEmpty) EmptyVdom
       else {
         val metaRoot = metaRO()
         val types = MetaAst.types(metaRoot)
@@ -92,19 +92,19 @@ object Joint {
     def hasParent(tn: TN): Boolean = (tn.parent.isDefined && tn.parent != null)
 
     def parentBtn(proxy: ModelProxy[TN]): TagMod = proxy().parent.toOption match {
-      case Some(null) => emptyTagMod
+      case Some(null) => EmptyVdom
       case Some(parent) => ParentButton(-41, -25, proxy.dispatchCB(GoUpAction(parent)))
-      case _ => emptyTagMod
+      case _ => EmptyVdom
     }
 
     def removeBtn(proxy: ModelProxy[TN]): TagMod = proxy().parent.toOption match {
-      case Some(null) => emptyTagMod
+      case Some(null) => EmptyVdom
       case Some(parent) => RemoveButton(-42, 10, proxy.dispatchCB(RemoveFromAction(proxy(), parent)))
-      case _ => emptyTagMod
+      case _ => EmptyVdom
     }
 
     def link(rtn: TN): TagMod = rtn.parent.toOption match {
-      case Some(null) => emptyTagMod
+      case Some(null) => EmptyVdom
       case Some(parent) => Link(Path(
           id = parent.id.getOrElse(0).toString + "-" + rtn.id.getOrElse(0).toString,
           display = parent.display.getOrElse(true) && rtn.display.getOrElse(true),
@@ -114,7 +114,7 @@ object Joint {
           tx = rtn.x.getOrElse(0),
           ty = rtn.y.getOrElse(0)
         ))
-      case _ => emptyTagMod
+      case _ => EmptyVdom
     }
 
     def render(p: Props) = {

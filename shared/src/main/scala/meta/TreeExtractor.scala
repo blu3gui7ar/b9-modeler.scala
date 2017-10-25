@@ -41,7 +41,7 @@ object TreeExtractor {
                 Some(create(name,
                   ll.flatMap(child => subl.tree(name + "[?]", Some(child), meta.copy(t = Some(subl)))),
                   meta,
-                  l
+                  l,
                 ))
               }
               case _ => None
@@ -53,7 +53,7 @@ object TreeExtractor {
               create(name,
                 l.value.flatMap(child => td.tree(name + "[?]", Some(child), meta.copy(t = Some(tr)))),
                 meta,
-                l
+                l,
               )
             }
           }
@@ -75,7 +75,7 @@ object TreeExtractor {
                     subl.tree(key, Some(child), meta.copy(t = Some(subl)))
                   },
                   meta,
-                  m
+                  m,
                 ))
               }
               case _ => None
@@ -89,7 +89,7 @@ object TreeExtractor {
                   td.tree(key, Some(child), meta.copy(t = Some(tr)))
                 },
                 meta,
-                m
+                m,
               )
             }
           }
@@ -101,7 +101,7 @@ object TreeExtractor {
 
   implicit class AttrExtractor(attr: Attr)(implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]) extends TreeExtractor {
     def tree(name: String, value: Option[Js.Value], meta: AttrDef) : Option[TreeNode] = {
-      val expandedAttrDef = expand(attr.definition, macros)
+      val expandedAttrDef = expand(meta, macros)
       expandedAttrDef.t flatMap { _.tree(name, value, expandedAttrDef) }
     }
   }
@@ -111,10 +111,10 @@ object TreeExtractor {
       case obj : Js.Obj => create(name,
         t.members.filter(_.isInstanceOf[Attr]).flatMap({ m =>
           val attr = m.asInstanceOf[Attr]
-          attr.tree(attr.name, obj.value.toMap.get(attr.name), meta)
+          attr.tree(attr.name, obj.value.toMap.get(attr.name), attr.definition)
         }),
         meta,
-        obj
+        obj,
       )
       case n : Js.Value  => create(name, Seq.empty, meta, n)
     }

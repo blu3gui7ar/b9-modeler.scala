@@ -21,28 +21,28 @@ object Editor {
 
     def render(p: Props): VdomTag = {
       val tn = p.n()
-      tn.data.map { data =>
-        <.div(
-          <.span(data.name),
-          <.span(" : "),
-          tn.children map { children =>
-            if (children.isEmpty) {
-              data.meta.widget flatMap { widget =>
-                WidgetRegistry(widget.name)
-              } map {
-                _.render(uuid, data.meta, data.value)
-              } getOrElse (EmptyVdom)
-            } else {
-               children.zipWithIndex.map {
-                case (child, idx) => {
-                  Editor(p.n.zoom(_.children.get.apply(idx)))
-                }
-              } toTagMod
+      val data = tn.data
+      <.div(
+        <.span(data.map(_.name).getOrElse("Unknown"): String),
+        <.span(" : "),
+
+        data.toOption.flatMap { d =>
+          d.meta.widget flatMap { widget =>
+            WidgetRegistry(widget.name)
+          } map {
+            _.render(uuid, d.meta, d.value)
+          }
+        } getOrElse (EmptyVdom) when (tn.children.map(_.isEmpty).getOrElse(true)), //meta children
+
+        tn.children map { children =>
+          children.zipWithIndex.map {
+            case (child, idx) => {
+              Editor(p.n.zoom(_.children.get.apply(idx)))
             }
-          } getOrElse(EmptyVdom)
-        )
-      }
-    } getOrElse(<.div())
+          } toTagMod
+        } getOrElse (EmptyVdom)
+      )
+    }
   }
 
   def uuid() = UUID.randomUUID().toString

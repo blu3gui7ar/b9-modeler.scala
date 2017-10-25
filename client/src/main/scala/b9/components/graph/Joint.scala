@@ -54,6 +54,7 @@ object Joint {
       else {
         val metaRoot = metaRO()
         val types = MetaAst.types(metaRoot)
+        val macros = MetaAst.macros(metaRoot)
 
         val children = node.data.toOption flatMap { tn =>
           val meta = tn.meta
@@ -84,7 +85,7 @@ object Joint {
         }
 
         children.getOrElse(Seq.empty).zipWithIndex.toTagMod {
-          case ((name, meta), idx) => CreateButton(name, 18 + 30 * idx, 10, true, pn.dispatchCB(CreateAction(pn(), name, meta)))
+          case ((name, meta), idx) => CreateButton(name, 18 + 30 * idx, 10, true, pn.dispatchCB(CreateAction(pn(), name, MetaAst.expand(meta, macros))))
         }
       }
     }

@@ -158,6 +158,8 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
         val tree = modelRW.zoom(_.tree).value
         ModelUpdateEffect(
           modelRW.zoomTo(_.displayRoot).updated {
+            node.fold = true
+            redisplay(tree, displayRoot)
             node.nextDisplay = false
             rehierarchy(tree, displayRoot, {_.nextDisplay.getOrElse(true)})
             compact(tree, displayRoot)(_.nextDisplay.getOrElse(true))

@@ -31,7 +31,7 @@ object Editor {
           d.meta.widget flatMap { widget =>
             WidgetRegistry(widget.name)
           } map {
-            _.render(uuid, d.meta, d.value)
+            _.render(d.uuid.toString, d.meta, d.value)
           }
         } getOrElse {
           tn.children map { children =>
@@ -45,8 +45,6 @@ object Editor {
       )
     }
   }
-
-  def uuid() = UUID.randomUUID().toString
 
   private val component = ScalaComponent.builder[Props]("Editor")
     .renderBackend[Backend]

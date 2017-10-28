@@ -10,20 +10,20 @@ import upickle.Js
 object RadioWidget extends Widget {
   val name = "Radio"
 
-  override def render(ref: String, meta: AttrDef, value: Js.Value): TagMod = (
+  override def render(ref: String, meta: AttrDef, value: Js.Value): TagMod =
     meta.values map { choices =>
-      choices map { choice =>
+      val boxes = choices map { choice =>
         <.span(
           <.input(
             ^.`type` := "radio",
             ^.name := ref,
             ^.value := choice.name,
             ^.checked := value.toString() == choice.name,
-            onChange => CallbackTo.apply({ () => ()})
+            onChange => CallbackTo.apply({ () => () })
           ),
           choice.name
         )
       }
-    } getOrElse(Seq.empty)
-  ).toTagMod
+      boxes.toTagMod
+    } getOrElse EmptyVdom
 }

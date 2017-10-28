@@ -14,21 +14,21 @@ object CheckboxWidget extends Widget {
       case vs: Js.Arr => vs.value.toSeq.map(_.value.toString)
       case _ => Seq.empty
     }
-    (
-      meta.values map { choices =>
-        choices map { choice =>
-          <.span(
-            <.input(
-              ^.`type` := "checkbox",
-              ^.name := ref,
-              ^.value := choice.name,
-              ^.checked := checked.contains(choice.name),
-              onChange => CallbackTo.apply({ () => () })
-            ),
-            choice.name
-          )
-        }
-      } getOrElse(Seq.empty)
-      ).toTagMod
+
+    meta.values map { choices =>
+      val boxes = choices map { choice =>
+        <.span(
+          <.input(
+            ^.`type` := "checkbox",
+            ^.name := ref,
+            ^.value := choice.name,
+            ^.checked := checked.contains(choice.name),
+            onChange => CallbackTo.apply({ () => () })
+          ),
+          choice.name
+        )
+      }
+      boxes.toTagMod
+    } getOrElse EmptyVdom
   }
 }

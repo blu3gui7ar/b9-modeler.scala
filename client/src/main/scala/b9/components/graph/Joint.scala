@@ -124,7 +124,8 @@ object Joint {
           ModelerCss.jointFolded.when(isFolded(tn)),
           ModelerCss.hidden.unless(tn.display.getOrElse(true)),
           ModelerCss.moving.when(isMoving(tn)),
-          keyAttr := tn.id.getOrElse(-1).toString,
+//          keyAttr := tn.id.getOrElse(-1).toString,
+          keyAttr := tn.data.map(_.uuid.toString).getOrElse(""),
           ^.transform := transform(tn.y.getOrElse(0.0), tn.x.getOrElse(0.0)),
           onDoubleClick --> p.n.dispatchCB(FoldAction(tn)),
           <.circle(

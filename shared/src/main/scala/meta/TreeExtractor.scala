@@ -1,11 +1,13 @@
 package meta
 
+import java.util.UUID
+
 import meta.MetaAst._
 import upickle.Js
 /**
   * Created by blu3gui7ar on 2017/6/1.
   */
-case class TreeNode(name: String, children: Seq[TreeNode], meta: AttrDef, value: Js.Value,
+case class TreeNode(uuid: UUID, name: String, children: Seq[TreeNode], meta: AttrDef, value: Js.Value,
                     x: Double = 0, y: Double = 0, fold: Boolean = false)
 
 trait TreeExtractor {
@@ -17,7 +19,7 @@ object TreeExtractor {
   val RootAttrDef = AttrDef(None, Some(TypeRef("Meta")), None, None, None)
   val emptyTree = create("empty", Seq.empty, emptyAttrDef)
 
-  def create(name: String, children: Seq[TreeNode], meta: AttrDef, value: Js.Value = Js.Null) = TreeNode(name, children, meta, value)
+  def create(name: String, children: Seq[TreeNode], meta: AttrDef, value: Js.Value = Js.Null) = TreeNode(UUID.randomUUID(), name, children, meta, value)
 
   implicit class RefExtractor(ref: Reference)(implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]) extends TreeExtractor {
     def tree(name: String, value: Option[Js.Value], meta: AttrDef) : Option[TreeNode] = ref match {

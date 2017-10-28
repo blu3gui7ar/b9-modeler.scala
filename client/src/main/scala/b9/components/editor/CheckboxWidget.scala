@@ -10,21 +10,25 @@ object CheckboxWidget extends Widget {
   val name = "Checkbox"
 
   override def render(ref: String, meta: AttrDef, value: Js.Value): TagMod = {
-    val subs = meta.values map { choices =>
-      choices map { choice =>
-        <.span(
-          <.input(
-            ^.`type` := "checkbox",
-            ^.name := ref,
-            ^.value := choice.name,
-            ^.checked := value.toString() == choice.name,
-            onChange => CallbackTo.apply({ () => () })
-          ),
-          choice.name
-        )
-      }
-    } getOrElse(Seq.empty)
-
-    TagMod(subs: _*)
+    val checked = value match {
+      case vs: Js.Arr => vs.value.toSeq.map(_.value.toString)
+      case _ => Seq.empty
+    }
+    (
+      meta.values map { choices =>
+        choices map { choice =>
+          <.span(
+            <.input(
+              ^.`type` := "checkbox",
+              ^.name := ref,
+              ^.value := choice.name,
+              ^.checked := checked.contains(choice.name),
+              onChange => CallbackTo.apply({ () => () })
+            ),
+            choice.name
+          )
+        }
+      } getOrElse(Seq.empty)
+      ).toTagMod
   }
 }

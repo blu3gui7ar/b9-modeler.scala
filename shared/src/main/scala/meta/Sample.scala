@@ -8,7 +8,7 @@ import upickle.Js
   */
 
 object Sample {
-  val metadata: String =
+  val meta: String =
     """
       |Meta {
       |  %DEFAULT = String :: Text
@@ -23,7 +23,7 @@ object Sample {
       |  Boolean {}
       |  Int {}
       |
-      |  processor: String
+      |  processor
       |  tpl
       |  pattern
       |  size: Size
@@ -39,7 +39,7 @@ object Sample {
       |    id: %INT | (0, 100000)
       |    enable: %LANGS
       |    time: %DATE
-      |    tite: Nl
+      |    title: Nl
       |    url
       |    active: %BOOL
       |    type: %SELECT $ link, shuffle
@@ -56,7 +56,7 @@ object Sample {
       |  }
       |
       |  Mark {
-      |    location
+      |    location: :: Select $ header,banner,body
       |    url
       |  }
       |}
@@ -104,8 +104,9 @@ object Sample {
     """.stripMargin
 
   def tree(): (Root, TreeNode, Js.Value) = {
-    val ds = new MetaSource(metadata)
+    val ds = new MetaSource(meta)
     import ds._
+    println(ds.meta)
 
     val dataJs = upickle.json.read(data)
     import TreeExtractor._
@@ -116,7 +117,7 @@ object Sample {
   }
 
   def main(args: Array[String]): Unit = {
-    tree() match { case(_meta, _data, json) =>
+    tree() match { case(_meta, _data, _) =>
       println(_meta)
       println(_data)
     }

@@ -10,8 +10,8 @@ import upickle.Js
 object RadioWidget extends Widget {
   val name = "Radio"
 
-  override def render(ref: String, meta: AttrDef, value: Js.Value): TagMod = {
-    val subs = meta.values map { choices =>
+  override def render(ref: String, meta: AttrDef, value: Js.Value): TagMod = (
+    meta.values map { choices =>
       choices map { choice =>
         <.span(
           <.input(
@@ -25,7 +25,5 @@ object RadioWidget extends Widget {
         )
       }
     } getOrElse(Seq.empty)
-
-    TagMod(subs: _*)
-  }
+  ).toTagMod
 }

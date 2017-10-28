@@ -12,13 +12,17 @@ object SelectWidget extends Widget {
     val subs = meta.values map { choices =>
       choices map { choice =>
         <.option(
-          ^.value := choice.name
+          ^.value := choice.name,
+          choice.name
         )
       }
     } getOrElse(Seq.empty)
 
+    val selected = if (value.value == null)  "" else value.value.toString
+
     <.select(
-      subs: _*
+      (^.value := selected).when(value.value != null),
+      subs.toTagMod
     )
   }
 }

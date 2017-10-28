@@ -79,7 +79,7 @@ object MetaParser {
 //  val MultiChoices = P( "[" ~/ ValueTerm.rep(sep = ",") ~ "]").map(MetaAst.MultiChoicesR)
 //  val SingleChoice = P( "<" ~/ ValueTerm.rep(sep = ",") ~ ">").map(MetaAst.SingleChoiceR)
 
-  val Meta = P(Semis.? ~ "Meta" ~/ BlockExpr ~ Semis.?).map(MetaAst.Root(_))
+  val Meta = P(Semis.? ~ "Meta" ~/ BlockExpr ~ Semis.?).map(MetaAst.Root)
   val BlockExpr : P[Seq[MetaAst.AstNode]] = P(Semis.? ~ "{" ~/ Block ~ "}")
   val Block = {
     val BlockEnd = P(Semis.? ~ &("}"))

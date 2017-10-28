@@ -3,7 +3,8 @@ package b9.components.editor
 import java.util.UUID
 
 import b9.short.TN
-import b9.ModelerCircuit
+
+//import b9.ModelerCircuit
 import diode.react.ModelProxy
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -14,10 +15,10 @@ object Editor {
   case class Props(n: ModelProxy[TN])
 
   class Backend($: BackendScope[Props, Unit]) {
-    val displayRootRO = ModelerCircuit.zoom(_.graph.displayRoot)
-    val activeRO = ModelerCircuit.zoom(_.graph.activeNode)
-    val editingRO = ModelerCircuit.zoom(_.graph.editingNode)
-    val metaRO = ModelerCircuit.zoom(_.graph.meta)
+//    private val displayRootRO = ModelerCircuit.zoom(_.graph.displayRoot)
+//    private val activeRO = ModelerCircuit.zoom(_.graph.activeNode)
+//    private val editingRO = ModelerCircuit.zoom(_.graph.editingNode)
+//    private val metaRO = ModelerCircuit.zoom(_.graph.meta)
 
     def render(p: Props): VdomTag = {
       val tn = p.n()
@@ -35,10 +36,10 @@ object Editor {
         } getOrElse {
           tn.children map { children =>
             children.zipWithIndex.map {
-              case (child, idx) => {
+              case (_, idx) => {
                 Editor(p.n.zoom(_.children.get.apply(idx)))
               }
-            } toTagMod
+            }.toTagMod
           } getOrElse (EmptyVdom)
         }
       )

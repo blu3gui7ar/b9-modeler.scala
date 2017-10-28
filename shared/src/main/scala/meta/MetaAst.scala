@@ -42,10 +42,9 @@ object MetaAst {
   def expand(attrDef: AttrDef, macros: Map[String, Macro]): AttrDef = {
     val expanded = expand0(attrDef, macros)
     expanded match {
-      case AttrDef(_, None, _, _, _) => {
+      case AttrDef(_, None, _, _, _) =>
         val default = macros.get(DEFAULT) map { m => MacroRef(m.name)}
         expand0(expanded.copy(m = default), macros)
-      }
       case _ => expanded
     }
   }
@@ -53,7 +52,7 @@ object MetaAst {
   protected def expand0(attrDef: AttrDef, macros: Map[String, Macro]): AttrDef = {
     attrDef match {
       case AttrDef(None, _, _, _, _) => attrDef
-      case AttrDef(m, _, _, _, _) => {
+      case AttrDef(m, _, _, _, _) =>
         val merged = for {
           mf <- m
           md <- macros.get(mf.name)
@@ -62,7 +61,6 @@ object MetaAst {
           case None => attrDef
           case Some(mdef) => expand0(mdef, macros)
         }
-      }
     }
   }
 
@@ -74,7 +72,9 @@ object MetaAst {
     (defRefined.restricts ++ defMacro.restricts).reduceLeftOption((a, _) => a)
   )
 
-  def macros(r: Root) = r.members collect { case m: Macro => (m.name, m) } toMap
+  def macros(r: Root): Map[String, Macro] = (r.members collect { case m: Macro =>
+    (m.name, m)
+  }).toMap
 
   def types(r: Root): Map[String, AstNodeWithMembers] = {
     val types: Seq[(String, AstNodeWithMembers)] = r.members collect { case t: AstNodeWithMembers => (t.name, t) }

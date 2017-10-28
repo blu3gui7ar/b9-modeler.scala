@@ -48,19 +48,20 @@ object TreeGraph {
     def joints(rtn: ModelProxy[TN]): Seq[TagMod] = {
       type ZoomFunc = TN => TN
       def jointsAcc(tn: ModelProxy[TN], f: ZoomFunc, coll: mutable.MutableList[TagMod]): Unit = {
-        tn().children map { children =>
-          children.toArray.zipWithIndex.foreach {
-            case (child, idx) => {
-              val g: ZoomFunc = _.children.get.apply(idx)
-              val cf = g compose f
-              jointsAcc(tn.zoom(g), cf, coll)
+        if (!tn().data.toOption.flatMap(_.meta.widget).isDefined) {
+          tn().children map { children =>
+            children.toArray.zipWithIndex.foreach {
+              case (child, idx) => {
+                val g: ZoomFunc = _.children.get.apply(idx)
+                val cf = g compose f
+                jointsAcc(tn.zoom(g), cf, coll)
+              }
             }
           }
         }
-
         //        val modelerConnection = ModelerCircuit.connect(s => f(s.graph.tree))
         //        coll += modelerConnection(Joint(_))
-        coll += Joint(tn)
+          coll += Joint(tn)
       }
       val coll = mutable.MutableList[TagMod]()
       jointsAcc(rtn, identity[TN], coll)

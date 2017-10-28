@@ -7,7 +7,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.HtmlAttrs.{onClick, onDoubleClick, onMouseOver}
 import japgolly.scalajs.react.vdom.svg_<^._
 import meta.MetaAst
-import meta.MetaAst.{Attr, ListRef, MapRef, TypeRef}
+import meta.MetaAst._
 
 import scala.scalajs.js
 import scalacss.ScalaCssReact._
@@ -84,8 +84,10 @@ object Joint {
           }
         }
 
-        children.getOrElse(Seq.empty).zipWithIndex.toTagMod {
-          case ((name, meta), idx) => CreateButton(name, 18 + 30 * idx, 10, true, pn.dispatchCB(CreateAction(pn(), name, MetaAst.expand(meta, macros))))
+        children.getOrElse(Seq.empty).filter({ case (name: String , meta: AttrDef) =>
+          !meta.widget.isDefined
+        }).zipWithIndex.toTagMod { case ((name, meta), idx) =>
+          CreateButton(name, 18 + 30 * idx, 10, true, pn.dispatchCB(CreateAction(pn(), name, MetaAst.expand(meta, macros))))
         }
       }
     }

@@ -19,8 +19,7 @@ object RadioWidget extends Widget {
             ^.name := ref,
             ^.value := choice.name,
             ^.checked := value.toString() == choice.name,
-            onChange => CallbackTo.apply({ () => ()
-            })
+            onChange => CallbackTo.apply({ () => ()})
           ),
           choice.name
         )

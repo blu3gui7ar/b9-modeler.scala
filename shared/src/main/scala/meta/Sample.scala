@@ -8,7 +8,7 @@ import upickle.Js
   */
 
 object Sample {
-  val meta =
+  val metadata: String =
     """
       |Meta {
       |  %DEFAULT = String :: Text
@@ -18,6 +18,7 @@ object Sample {
       |  %BOOL = Boolean :: Radio $ true, false
       |  %SELECT = String :: Select
       |  %HREF = String :: Text | /(https?|mail|ftps?|sftp):\/\/.*/
+      |  %INT = Int :: Text | /[0-9]*/
       |  String {}
       |  Boolean {}
       |  Int {}
@@ -32,10 +33,10 @@ object Sample {
       |  effect: Effect
       |  marks: <Mark> | [1,]
       |
-      |  Size { height: Int; width: Int }
+      |  Size { height: %INT; width: %INT }
       |  Time { start: %DATE; end: %DATE }
       |  Img {
-      |    id: Int | (0, 100000)
+      |    id: %INT | (0, 100000)
       |    enable: %LANGS
       |    time: %DATE
       |    tite: Nl
@@ -61,7 +62,7 @@ object Sample {
       |}
     """.stripMargin
 
-  val data =
+  val data: String =
     """
       |{
       |  "processor": "This is processor",
@@ -73,15 +74,19 @@ object Sample {
       |  "imgs": [
       |    [
       |      {
-      |        "id": 123
+      |        "id": 123,
+      |        "active": true,
+      |        "enable": [ "en", "fr"]
       |      },
       |      {
-      |        "id": 789
+      |        "id": 789,
+      |        "active": false
       |      }
       |    ],
       |    [
       |      {
-      |        "id": 456
+      |        "id": 456,
+      |        "active": true
       |      }
       |    ]
       |  ],
@@ -99,20 +104,21 @@ object Sample {
     """.stripMargin
 
   def tree(): (Root, TreeNode, Js.Value) = {
-    val ds = new MetaSource(meta)
+    val ds = new MetaSource(metadata)
     import ds._
 
     val dataJs = upickle.json.read(data)
     import TreeExtractor._
     val tree = ds.meta.tree("meta", Some(dataJs), RootAttrDef)
+//    println(tree)
 
     (ds.meta, tree.getOrElse(TreeExtractor.emptyTree), dataJs)
   }
 
   def main(args: Array[String]): Unit = {
-    tree() match { case(meta, data, json) =>
-      println(meta)
-      println(data)
+    tree() match { case(_meta, _data, json) =>
+      println(_meta)
+      println(_data)
     }
   }
 }

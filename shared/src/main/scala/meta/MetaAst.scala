@@ -40,10 +40,13 @@ object MetaAst {
   case class MapRef(ref: Reference) extends Reference
 
   def expand(attrDef: AttrDef, macros: Map[String, Macro]): AttrDef = {
-    val default = macros.get(DEFAULT) map { m => MacroRef(m.name)}
-    attrDef match {
-      case AttrDef(None, _, _, _, _) => expand0(attrDef.copy(m = default), macros)
-      case _ => expand0(attrDef, macros)
+    val expanded = expand0(attrDef, macros)
+    expanded match {
+      case AttrDef(_, None, _, _, _) => {
+        val default = macros.get(DEFAULT) map { m => MacroRef(m.name)}
+        expand0(expanded.copy(m = default), macros)
+      }
+      case _ => expanded
     }
   }
 

@@ -32,15 +32,15 @@ object Editor {
           } map {
             _.render(uuid, d.meta, d.value)
           }
-        } getOrElse (EmptyVdom) when (tn.children.map(_.isEmpty).getOrElse(true)), //meta children
-
-        tn.children map { children =>
-          children.zipWithIndex.map {
-            case (child, idx) => {
-              Editor(p.n.zoom(_.children.get.apply(idx)))
-            }
-          } toTagMod
-        } getOrElse (EmptyVdom)
+        } getOrElse {
+          tn.children map { children =>
+            children.zipWithIndex.map {
+              case (child, idx) => {
+                Editor(p.n.zoom(_.children.get.apply(idx)))
+              }
+            } toTagMod
+          } getOrElse (EmptyVdom)
+        }
       )
     }
   }

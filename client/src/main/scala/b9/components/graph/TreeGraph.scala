@@ -1,8 +1,9 @@
 package b9.components.graph
 
 import b9._
+
 import scalacss.ScalaCssReact._
-import b9.short.TN
+import b9.short.{TN, ZoomFunc}
 import diode.react.ModelProxy
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.svg_<^._
@@ -46,7 +47,6 @@ object TreeGraph {
     }
 
     def joints(rtn: ModelProxy[TN]): Seq[TagMod] = {
-      type ZoomFunc = TN => TN
       def jointsAcc(tn: ModelProxy[TN], f: ZoomFunc, coll: mutable.MutableList[TagMod]): Unit = {
         if (!tn().data.toOption.flatMap(_.meta.widget).isDefined) {
           tn().children map { children =>
@@ -61,7 +61,7 @@ object TreeGraph {
         }
         //        val modelerConnection = ModelerCircuit.connect(s => f(s.graph.tree))
         //        coll += modelerConnection(Joint(_))
-          coll += Joint(tn)
+        coll += Joint(tn)
       }
       val coll = mutable.MutableList[TagMod]()
       jointsAcc(rtn, identity[TN], coll)

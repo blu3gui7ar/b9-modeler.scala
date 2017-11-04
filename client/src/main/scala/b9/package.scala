@@ -23,6 +23,7 @@ package object b9 {
 
     type TN = IdNode[TreeNode]
     type LN = facades.d3js.Link[TN]
+    type ZoomFunc = TN => TN
 
     @ScalaJSDefined
     class RealNode(val data: TreeNode, val parent: TN, val x: js.UndefOr[Double], val y: js.UndefOr[Double],

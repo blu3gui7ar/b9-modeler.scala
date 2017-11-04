@@ -45,7 +45,7 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
         val d: Option[TN] = Some(r)
         println(meta.json(d))
 
-        State(GraphState(meta, r, r, r, r, r, json))
+        State(GraphState(meta, r, r, r, r, r))
       }
     }
 
@@ -178,6 +178,63 @@ object ModelerCircuit extends Circuit[State] with ReactConnector[State] {
             displayRoot
           }
         )
+      }
+      case ValueSetAction(node, ref, value) => {
+        //TODO: direct update is not right
+        node.data = node.data.map(_.copy(value = value))
+        val root: GraphState = modelRW()
+        val meta = root.meta
+        root.tree.data map { _ =>
+          import JsonExpr._
+          implicit val macros = MetaAst.macros(meta)
+          implicit val types = MetaAst.types(meta)
+          val tree = Some(root.tree)
+          println("set: " + meta.json(tree))
+        }
+        val dp = modelRW.zoomTo(_.displayRoot)
+        ModelUpdate(dp.updated(dp()))
+      }
+      case ValueAddAction(node, ref, value) => {
+        //TODO: direct update is not right
+        node.data = node.data.map { data =>
+          val newValue: Seq[Js.Value] = data.value match {
+            case arr: Js.Arr => value +: arr.value
+            case _ => Seq.empty
+          }
+          data.copy(value = Js.Arr(newValue: _*))
+        }
+        val root: GraphState = modelRW()
+        val meta = root.meta
+        root.tree.data map { _ =>
+          import JsonExpr._
+          implicit val macros = MetaAst.macros(meta)
+          implicit val types = MetaAst.types(meta)
+          val tree = Some(root.tree)
+          println("add: " + meta.json(tree))
+        }
+        val dp = modelRW.zoomTo(_.displayRoot)
+        ModelUpdate(dp.updated(dp()))
+      }
+      case ValueDelAction(node, ref, value) => {
+        //TODO: direct update is not right
+        node.data = node.data.map { data =>
+          val newValue: Seq[Js.Value] = data.value match {
+            case arr: Js.Arr => arr.value.filter(_ != value)
+            case _ => Seq.empty
+          }
+          data.copy(value = Js.Arr(newValue: _*))
+        }
+        val root: GraphState = modelRW()
+        val meta = root.meta
+        root.tree.data map { _ =>
+          import JsonExpr._
+          implicit val macros = MetaAst.macros(meta)
+          implicit val types = MetaAst.types(meta)
+          val tree = Some(root.tree)
+          println("del: " + meta.json(tree))
+        }
+        val dp = modelRW.zoomTo(_.displayRoot)
+        ModelUpdate(dp.updated(dp()))
       }
     }
   }

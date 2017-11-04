@@ -1,18 +1,14 @@
 package b9.components.editor
 
-import java.util.UUID
-
-import b9.short.TN
-
-//import b9.ModelerCircuit
+import b9.short.{TN, ZoomFunc}
 import diode.react.ModelProxy
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 
 object Editor {
-  def apply(tn: ModelProxy[TN]) = component(Props(tn))
+  def apply(mp: ModelProxy[TN]) = component(Props(mp))
 
-  case class Props(n: ModelProxy[TN])
+  case class Props(mp: ModelProxy[TN])
 
   class Backend($: BackendScope[Props, Unit]) {
 //    private val displayRootRO = ModelerCircuit.zoom(_.graph.displayRoot)
@@ -21,8 +17,8 @@ object Editor {
 //    private val metaRO = ModelerCircuit.zoom(_.graph.meta)
 
     def render(p: Props): VdomTag = {
-      val tn = p.n()
-      val data = tn.data
+      val tn = p.mp;
+      val data = tn().data
       <.div(
         <.span(data.map(_.name).getOrElse("Unknown"): String),
         <.span(" : "),
@@ -31,13 +27,14 @@ object Editor {
           d.meta.widget flatMap { widget =>
             WidgetRegistry(widget.name)
           } map {
-            _.render(d.uuid.toString, d.meta, d.value)
+            _.render(d.uuid.toString, d.meta, d.value, p.mp);
           }
         } getOrElse {
-          tn.children map { children =>
+          tn().children map { children =>
             children.zipWithIndex.map {
               case (_, idx) => {
-                Editor(p.n.zoom(_.children.get.apply(idx)))
+                val g: ZoomFunc = _.children.get.apply(idx)
+                Editor(p.mp.zoom(g))
               }
             }.toTagMod
           } getOrElse (EmptyVdom)

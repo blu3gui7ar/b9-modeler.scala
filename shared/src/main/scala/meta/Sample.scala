@@ -106,7 +106,7 @@ object Sample {
   def tree(): (Root, TreeNode, Js.Value) = {
     val ds = new MetaSource(meta)
     import ds._
-    println(ds.meta)
+//    println(ds.meta)
 
     val dataJs = upickle.json.read(data)
     import TreeExtractor._

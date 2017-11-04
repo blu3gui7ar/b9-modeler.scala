@@ -15,8 +15,7 @@ case class GraphState(
                        displayRoot: TN,
                        relocateSource: TN,
                        activeNode: TN,
-                       editingNode: TN,
-                       json: Js.Value
+                       editingNode: TN
                      )
 case class State(graph: GraphState)
 
@@ -31,3 +30,7 @@ case class EditAction(node: TN) extends Action
 case class FoldAction(node: TN) extends Action
 case class ActiveAction(node: TN) extends Action
 case class CreateAction(node: TN, name: String, meta: AttrDef) extends Action
+
+case class ValueSetAction(node: TN, ref: String, value: Js.Value) extends Action
+case class ValueAddAction(node: TN, ref: String, value: Js.Value) extends Action
+case class ValueDelAction(node: TN, ref: String, value: Js.Value) extends Action

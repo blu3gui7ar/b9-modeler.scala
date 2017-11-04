@@ -60,6 +60,7 @@ lazy val client = (project in file("client")).settings(
 ).enablePlugins(ScalaJSBundlerPlugin, ScalaJSWeb).
   dependsOn(sharedJs)
 
+val monocleVersion = "1.4.0" // 1.5.0-cats-M1 based on cats 1.0.0-MF
 
 lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared")).
   settings(
@@ -69,7 +70,12 @@ lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared")).
       "com.lihaoyi" %%% "autowire" % "0.2.6",
       "com.lihaoyi" %%% "fastparse" % "0.4.2",
       "org.scalactic" %%% "scalactic" % "3.0.1",
-      "org.scalatest" %%% "scalatest" % "3.0.1" % Test
+      "org.scalatest" %%% "scalatest" % "3.0.1" % Test,
+      "com.github.julien-truffaut" %%% "monocle-core"  % monocleVersion,
+      "com.github.julien-truffaut" %%% "monocle-macro" % monocleVersion,
+      "com.github.julien-truffaut" %%% "monocle-law"   % monocleVersion % Test,
+      "com.github.kenbot" %% "goggles-dsl" % "1.0",
+      "com.github.kenbot" %% "goggles-macros" % "1.0"
     )
   ).jsConfigure(_ enablePlugins ScalaJSWeb)
 

@@ -49,10 +49,14 @@ object JsonExpr {
   }
 
   implicit class AttrToJsonExpr(attr: Attr)(implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]) extends JsonExpr {
-    def json(value: Option[TN]): Option[String] = value flatMap { _ =>
-      expand(attr.definition, macros).t flatMap { t =>
-        t.json(value) map { v => s""""${attr.name}": $v""" }
-      }
+    def json(value: Option[TN]): Option[String] = value flatMap { v =>
+      val expanded = expand(attr.definition, macros)
+      if(expanded.widget.isDefined) {
+        v.data.toOption.map(_.value.toString)
+      } else
+        expanded.t flatMap { t =>
+          t.json(value) map { v => s""""${attr.name}": $v""" }
+        }
     }
   }
 

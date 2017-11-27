@@ -19,15 +19,16 @@ lazy val server = (project in file("server")).settings(
     "com.typesafe.play" %% "play-slick-evolutions" % "3.0.0-M3",
     "com.typesafe.slick" %% "slick" % "3.2.0",
     "mysql" % "mysql-connector-java" % "6.0.6",
-    "com.lihaoyi" %%% "scalatags" % "0.6.5",
+    "com.lihaoyi" %% "scalatags" % "0.6.5",
+    guice,
 //    "com.vmunier" %% "scalajs-scripts" % "1.1.0", //not work with js bundler
 //    "org.webjars.npm" % "bulma" % "0.4.1",
 //    "org.webjars" % "font-awesome" % "4.7.0",
     specs2 % Test,
     filters
   ),
-  npmAssets ++= NpmAssets.ofProject(client) { nodeModules => (nodeModules / "font-awesome").*** }.value,
-  npmAssets ++= NpmAssets.ofProject(client) { nodeModules => (nodeModules / "bulma").*** }.value
+  npmAssets ++= NpmAssets.ofProject(client) { nodeModules => nodeModules / "font-awesome" ** "*" }.value,
+  npmAssets ++= NpmAssets.ofProject(client) { nodeModules => nodeModules / "bulma" ** "*" }.value
   // Compile the project before generating Eclipse files, so that generated .scala or .class files for views and routes are present
   // EclipseKeys.preTasks := Seq(compile in Compile)
 ).enablePlugins(PlayScala, WebScalaJSBundlerPlugin).
@@ -36,7 +37,7 @@ lazy val server = (project in file("server")).settings(
 lazy val client = (project in file("client")).settings(
   scalaVersion := scalaV,
   // This is an application with a main method
-//  scalaJSUseMainModuleInitializer := true,// no need for scalajs-bundler
+  scalaJSUseMainModuleInitializer := true,// no need for scalajs-bundler
   mainClass in Compile := Some("b9.ModelerApp"),
   libraryDependencies ++= Seq(
     "com.github.japgolly.scalajs-react" %%% "core" % "1.0.0",
@@ -48,7 +49,7 @@ lazy val client = (project in file("client")).settings(
     "com.github.japgolly.scalacss" %%% "ext-react" % "0.5.3",
     "org.scala-js" %%% "scalajs-dom" % "0.9.1"
   ),
-  enableReloadWorkflow := true,
+  webpackBundlingMode := BundlingMode.LibraryAndApplication(),
   npmDependencies in Compile ++= Seq(
     "react" -> "15.5.4",
     "react-dom" -> "15.5.4",
@@ -66,18 +67,19 @@ lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared")).
   settings(
     scalaVersion := scalaV,
     libraryDependencies ++= Seq(
+      "org.scalaz" %%% "scalaz-core" % "7.2.17",
       "com.lihaoyi" %%% "upickle" % "0.4.4",
       "com.lihaoyi" %%% "autowire" % "0.2.6",
-      "com.lihaoyi" %%% "fastparse" % "0.4.2",
+      "com.lihaoyi" %%% "fastparse" % "1.0.0",
       "org.scalactic" %%% "scalactic" % "3.0.1",
-      "org.scalatest" %%% "scalatest" % "3.0.1" % Test,
-      "com.github.julien-truffaut" %%% "monocle-core"  % monocleVersion,
-      "com.github.julien-truffaut" %%% "monocle-macro" % monocleVersion,
-      "com.github.julien-truffaut" %%% "monocle-law"   % monocleVersion % Test,
-      "com.github.kenbot" %% "goggles-dsl" % "1.0",
-      "com.github.kenbot" %% "goggles-macros" % "1.0"
+      "org.scalatest" %%% "scalatest" % "3.0.1" % Test
+//      "com.github.julien-truffaut" %%% "monocle-core"  % monocleVersion,
+//      "com.github.julien-truffaut" %%% "monocle-macro" % monocleVersion,
+//      "com.github.julien-truffaut" %%% "monocle-law"   % monocleVersion % Test,
+//      "com.github.kenbot" %% "goggles-dsl" % "1.0",
+//      "com.github.kenbot" %% "goggles-macros" % "1.0"
     )
   ).jsConfigure(_ enablePlugins ScalaJSWeb)
 
 // loads the server project at sbt startup
-onLoad in Global := (Command.process("project server", _: State)) compose (onLoad in Global).value
+onLoad in Global ~= (_ andThen ("project server" :: _))

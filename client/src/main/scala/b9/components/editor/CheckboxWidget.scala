@@ -1,8 +1,7 @@
 package b9.components.editor
 
 import b9._
-import b9.short.TN
-import diode.NoAction
+import b9.short.TM
 import diode.react.ModelProxy
 import japgolly.scalajs.react.vdom.HtmlAttrs.onChange
 import japgolly.scalajs.react.vdom.TagMod
@@ -13,7 +12,7 @@ import upickle.Js
 object CheckboxWidget extends Widget {
   val name = "Checkbox"
 
-  override def render(ref: String, meta: AttrDef, value: Js.Value, mp: ModelProxy[TN]): TagMod = {
+  override def render(ref: String, meta: AttrDef, value: Js.Value, mp: ModelProxy[TM]): TagMod = {
     val checked = value match {
       case vs: Js.Arr => vs.value.toSeq.map(_.value.toString)
       case _ => Seq.empty

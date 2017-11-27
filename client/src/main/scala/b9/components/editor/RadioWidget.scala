@@ -1,7 +1,7 @@
 package b9.components.editor
 
 import b9.ValueSetAction
-import b9.short.TN
+import b9.short.TM
 import diode.react.ModelProxy
 import japgolly.scalajs.react.vdom.HtmlAttrs.onChange
 import japgolly.scalajs.react.vdom.TagMod
@@ -12,7 +12,7 @@ import upickle.Js
 object RadioWidget extends Widget {
   val name = "Radio"
 
-  override def render(ref: String, meta: AttrDef, value: Js.Value, mp: ModelProxy[TN]): TagMod =
+  override def render(ref: String, meta: AttrDef, value: Js.Value, mp: ModelProxy[TM]): TagMod =
     meta.values map { choices =>
       val boxes = choices map { choice =>
         val newVal: Option[Js.Value] = meta.t.map {

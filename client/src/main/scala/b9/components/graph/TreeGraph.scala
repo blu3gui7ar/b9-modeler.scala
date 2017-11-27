@@ -1,14 +1,12 @@
 package b9.components.graph
 
 import b9._
-
-import scalacss.ScalaCssReact._
-import b9.short.{TN, ZoomFunc}
+import b9.short._
 import diode.react.ModelProxy
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.svg_<^._
 
-import scala.collection.mutable
+import scalacss.ScalaCssReact._
 
 /**
   * Created by blu3gui7ar on 2017/5/24.
@@ -30,11 +28,20 @@ object TreeGraph {
 
     def transform(x: Int, y: Int) = s"translate($x, $y)"
 
-    def breadcrums(displayRoot: ModelProxy[TN], top: Int): TagMod = {
-      val levels = displayRoot().ancestors().reverseInPlace().toTagMod { n =>
+    def breadcrums(displayRoot: ModelProxy[TMLoc], top: Int): TagMod = {
+      val dp = displayRoot()
+      val parents: Stream[TMLoc] =  {
+        def loop(loc: Option[TMLoc]): Stream[TMLoc] = loc match {
+          case Some(l) => loop(l.parent)
+          case _ => Stream.empty
+        }
+        loop(Some(dp))
+      }
+
+      val levels = parents.toTagMod { loc =>
         BreadCrum(
-          n.data.map(_.name).getOrElse("unknown") + "> ",
-          displayRoot.dispatchCB(GoUpAction(n))
+          loc.tree.rootLabel.name + "> ",
+          displayRoot.dispatchCB(GoUpAction(loc.tree))
         )
       }
 
@@ -46,38 +53,25 @@ object TreeGraph {
       )
     }
 
-    def joints(rtn: ModelProxy[TN]): Seq[TagMod] = {
-      def jointsAcc(tn: ModelProxy[TN], f: ZoomFunc, coll: mutable.MutableList[TagMod]): Unit = {
-        if (!tn().data.toOption.flatMap(_.meta.widget).isDefined) {
-          tn().children map { children =>
-            children.toArray.zipWithIndex.foreach {
-              case (child, idx) => {
-                val g: ZoomFunc = _.children.get.apply(idx)
-                val cf = g compose f
-                jointsAcc(tn.zoom(g), cf, coll)
-              }
-            }
-          }
-        }
-        //        val modelerConnection = ModelerCircuit.connect(s => f(s.graph.tree))
-        //        coll += modelerConnection(Joint(_))
-        coll += Joint(tn)
+    def joints(displayRoot: ModelProxy[TMLoc]): Stream[TagMod] = {
+      val root = displayRoot().tree
+      val tagMods = root.cobind { tree: TM =>
+        tree.subForest.toTagMod { child => Joint(displayRoot, Some(tree), child) }
       }
-      val coll = mutable.MutableList[TagMod]()
-      jointsAcc(rtn, identity[TN], coll)
-      coll
+      val rootTag: TagMod = Joint(displayRoot, None, root)
+      rootTag +: tagMods.flatten reverse
     }
 
     def render(p: Props) = {
-      val root = p.model.zoom(_.tree)
-      val displayRoot = p.model.zoom(_.displayRoot)
+      val displayRoot = p.model.zoom(_.display)
+
       <.svg(
         ^.width := p.width.toString, //[BUG] https://github.com/japgolly/scalajs-react/issues/388
         ^.height:= p.height.toString,
         <.g(
           ^.transform := transform(p.left, p.top),
           breadcrums(displayRoot, p.top),
-          TagMod(joints(root): _*)
+          TagMod(joints(displayRoot): _*)
         )
       )
     }
@@ -87,7 +81,7 @@ object TreeGraph {
     .renderBackend[Backend]
     .componentDidMount { scope =>
       Callback {
-          val p = scope.props.model.zoom(_.tree)
+          val p = scope.props.model.zoom(_.root)
           p.dispatchCB(GoUpAction(p())).async.runNow()
       }
     }

@@ -1,7 +1,7 @@
 package b9.components.graph
 
 import b9._
-import b9.short.{TN, keyAttr}
+import b9.short.{TM, TMLoc, keyAttr}
 import diode.react.ModelProxy
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.HtmlAttrs.{onClick, onDoubleClick, onMouseOver}
@@ -9,150 +9,135 @@ import japgolly.scalajs.react.vdom.svg_<^._
 import meta.MetaAst
 import meta.MetaAst._
 
-import scala.scalajs.js
 import scalacss.ScalaCssReact._
 
 /**
   * Created by blu3gui7ar on 2017/5/25.
   */
 object Joint {
-  case class Props(n: ModelProxy[TN])
+  case class Props(proxy: ModelProxy[TMLoc], parent: Option[TM], current: TM)
 
   class Backend($: BackendScope[Props, Unit]) {
-    private val displayRootRO = ModelerCircuit.zoom(_.graph.displayRoot)
-    private val activeRO = ModelerCircuit.zoom(_.graph.activeNode)
-    private val editingRO = ModelerCircuit.zoom(_.graph.editingNode)
-    private val metaRO = ModelerCircuit.zoom(_.graph.meta)
+    private val displayRootRO = ModelerCircuit.zoom(_.graph.display)
+    private val activeRO = ModelerCircuit.zoom(_.graph.active)
+    private val editingRO = ModelerCircuit.zoom(_.graph.editing)
+    private val metaRO = ModelerCircuit.zoom(_.meta)
 
-    def click(pn: ModelProxy[TN])(e: ReactMouseEvent): Callback = {
+    def click(proxy: ModelProxy[TMLoc], target: TM)(e: ReactMouseEvent): Callback =
       if (e.altKey)
-        pn.dispatchCB(GoDownAction(pn()))
+        proxy.dispatchCB(GoDownAction(target))
       else
         Callback.empty
-    }
 
     def transform(x: Double, y: Double) = s"translate($x, $y)"
 
-    def isActive(tn: TN): Boolean = activeRO() eq tn
+    def isActive(tn: TM): Boolean = activeRO() eq tn
 
-    def isEditing(tn: TN): Boolean = editingRO() eq tn
+    def isEditing(tn: TM): Boolean = editingRO() eq tn
 
-    def isFolded(tn: TN): Boolean = tn.fold.getOrElse(false)
+    def isFolded(tn: TM): Boolean = tn.rootLabel.attach.fold
 
-    def isMoving(tn: TN): Boolean = tn.display != tn.nextDisplay
+    def isMoving(tn: TM): Boolean = tn.rootLabel.attach.display != tn.rootLabel.attach.nextDisplay
 
-    def canGoParent(tn: TN): Boolean = displayRootRO() eq tn
+    def canGoParent(tn: TM): Boolean = displayRootRO().tree eq tn
 
-    def canRemove(tn: TN): Boolean = isActive(tn)
+    def canRemove(tn: TM): Boolean = isActive(tn)
 
-    def canEdit(tn: TN): Boolean = true
+    def canEdit(tn: TM): Boolean = true
 
-    def creates(pn: ModelProxy[TN]): TagMod  = {
-      val node = pn()
+    def creates(proxy: ModelProxy[TMLoc], node: TM): TagMod  = {
       val metaRoot = metaRO()
       val types = MetaAst.types(metaRoot)
-      val macros = MetaAst.macros(metaRoot)
 
-      val children = node.data.toOption flatMap { tn =>
-        val meta = MetaAst.expand(tn.meta, macros)
+      val meta = node.rootLabel.meta
+
+      val children =
         if (meta.widget.isEmpty)
           meta.t flatMap {
             case TypeRef(t) => {
-              val cs = node.children.getOrElse(js.Array()) flatMap {
-                _.data.toOption map {
-                  _.name
-                }
-              }
+              val cs = node.subForest.map(_.rootLabel.name)
               types.get(t) map {
                 _.members collect {
-                  case Attr(name, adef) if !cs.contains(name) => (name, MetaAst.expand(adef, macros))
+                  case Attr(name, adef) if !cs.contains(name) => (name, adef)
                 }
               }
             }
             case ListRef(l) => Some(Seq(
-              (node.data.map(_.name).getOrElse("") + "[?]", meta.copy(t = Some(l)))
+              (node.rootLabel.name + "[?]", meta.copy(t = Some(l)))
             ))
             case MapRef(m) => Some(Seq(
-              (node.data.map(_.name).getOrElse("") + "[?]", meta.copy(t = Some(m)))
+              (node.rootLabel.name + "[?]", meta.copy(t = Some(m)))
             ))
             case _ => None
           }
         else None
-      }
 
       children.getOrElse(Seq.empty).zipWithIndex.toTagMod { case ((name, meta), idx) =>
-        CreateButton(name, 18 + 30 * idx, 10, true, pn.dispatchCB(CreateAction(pn(), name, meta)))
+        CreateButton(name, 18 + 30 * idx, 10, true, proxy.dispatchCB(CreateAction(node, name, meta)))
       }
     }
 
-    def hasParent(tn: TN): Boolean = (tn.parent.isDefined && tn.parent != null)
+    def parentBtn(proxy: ModelProxy[TMLoc], parent: TM): TagMod =
+       ParentButton(-41, -25, proxy.dispatchCB(GoUpAction(parent)))
 
-    def parentBtn(proxy: ModelProxy[TN]): TagMod = proxy().parent.toOption match {
-      case Some(null) => EmptyVdom
-      case Some(parent) => ParentButton(-41, -25, proxy.dispatchCB(GoUpAction(parent)))
-      case _ => EmptyVdom
-    }
+    def removeBtn(proxy: ModelProxy[TMLoc], current: TM, parent: TM): TagMod =
+      RemoveButton(-42, 10, proxy.dispatchCB(RemoveFromAction(current, parent)))
 
-    def removeBtn(proxy: ModelProxy[TN]): TagMod = proxy().parent.toOption match {
-      case Some(null) => EmptyVdom
-      case Some(parent) => RemoveButton(-42, 10, proxy.dispatchCB(RemoveFromAction(proxy(), parent)))
-      case _ => EmptyVdom
-    }
-
-    def link(rtn: TN): TagMod = rtn.parent.toOption match {
-      case Some(null) => EmptyVdom
-      case Some(parent) => Link(Path(
-          id = parent.id.getOrElse(0).toString + "-" + rtn.id.getOrElse(0).toString,
-          display = parent.display.getOrElse(true) && rtn.display.getOrElse(true),
-          moving = isMoving(rtn),
-          sx = parent.x.getOrElse(0),
-          sy = parent.y.getOrElse(0),
-          tx = rtn.x.getOrElse(0),
-          ty = rtn.y.getOrElse(0)
-        ))
-      case _ => EmptyVdom
+    def link(parent: TM, current: TM): TagMod = {
+      val pInfo = parent.rootLabel.attach
+      val cInfo = current.rootLabel.attach
+      Link(Path(
+        id = "%s-%s".format(parent.rootLabel.uuid, current.rootLabel.uuid),
+        display = pInfo.display && cInfo.display,
+        moving = isMoving(current),
+        sx = pInfo.x,
+        sy = pInfo.y,
+        tx = cInfo.x,
+        ty = cInfo.y
+      ))
     }
 
     def render(p: Props): VdomElement = {
-      val tn = p.n()
+      val tn = p.current
+      val parent = p.parent
+      val proxy = p.proxy
       <.g(
-        link(tn),
+        parent.map(link(_, p.current)).whenDefined,
         <.g(
           ModelerCss.joint,
           ModelerCss.jointActive.when(isActive(tn)),
           ModelerCss.jointEditing.when(isEditing(tn)),
           ModelerCss.jointFolded.when(isFolded(tn)),
-          ModelerCss.hidden.unless(tn.display.getOrElse(true)),
+          ModelerCss.hidden.unless(tn.rootLabel.attach.display),
           ModelerCss.moving.when(isMoving(tn)),
-//          keyAttr := tn.id.getOrElse(-1).toString,
-          keyAttr := tn.data.map(_.uuid.toString).getOrElse(""),
-          ^.transform := transform(tn.y.getOrElse(0.0), tn.x.getOrElse(0.0)),
-          onDoubleClick --> p.n.dispatchCB(FoldAction(tn)),
+          keyAttr := tn.rootLabel.uuid.toString,
+          ^.transform := transform(tn.rootLabel.attach.y, tn.rootLabel.attach.x),
+          onDoubleClick --> proxy.dispatchCB(FoldAction(tn)),
           <.circle(
             ^.r := 6,
-            (onMouseOver --> p.n.dispatchCB(ActiveAction(tn))).when(!isActive(tn)),
-            onClick ==> click(p.n)
+            (onMouseOver --> proxy.dispatchCB(ActiveAction(tn))).when(!isActive(tn)),
+            onClick ==> click(proxy, tn)
           ),
           <.text(
             ^.x := 15,
             ^.y := 3,
             ^.textAnchor := "start",
             onClick --> Callback.empty,
-            tn.data.map(_.name).getOrElse("unkonwn"): String
+            tn.rootLabel.name
           ),
-          parentBtn(p.n).when(canGoParent(tn)),
-          removeBtn(p.n),
-          EditButton(-12, 10, p.n.dispatchCB(EditAction(tn))).when(canEdit(tn)),
-          creates(p.n)
+          parent.map(parentBtn(proxy, _)).whenDefined.when(canGoParent(tn)),
+          parent.map(removeBtn(proxy, tn, _)).whenDefined,
+          EditButton(-12, 10, proxy.dispatchCB(EditAction(tn))).when(canEdit(tn)),
+          creates(proxy, tn)
         )
       )
     }
-  }
+}
 
 
   private val component = ScalaComponent.builder[Props]("Joint")
     .renderBackend[Backend]
     .build
 
-  def apply(tn: ModelProxy[TN]) = component(Props(tn))
+  def apply(proxy: ModelProxy[TMLoc], parent: Option[TM], current: TM) = component(Props(proxy, parent, current))
 }

@@ -4,6 +4,7 @@ import meta.TreeNode
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.ScalaJSDefined
+import scalaz.{Tree, TreeLoc}
 
 /**
   * Created by blu3gui7ar on 2017/6/23.
@@ -21,12 +22,23 @@ package object b9 {
       var diffDescendants: js.UndefOr[Int] = js.native
     }
 
-    type TN = IdNode[TreeNode]
+    class TreeAttach (
+      var x: Double = 0,
+      var y: Double = 0,
+      var fold: Boolean = false,
+      var display: Boolean = true,
+      var nextDisplay: Boolean = true
+    )
+
+    type TM = Tree[TreeNode[TreeAttach]]
+    type TMLoc = TreeLoc[TreeNode[TreeAttach]]
+    type TN = IdNode[TM]
     type LN = facades.d3js.Link[TN]
     type ZoomFunc = TN => TN
 
-    @ScalaJSDefined
-    class RealNode(val data: TreeNode, val parent: TN, val x: js.UndefOr[Double], val y: js.UndefOr[Double],
+
+
+    class RealNode(val data: TreeNode[TreeAttach], val parent: TN, val x: js.UndefOr[Double], val y: js.UndefOr[Double],
                    val id: js.UndefOr[Int]) extends js.Object
 
 

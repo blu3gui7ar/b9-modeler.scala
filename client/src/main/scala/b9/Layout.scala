@@ -1,8 +1,9 @@
 package b9
 
-import b9.short.{IdNode, TN}
+import b9.short.{IdNode, TM}
 import facades.d3js.Hierarchy
 
+import scala.annotation.tailrec
 import scala.scalajs.js
 
 /**
@@ -36,23 +37,23 @@ object Layout {
   def gather[N](node: IdNode[N]): IdNode[N] =
     gather(node, (width - left - right) / 2 + left, (height - top - bottom) / 2 + top)()
 
-  def compact[N](treeRoot: IdNode[N], displayRoot: IdNode[N])(f: IdNode[N] => Boolean = { n: IdNode[N] => n.display.getOrElse(true) }): IdNode[N] =
-    treeRoot.eachBefore { n: IdNode[N] =>
-      if (!f(n)) {
-        val parent = n.parent.getOrElse(displayRoot)
-        if (parent != null) {
-          n.x = parent.x
-          n.y = parent.y
-        } else {
-          n.x = displayRoot.x
-          n.y = displayRoot.y
-        }
-      }
+  def compact(treeRoot: TM, displayRoot: TM)(f: TM => Boolean = { n: TM => n.rootLabel.attach.display }): TM = {
+    if(treeRoot != displayRoot) {
+      treeRoot.rootLabel.attach.x = displayRoot.rootLabel.attach.x
+      treeRoot.rootLabel.attach.y = displayRoot.rootLabel.attach.y
     }
+    traverse(treeRoot, { (parent: TM, child: TM) =>
+      if (!f(child)) {
+        child.rootLabel.attach.x = parent.rootLabel.attach.x
+        child.rootLabel.attach.y = parent.rootLabel.attach.y
+      }
+    })
+    treeRoot
+  }
 
-  def relocate(node: TN): TN = {
+  def relocate[N](node: IdNode[N]): IdNode[N] = {
     //rebuild depth
-    val dn = node.eachBefore { n: TN =>
+    val dn = node.eachBefore { n: IdNode[N] =>
       n.depth = n.parent.toOption match {
         case Some(null) => 0
         case Some(parent) => if (n == node) 0 else parent.depth.getOrElse(0) + 1
@@ -71,33 +72,40 @@ object Layout {
     //    }
   }
 
-  def applyDisplay(treeRoot: TN) = {
-    treeRoot.eachBefore { n: TN =>
-      n.display = n.nextDisplay
+  def applyDisplay(treeRoot: TM) =
+    traverse(treeRoot, { (parent, _) =>
+      parent.rootLabel.attach.display = parent.rootLabel.attach.nextDisplay
+    })
+
+  protected def traverse(node: TM, f: (TM, TM) => Unit): Unit =
+    node.subForest.foreach { child: TM =>
+      f(node, child)
+      traverse(child, f)
     }
+
+  def redisplay(treeRoot: TM, displayRoot: TM): TM = {
+    treeRoot.rootLabel.attach.nextDisplay = (treeRoot == displayRoot)
+    traverse(treeRoot, { (parent: TM, child: TM) =>
+      child.rootLabel.attach.nextDisplay = (child == displayRoot) ||
+        ( parent.rootLabel.attach.nextDisplay && !parent.rootLabel.attach.fold )
+    })
+    treeRoot
   }
 
-  def redisplay(treeRoot: TN, displayRoot: TN): TN = treeRoot.eachBefore { n: TN =>
-    n.nextDisplay = (n == displayRoot) ||
-      (n.parent.toOption match {
-        case Some(null) => false
-        case None => false
-        case Some(parent) => parent.nextDisplay.getOrElse(false) && !parent.fold.getOrElse(false)
-      })
-  }
-
-  def rehierarchy(treeRoot: TN, displayRoot: TN, displayCheck: (TN) => Boolean = {_.display.getOrElse(true)}): TN = {
-    val empty = js.Array[TN]()
-    val rhroot = Hierarchy.hierarchy[TN, IdNode[TN]](displayRoot,
-      { n =>
-        if (n.fold.getOrElse(false)) empty else n.children.getOrElse(empty).filter(displayCheck)
-      }: js.Function1[TN, js.Array[TN]]
+  def rehierarchy(treeRoot: TM, displayRoot: TM, displayCheck: TM => Boolean = _.rootLabel.attach.display): TM = {
+    import js.JSConverters._
+    val empty = js.Array[TM]()
+    val rhroot = Hierarchy.hierarchy[TM, IdNode[TM]](displayRoot,
+      { n: TM =>
+        if (n.rootLabel.attach.fold) empty
+        else n.subForest.filter(displayCheck).toJSArray
+      }: js.Function1[TM, js.Array[TM]]
     )
-    (apply(rhroot) eachBefore { n: IdNode[TN] =>
+    (apply(rhroot) eachBefore { n: IdNode[TM] =>
       n.data.toOption match {
         case Some(rn) => {
-          rn.x = n.x
-          rn.y = n.y
+          rn.rootLabel.attach.x = n.x.getOrElse(0.0)
+          rn.rootLabel.attach.y = n.y.getOrElse(0.0)
         }
         case _ =>
       }

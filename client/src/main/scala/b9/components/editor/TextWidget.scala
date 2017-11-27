@@ -1,7 +1,7 @@
 package b9.components.editor
 
 import b9.ValueSetAction
-import b9.short.TN
+import b9.short.TM
 import diode.react.ModelProxy
 import japgolly.scalajs.react.vdom.HtmlAttrs.onChange
 import japgolly.scalajs.react.vdom.TagMod
@@ -13,13 +13,13 @@ import upickle.Js
 object TextWidget extends Widget with ReactEventTypes {
   val name = "Text"
 
-  def onTextChange(mp: ModelProxy[TN], ref: String)(e: ReactEventFromInput): Callback =
+  def onTextChange(mp: ModelProxy[TM], ref: String)(e: ReactEventFromInput): Callback =
     mp.dispatchCB(ValueSetAction(mp(), ref, Js.Str(e.target.value)))
 
-  def onNumChange(mp: ModelProxy[TN], ref: String)(e: ReactEventFromInput): Callback =
+  def onNumChange(mp: ModelProxy[TM], ref: String)(e: ReactEventFromInput): Callback =
     mp.dispatchCB(ValueSetAction(mp(), ref, Js.Num(e.target.value.toDouble)))
 
-  def render(ref: String, meta: AttrDef, value: Js.Value, mp: ModelProxy[TN]): TagMod = value match {
+  def render(ref: String, meta: AttrDef, value: Js.Value, mp: ModelProxy[TM]): TagMod = value match {
     case n: Js.Num => <.input(
       ^.name := ref,
       ^.defaultValue := n.num.toString,

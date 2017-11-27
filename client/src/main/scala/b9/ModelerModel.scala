@@ -1,6 +1,6 @@
 package b9
 
-import b9.short.TN
+import b9.short.{TM, TMLoc, TN}
 import diode.Action
 import meta.MetaAst
 import meta.MetaAst.AttrDef
@@ -10,27 +10,30 @@ import upickle.Js
   * Created by blu3gui7ar on 2017/5/23.
   */
 case class GraphState(
-                       meta: MetaAst.Root,
-                       tree: TN,
-                       displayRoot: TN,
-                       relocateSource: TN,
-                       activeNode: TN,
-                       editingNode: TN
+                       root: TM,
+                       display: TMLoc,
+                       active: TM,
+                       editing: TM,
                      )
-case class State(graph: GraphState)
+
+case class ModelerState(
+                         meta: MetaAst.Root,
+                         editor: TM,
+                         graph: GraphState,
+                       )
 
 
-case class FlushDisplayAction(node: TN) extends Action
-case class FlushHierarchyAction(node: TN) extends Action
-case class GoUpAction(node: TN) extends Action
-case class GoDownAction(node: TN) extends Action
-case class RemoveFromAction(node: TN, parent: TN) extends Action
-case class FlushRemoveFromAction(node: TN, parent: TN) extends Action
-case class EditAction(node: TN) extends Action
-case class FoldAction(node: TN) extends Action
-case class ActiveAction(node: TN) extends Action
-case class CreateAction(node: TN, name: String, meta: AttrDef) extends Action
+case class FlushDisplayAction(node: TM) extends Action
+case class FlushHierarchyAction(nodeLoc: TMLoc) extends Action
+case class GoUpAction(node: TM) extends Action
+case class GoDownAction(node: TM) extends Action
+case class RemoveFromAction(node: TM, parent: TM) extends Action
+case class FlushRemoveFromAction(node: TM, parent: TM) extends Action
+case class EditAction(node: TM) extends Action
+case class FoldAction(node: TM) extends Action
+case class ActiveAction(node: TM) extends Action
+case class CreateAction(node: TM, name: String, meta: AttrDef) extends Action
 
-case class ValueSetAction(node: TN, ref: String, value: Js.Value) extends Action
-case class ValueAddAction(node: TN, ref: String, value: Js.Value) extends Action
-case class ValueDelAction(node: TN, ref: String, value: Js.Value) extends Action
+case class ValueSetAction(node: TM, ref: String, value: Js.Value) extends Action
+case class ValueAddAction(node: TM, ref: String, value: Js.Value) extends Action
+case class ValueDelAction(node: TM, ref: String, value: Js.Value) extends Action

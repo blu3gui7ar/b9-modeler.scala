@@ -1,6 +1,6 @@
 package b9.components.editor
 
-import b9.short.TN
+import b9.short.{TM, TN}
 import b9.{GraphState, ValueSetAction}
 import diode.react.ModelProxy
 import japgolly.scalajs.react.ReactEventTypes
@@ -13,7 +13,7 @@ import upickle.Js
 object SelectWidget extends Widget with ReactEventTypes {
   val name = "Select"
 
-  override def render(ref: String, meta: AttrDef, value: Js.Value, mp: ModelProxy[TN]): TagMod = {
+  override def render(ref: String, meta: AttrDef, value: Js.Value, mp: ModelProxy[TM]): TagMod = {
     val subs = meta.values map { choices =>
       choices map { choice =>
         <.option(

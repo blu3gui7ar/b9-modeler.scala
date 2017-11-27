@@ -1,90 +1,68 @@
 package b9
 
-import b9.short.TN
+import b9.short.TM
 import meta.MetaAst._
 
 /**
   * Created by blu3gui7ar on 2017/6/1.
   */
 trait JsonExpr {
-  def json(value: Option[TN]): Option[String]
+  def json(value: Option[TM]): Option[String]
 }
 
 object JsonExpr {
 
   implicit class ReferenceToJsonExpr(ref: Reference)(implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]) extends JsonExpr {
-    def json(value: Option[TN]): Option[String] = ref match {
+    def json(value: Option[TM]): Option[String] = ref match {
       case t: TypeRef => types.get(t.name) flatMap {
         _.json(value)
       }
       case l: ListRef => value flatMap { v =>
-        v.children.toOption match {
-          case Some(null) => None
-          case Some(children) => {
-            val subJsons = children flatMap { child =>
-              l.ref.json(Some(child))
-            }
-            if (subJsons.nonEmpty) Some("[" + subJsons.mkString(", ") + "]") else None
-          }
-          case _ => None
+        val subJsons = v.subForest flatMap { child =>
+          l.ref.json(Some(child))
         }
+        Some("[" + subJsons.mkString(", ") + "]")
       }
       case m: MapRef => value flatMap { v =>
-        v.children.toOption match {
-          case Some(null) => None
-          case Some(children) => {
-            val subJsons = children flatMap { child =>
-              m.ref.json(Some(child)) flatMap { subJson =>
-                child.data.toOption map { tn =>
-                  s""""${tn.name}": $subJson"""
-                }
-              }
-            }
-            if (subJsons.nonEmpty) Some("{" + subJsons.mkString(", ") + "}") else None
+        val subJsons = v.subForest flatMap { child =>
+          m.ref.json(Some(child)) map { subJson =>
+              s""""${child.rootLabel.name}": $subJson"""
           }
-          case _ => None
         }
+        Some("{" + subJsons.mkString(", ") + "}")
       }
     }
   }
 
   implicit class AttrToJsonExpr(attr: Attr)(implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]) extends JsonExpr {
-    def json(value: Option[TN]): Option[String] = value flatMap { v =>
-      val expanded = expand(attr.definition, macros)
-      if(expanded.widget.isDefined) {
-        v.data.toOption.map(_.value.toString)
+    def json(value: Option[TM]): Option[String] = value flatMap { v: TM =>
+      val expandedAttrDef = expand(attr.definition, macros)
+      if(expandedAttrDef.widget.isDefined) {
+        Some(v.rootLabel.value.toString)
       } else
-        expanded.t flatMap { t =>
+        expandedAttrDef.t flatMap { t =>
           t.json(value) map { v => s""""${attr.name}": $v""" }
         }
     }
   }
 
   implicit class AstNodeWithMembersToJsonExpr(t: AstNodeWithMembers)(implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]) extends JsonExpr {
-    def json(value: Option[TN]): Option[String] = value flatMap { v =>
+    def json(value: Option[TM]): Option[String] = value map { v: TM =>
       val attrs: Map[String, Attr] = t.members.filter(_.isInstanceOf[Attr]).map { a =>
         val attr = a.asInstanceOf[Attr]
         (attr.name -> attr)
       }(collection.breakOut)
 
       if (attrs.isEmpty) {
-        v.data.toOption map { _.value.toString }
+        v.rootLabel.value.toString
       } else {
-        v.children.toOption match {
-          case Some(null) => None
-          case Some(children) => {
-            val subJsons = children flatMap { child =>
-              child.data.toOption flatMap { tn =>
-                val attr = attrs.get(tn.name)
-                attr flatMap {
-                  _.json(Some(child))
-                }
-              }
-            }
-            if (subJsons.nonEmpty) Some("{" + subJsons.mkString(", ") + "}") else None
+        val subJsons = v.subForest flatMap { child =>
+          val attr = attrs.get(child.rootLabel.name)
+          attr flatMap {
+            _.json(Some(child))
           }
-          case _ => None
         }
+        "{" + subJsons.mkString(", ") + "}"
       }
     }
   }

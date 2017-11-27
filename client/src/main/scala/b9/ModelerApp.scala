@@ -10,14 +10,14 @@ import shared.Apps
 
 import scala.scalajs.js
 
-object ModelerApp extends js.JSApp {
+object ModelerApp {
   def require(): Unit = {
     WebpackRequire.React
     WebpackRequire.ReactDOM
     ()
   }
 
-  def main(): Unit = {
+  def main(args: Array[String]): Unit = {
     require()
     ModelerCss.addToDocument()
     init(
@@ -36,7 +36,7 @@ object ModelerApp extends js.JSApp {
     //    val dc = ModelerCircuit.wrap(_.graph)(TreeGraph(_, 700, 500))
     //    dc.renderIntoDOM(ele)
 
-    modelerConnection(p => Editor(p.zoom(_.displayRoot)))
-      .renderIntoDOM(editorEle)
+//    modelerConnection(p => Editor(p.zoom(_.displayRoot)))
+//      .renderIntoDOM(editorEle)
   }
 }

@@ -103,23 +103,23 @@ object Sample {
       |}
     """.stripMargin
 
-  def tree(): (Root, TreeNode, Js.Value) = {
-    val ds = new MetaSource(meta)
-    import ds._
-//    println(ds.meta)
+//  def tree(): (Root, TreeNode, Js.Value) = {
+//    val ds = new MetaSource(meta)
+//    import ds._
+////    println(ds.meta)
+//
+//    val dataJs = upickle.json.read(data)
+//    import TreeExtractor._
+//    val tree = ds.meta.tree("meta", Some(dataJs), RootAttrDef)
+////    println(tree)
+//
+//    (ds.meta, tree.getOrElse(TreeExtractor.emptyTree), dataJs)
+//  }
 
-    val dataJs = upickle.json.read(data)
-    import TreeExtractor._
-    val tree = ds.meta.tree("meta", Some(dataJs), RootAttrDef)
-//    println(tree)
-
-    (ds.meta, tree.getOrElse(TreeExtractor.emptyTree), dataJs)
-  }
-
-  def main(args: Array[String]): Unit = {
-    tree() match { case(_meta, _data, _) =>
-      println(_meta)
-      println(_data)
-    }
-  }
+//  def main(args: Array[String]): Unit = {
+//    tree() match { case(_meta, _data, _) =>
+//      println(_meta)
+//      println(_data)
+//    }
+//  }
 }

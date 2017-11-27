@@ -15,7 +15,9 @@ object MetaAst {
 
   case class Attr(name: String, definition: AttrDef) extends AstNode
   case class AttrDef(m: Option[MacroRef], t: Option[Reference], widget: Option[Widget],
-                     values: Option[Seq[Value]], restricts: Option[Seq[Restrict]]) extends AstNode
+                     values: Option[Seq[Value]], restricts: Option[Seq[Restrict]]) extends AstNode {
+    def isLeaf: Boolean = widget.isDefined
+  }
 
   case class Macro(name: String, definition: AttrDef) extends AstNode
   case class Type(override val name: String, override val members: Seq[AstNode]) extends AstNodeWithMembers(name, members)

@@ -30,15 +30,16 @@ object TreeGraph {
 
     def breadcrums(displayRoot: ModelProxy[TMLoc], top: Int): TagMod = {
       val dp = displayRoot()
+
       val parents: Stream[TMLoc] =  {
         def loop(loc: Option[TMLoc]): Stream[TMLoc] = loc match {
-          case Some(l) => loop(l.parent)
+          case Some(l) => l +: loop(l.parent)
           case _ => Stream.empty
         }
         loop(Some(dp))
       }
 
-      val levels = parents.toTagMod { loc =>
+      val levels = parents.reverse.toTagMod { loc =>
         BreadCrum(
           loc.tree.rootLabel.name + "> ",
           displayRoot.dispatchCB(GoUpAction(loc.tree))
@@ -53,25 +54,24 @@ object TreeGraph {
       )
     }
 
-    def joints(displayRoot: ModelProxy[TMLoc]): Stream[TagMod] = {
-      val root = displayRoot().tree
+    def joints(proxy: ModelProxy[TMLoc], root: TM): Stream[TagMod] = {
       val tagMods = root.cobind { tree: TM =>
-        tree.subForest.toTagMod { child => Joint(displayRoot, Some(tree), child) }
+        tree.subForest.toTagMod { child => Joint(proxy, Some(tree), child) }
       }
-      val rootTag: TagMod = Joint(displayRoot, None, root)
+      val rootTag: TagMod = Joint(proxy, None, root)
       rootTag +: tagMods.flatten reverse
     }
 
     def render(p: Props) = {
       val displayRoot = p.model.zoom(_.display)
-
+      val treeRoot = p.model.zoom(_.root)
       <.svg(
         ^.width := p.width.toString, //[BUG] https://github.com/japgolly/scalajs-react/issues/388
         ^.height:= p.height.toString,
         <.g(
           ^.transform := transform(p.left, p.top),
           breadcrums(displayRoot, p.top),
-          TagMod(joints(displayRoot): _*)
+          TagMod(joints(displayRoot, treeRoot()): _*)
         )
       )
     }

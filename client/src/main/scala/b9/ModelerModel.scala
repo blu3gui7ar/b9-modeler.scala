@@ -24,7 +24,7 @@ case class ModelerState(
 
 
 case class FlushDisplayAction(node: TM) extends Action
-case class FlushHierarchyAction(nodeLoc: TMLoc) extends Action
+case class FlushHierarchyAction() extends Action
 case class GoUpAction(node: TM) extends Action
 case class GoDownAction(node: TM) extends Action
 case class RemoveFromAction(node: TM, parent: TM) extends Action

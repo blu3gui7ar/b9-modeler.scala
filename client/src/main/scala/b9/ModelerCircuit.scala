@@ -12,6 +12,7 @@ import scala.annotation.tailrec
 import scala.concurrent.Promise
 import scala.scalajs.js
 import scala.scalajs.js.timers._
+import scalaz.Tree.Node
 
 /**
   * Created by blu3gui7ar on 2017/6/24.
@@ -19,6 +20,8 @@ import scala.scalajs.js.timers._
 object ModelerCircuit extends Circuit[ModelerState] with ReactConnector[ModelerState] {
 
   import scala.concurrent.ExecutionContext.Implicits.global
+
+  protected lazy val treeExtractor = new TreeExtractorTpl[TreeAttach](new TreeAttach())
 
   def actionEffect(action: Action, timeout: Int = 0) = Effect {
     val p = Promise[Action]()
@@ -52,7 +55,6 @@ object ModelerCircuit extends Circuit[ModelerState] with ReactConnector[ModelerS
     import ds._
 
     val dataJs = upickle.json.read(Sample.data)
-    val treeExtractor = new TreeExtractorTpl[TreeAttach](new TreeAttach())
     import treeExtractor._
     val tree = ds.meta.tree("meta", Some(dataJs), RootAttrDef).getOrElse(emptyTree)
 //    println(tree.drawTree)
@@ -74,163 +76,200 @@ object ModelerCircuit extends Circuit[ModelerState] with ReactConnector[ModelerS
     val editRW = modelRW.zoomTo(_.graph.editing)
     val activeRW = modelRW.zoomTo(_.graph.active)
 
+    @tailrec
+    private def findParent(loc: TMLoc, target: TM): TMLoc =
+      if(loc.tree.rootLabel eq target.rootLabel) loc
+      else
+        loc.parent match {
+          case Some(parent) => findParent(parent, target)
+          case _ => loc
+        }
+
     override def handle = {
       case GoUpAction(node) => {
         val tree = treeRW()
         val currentDp = displayRW()
 
-        @tailrec
-        def findParent(loc: TMLoc, target: TM): TMLoc =
-          if((loc.tree eq target) || (loc.tree eq tree))
-            loc
-          else
-            findParent(loc, target)
-
         val newDp = findParent(currentDp, node)
 
-        ModelUpdateEffect( displayRW.updated {
+        ModelUpdateEffect(
+          displayRW.updated {
             redisplay(tree, node)
             applyDisplay(tree)
             newDp
           },
-          actionEffect(FlushHierarchyAction(newDp))
+          actionEffect(FlushHierarchyAction())
         )
       }
-//      case FlushDisplayAction(node) => {
-//        val tree = treeRW()
-//        ModelUpdate(displayRW.updated {
-//          applyDisplay(tree)
-//          node
-//        })
-//      }
-      case FlushHierarchyAction(nodeLoc) => {
+      case FlushHierarchyAction() => {
         val tree = treeRW()
-        val display = displayRW()
+        val currentDp = displayRW()
         ModelUpdate(displayRW.updated {
-          rehierarchy(tree, display.tree)
-          compact(tree, display.tree)(_.rootLabel.attach.display)
-          nodeLoc
+          rehierarchy(currentDp.tree)
+          compact(tree, currentDp.tree)(_.rootLabel.attach.display)
+          currentDp
         })
       }
-//      case GoDownAction(node) => {
-//        val tree = treeRW()
-//        ModelUpdateEffect(treeRW.updated {
-//            redisplay(tree, node)
-//            rehierarchy(tree, node)
-//            compact(tree, node)(_.nextDisplay.getOrElse(true))
-//            tree
-//          },
-//          actionEffect(FlushDisplayAction(node), ModelerCss.delay)
-//        )
-//      }
-//      case FoldAction(node) => {
-//        if (node.children.map(_.nonEmpty).getOrElse(false)) {
-//          //TODO: direct update is not right
-//          val fold = !node.fold.getOrElse(false)
-//          node.fold = fold
-//          val tree = treeRW()
-//          val display = displayRW()
-//          if (fold)
-//            ModelUpdateEffect(displayRW.updated {
-//                redisplay(tree, display)
-//                rehierarchy(tree, display)
-//                compact(tree, display)(_.nextDisplay.getOrElse(true))
-//                display
-//              },
-//              actionEffect(FlushDisplayAction(display), ModelerCss.delay)
-//            )
-//          else
-//            ModelUpdateEffect( displayRW.updated {
-//                redisplay(tree, display)
-//                applyDisplay(tree)
-//              },
-//              actionEffect(FlushHierarchyAction(display))
-//            )
-//        } else NoChange
-//      }
-//      case EditAction(node) => {
-//        if (editRW() ne node)
-//          ModelUpdate(editRW.updated(node))
-//        else NoChange
-//      }
+      case GoDownAction(node) => {
+        val tree = treeRW()
+        val currentDp = displayRW()
+
+        ModelUpdateEffect(displayRW.updated {
+          redisplay(tree, node)
+          rehierarchy(node)
+          compact(tree, node)(_.rootLabel.attach.nextDisplay)
+          currentDp
+        },
+          actionEffect(FlushDisplayAction(node), ModelerCss.delay)
+        )
+      }
+      case FlushDisplayAction(node) => {
+        val tree = treeRW()
+        val currentDp = displayRW()
+        currentDp.find { loc =>
+          loc.tree.rootLabel eq node.rootLabel
+        } map { newDp =>
+          ModelUpdate(displayRW.updated {
+            applyDisplay(tree)
+            newDp
+          })
+        } getOrElse(NoChange)
+      }
+      case FoldAction(node) => {
+        if (node.subForest.nonEmpty) {
+          //TODO: direct update is not right
+          val fold = !node.rootLabel.attach.fold
+          node.rootLabel.attach.fold = fold
+          val tree = treeRW()
+          val display = displayRW().tree
+          if (fold)
+            ModelUpdateEffect(displayRW.updated {
+                redisplay(tree, display)
+                rehierarchy(display)
+                compact(tree, display)(_.rootLabel.attach.nextDisplay)
+                displayRW()
+              },
+              actionEffect(FlushDisplayAction(display), ModelerCss.delay)
+            )
+          else
+            ModelUpdateEffect( displayRW.updated {
+                redisplay(tree, display)
+                applyDisplay(tree)
+                displayRW()
+              },
+              actionEffect(FlushHierarchyAction())
+            )
+        } else NoChange
+      }
+      case EditAction(node) => {
+        if (editRW() ne node)
+          ModelUpdate(editRW.updated(node))
+        else NoChange
+      }
       case ActiveAction(node) => {
         if (activeRW() ne node)
           ModelUpdate(activeRW.updated(node))
         else NoChange
       }
-//      case CreateAction(node, name, meta) =>  {
-//        //TODO: direct update is not right
-//        val newTN = TreeExtractor.create(name, Seq.empty, meta)
-//        val newChild = new RealNode(newTN, node, node.x, node.y, Idx.next()).asInstanceOf[TN]
-//        import js.JSConverters._
-//        if (node.children.isDefined) {
-//          node.children.get += newChild
-//        } else {
-//          node.children = Seq(newChild).toJSArray
-//        }
-//        val display = displayRW()
-//        val tree = treeRW()
-//        ModelUpdateEffect(displayRW.updated {
-//            redisplay(tree, display)
-//            applyDisplay(tree)
-//          },
-//          actionEffect(FlushHierarchyAction(display))
-//        )
-//      }
-//      case RemoveFromAction(node, parent) => {
-//        val display = displayRW()
-//        val tree = treeRW()
-//        ModelUpdateEffect( displayRW.updated {
-//            node.fold = true
-//            redisplay(tree, display)
-//            node.nextDisplay = false
-//            rehierarchy(tree, display, {_.nextDisplay.getOrElse(true)})
-//            compact(tree, display)(_.nextDisplay.getOrElse(true))
-//            display
-//          },
-//          actionEffect(FlushRemoveFromAction(node, parent), ModelerCss.delay)
-//        )
-//      }
-//      case FlushRemoveFromAction(node, parent) => {
-//        val display = displayRW()
-//        ModelUpdate( displayRW.updated {
-//            if (parent.children.isDefined) {
-//              parent.children.get -= node
-//            }
-//            display
-//          }
-//        )
-//      }
-//      case ValueSetAction(node, ref, value) => {
-//        //TODO: direct update is not right
-//        node.data = node.data.map(_.copy(value = value))
-//        printTree()
-//        ModelUpdate(displayRW.updated(displayRW()))
-//      }
-//      case ValueAddAction(node, ref, value) => {
-//        //TODO: direct update is not right
-//        node.data = node.data.map { data =>
-//          val newValue: Seq[Js.Value] = data.value match {
-//            case arr: Js.Arr => value +: arr.value
-//            case _ => Seq.empty
-//          }
-//          data.copy(value = Js.Arr(newValue: _*))
-//        }
-//        printTree()
-//        ModelUpdate(displayRW.updated(displayRW()))
-//      }
-//      case ValueDelAction(node, ref, value) => {
-//        //TODO: direct update is not right
-//        node.data = node.data.map { data =>
-//          val newValue: Seq[Js.Value] = data.value match {
-//            case arr: Js.Arr => arr.value.filter(_ != value)
-//            case _ => Seq.empty
-//          }
-//          data.copy(value = Js.Arr(newValue: _*))
-//        }
-//        printTree()
-//        ModelUpdate(displayRW.updated(displayRW()))
-//      }
+      case CreateAction(node, name, meta) =>  {
+        val graphRW = modelRW.zoomTo(_.graph)
+        val display = displayRW()
+        display.find(loc => loc.tree.rootLabel eq node.rootLabel) map { loc =>
+          val newTN = treeExtractor.create(name, Stream.empty, meta)
+          newTN.rootLabel.attach.x = loc.tree.rootLabel.attach.x
+          newTN.rootLabel.attach.y = loc.tree.rootLabel.attach.y
+          loc.modifyTree { case Node(rootLabel, subForest) => Node(rootLabel, subForest :+ newTN) }
+        } map {
+          findParent(_, display.tree)
+        } map { newDisplay =>
+          val newRoot = newDisplay.root.tree
+          ModelUpdateEffect(graphRW.updated {
+            redisplay(newRoot, newDisplay.tree)
+            applyDisplay(newRoot)
+            graphRW().copy(root = newDisplay.root.tree, display = newDisplay)
+          },
+            actionEffect(FlushHierarchyAction())
+          )
+        } getOrElse(NoChange)
+      }
+      case RemoveFromAction(node, parent) => {
+        val display = displayRW()
+        val tree = treeRW()
+        ModelUpdateEffect( displayRW.updated {
+            node.rootLabel.attach.fold = true
+            redisplay(tree, display.tree)
+            node.rootLabel.attach.nextDisplay = false
+            rehierarchy(display.tree, _.rootLabel.attach.nextDisplay)
+            compact(tree, display.tree)(_.rootLabel.attach.nextDisplay)
+            display
+          },
+          actionEffect(FlushRemoveFromAction(node, parent), ModelerCss.delay)
+        )
+      }
+      case FlushRemoveFromAction(node, parent) => {
+        val graphRW = modelRW.zoomTo(_.graph)
+        val display = displayRW()
+        display.find(_.tree.rootLabel eq parent.rootLabel) map { loc =>
+          loc.modifyTree { case Node(rootLabel, subForest) =>
+            Node(rootLabel, subForest.filter(_.rootLabel ne node.rootLabel))
+          }
+        } map { pLoc =>
+          ModelUpdate( graphRW.updated {
+            val newDp = findParent(pLoc, display.tree)
+            graphRW().copy(root = newDp.root.tree, display = newDp)
+          })
+        } getOrElse(NoChange)
+      }
+      case ValueSetAction(node, ref, value) => {
+        val graphRW = modelRW.zoomTo(_.graph)
+        val display = displayRW()
+        display.find(_.tree.rootLabel eq node.rootLabel) map { loc =>
+          loc.modifyTree { case Node(rootLabel, subForest) =>
+              Node(rootLabel.copy(value = value), subForest)
+          }
+        } map { newNodeLoc =>
+          ModelUpdate(graphRW.updated {
+            val newDp = findParent(newNodeLoc, display.tree)
+            graphRW().copy(root = newDp.root.tree, display = newDp)
+          })
+        } getOrElse(NoChange)
+      }
+      case ValueAddAction(node, ref, value) => {
+        val graphRW = modelRW.zoomTo(_.graph)
+        val display = displayRW()
+        display.find(_.tree.rootLabel eq node.rootLabel) map { loc =>
+          loc.modifyTree { case Node(rootLabel, subForest) =>
+            val newV: Seq[Js.Value] = rootLabel.value match {
+              case arr: Js.Arr => value +: arr.value
+              case _ => Seq.empty
+            }
+            Node(rootLabel.copy(value = Js.Arr(newV: _*)), subForest)
+          }
+        } map { newNodeLoc =>
+          ModelUpdate(graphRW.updated {
+            val newDp = findParent(newNodeLoc, display.tree)
+            graphRW().copy(root = newDp.root.tree, display = newDp)
+          })
+        } getOrElse(NoChange)
+      }
+      case ValueDelAction(node, ref, value) => {
+        val graphRW = modelRW.zoomTo(_.graph)
+        val display = displayRW()
+        display.find(_.tree.rootLabel eq node.rootLabel) map { loc =>
+          loc.modifyTree { case Node(rootLabel, subForest) =>
+            val newV: Seq[Js.Value] = rootLabel.value match {
+              case arr: Js.Arr => arr.value.filter(_ != value)
+              case _ => Seq.empty
+            }
+            Node(rootLabel.copy(value = Js.Arr(newV: _*)), subForest)
+          }
+        } map { newNodeLoc =>
+          ModelUpdate(graphRW.updated {
+            val newDp = findParent(newNodeLoc, display.tree)
+            graphRW().copy(root = newDp.root.tree, display = newDp)
+          })
+        } getOrElse(NoChange)
+      }
     }
 
 //    private def printTree(): Unit = {

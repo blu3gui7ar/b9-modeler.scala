@@ -38,7 +38,7 @@ object Layout {
     gather(node, (width - left - right) / 2 + left, (height - top - bottom) / 2 + top)()
 
   def compact(treeRoot: TM, displayRoot: TM)(f: TM => Boolean = { n: TM => n.rootLabel.attach.display }): TM = {
-    if(treeRoot != displayRoot) {
+    if(!f(treeRoot)) {
       treeRoot.rootLabel.attach.x = displayRoot.rootLabel.attach.x
       treeRoot.rootLabel.attach.y = displayRoot.rootLabel.attach.y
     }
@@ -72,10 +72,12 @@ object Layout {
     //    }
   }
 
-  def applyDisplay(treeRoot: TM) =
-    traverse(treeRoot, { (parent, _) =>
-      parent.rootLabel.attach.display = parent.rootLabel.attach.nextDisplay
+  def applyDisplay(treeRoot: TM) = {
+    treeRoot.rootLabel.attach.display = treeRoot.rootLabel.attach.nextDisplay
+    traverse(treeRoot, { (_, child) =>
+      child.rootLabel.attach.display = child.rootLabel.attach.nextDisplay
     })
+  }
 
   protected def traverse(node: TM, f: (TM, TM) => Unit): Unit =
     node.subForest.foreach { child: TM =>
@@ -83,16 +85,18 @@ object Layout {
       traverse(child, f)
     }
 
+  protected def eq(a: TM, b: TM): Boolean = a.rootLabel eq b.rootLabel
+
   def redisplay(treeRoot: TM, displayRoot: TM): TM = {
-    treeRoot.rootLabel.attach.nextDisplay = (treeRoot == displayRoot)
+    treeRoot.rootLabel.attach.nextDisplay = eq(treeRoot, displayRoot)
     traverse(treeRoot, { (parent: TM, child: TM) =>
-      child.rootLabel.attach.nextDisplay = (child == displayRoot) ||
-        ( parent.rootLabel.attach.nextDisplay && !parent.rootLabel.attach.fold )
+      child.rootLabel.attach.nextDisplay = eq(child, displayRoot) ||
+        (parent.rootLabel.attach.nextDisplay && !parent.rootLabel.attach.fold )
     })
     treeRoot
   }
 
-  def rehierarchy(treeRoot: TM, displayRoot: TM, displayCheck: TM => Boolean = _.rootLabel.attach.display): TM = {
+  def rehierarchy(displayRoot: TM, displayCheck: TM => Boolean = _.rootLabel.attach.display): TM = {
     import js.JSConverters._
     val empty = js.Array[TM]()
     val rhroot = Hierarchy.hierarchy[TM, IdNode[TM]](displayRoot,

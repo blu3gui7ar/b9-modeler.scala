@@ -49,7 +49,7 @@ lazy val client = (project in file("client")).settings(
     "com.github.japgolly.scalacss" %%% "ext-react" % "0.5.3",
     "org.scala-js" %%% "scalajs-dom" % "0.9.1"
   ),
-  webpackBundlingMode := BundlingMode.LibraryAndApplication(),
+  webpackBundlingMode := BundlingMode.LibraryOnly(),
   npmDependencies in Compile ++= Seq(
     "react" -> "15.5.4",
     "react-dom" -> "15.5.4",

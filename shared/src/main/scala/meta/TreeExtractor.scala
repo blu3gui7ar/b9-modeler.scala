@@ -5,7 +5,7 @@ import java.util.UUID
 import meta.MetaAst._
 import upickle.Js
 
-import scalaz.{Show, Tree}
+import scalaz.Tree
 import scalaz.Tree.Node
 /**
   * Created by blu3gui7ar on 2017/6/1.
@@ -14,11 +14,6 @@ case class TreeNode[T](uuid: UUID, name: String, meta: AttrDef, value: Js.Value,
 
 class TreeExtractorTpl[T](defaultT: => T) {
   type N = Tree[TreeNode[T]]
-
-  implicit val TreeShows: Show[TreeNode[T]] = Show.shows { tn: TreeNode[T] =>
-    tn.toString
-  }
-
   trait TreeExtractor[T] {
     def tree(name: String, value: Option[Js.Value], meta: AttrDef): Option[N]
   }

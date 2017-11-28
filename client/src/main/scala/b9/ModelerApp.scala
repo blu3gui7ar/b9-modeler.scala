@@ -8,8 +8,6 @@ import org.scalajs.dom
 import org.scalajs.dom.raw.Element
 import shared.Apps
 
-import scala.scalajs.js
-
 object ModelerApp {
   def require(): Unit = {
     WebpackRequire.React
@@ -36,7 +34,7 @@ object ModelerApp {
     //    val dc = ModelerCircuit.wrap(_.graph)(TreeGraph(_, 700, 500))
     //    dc.renderIntoDOM(ele)
 
-//    modelerConnection(p => Editor(p.zoom(_.displayRoot)))
-//      .renderIntoDOM(editorEle)
+    modelerConnection(p => Editor(p.zoom(_.display)))
+      .renderIntoDOM(editorEle)
   }
 }

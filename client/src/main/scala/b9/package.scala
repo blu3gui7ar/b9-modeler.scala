@@ -4,7 +4,7 @@ import meta.TreeNode
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.ScalaJSDefined
-import scalaz.{Tree, TreeLoc}
+import scalaz.{Show, Tree, TreeLoc}
 
 /**
   * Created by blu3gui7ar on 2017/6/23.
@@ -35,6 +35,10 @@ package object b9 {
     type TN = IdNode[TM]
     type LN = facades.d3js.Link[TN]
     type ZoomFunc = TN => TN
+
+    implicit val TreeShows: Show[TreeNode[TreeAttach]] = Show.shows { tn: TreeNode[TreeAttach] =>
+      tn.toString
+    }
 
 
 

@@ -39,7 +39,7 @@ object Joint {
 
     def isMoving(tn: TM): Boolean = tn.rootLabel.attach.display != tn.rootLabel.attach.nextDisplay
 
-    def canGoParent(tn: TM): Boolean = displayRootRO().tree eq tn
+    def canGoParent(tn: TM): Boolean = displayRootRO().tree.rootLabel.attach eq tn.rootLabel.attach
 
     def canRemove(tn: TM): Boolean = isActive(tn)
 
@@ -102,13 +102,13 @@ object Joint {
       val parent = p.parent
       val proxy = p.proxy
       <.g(
+        ModelerCss.hidden.unless(tn.rootLabel.attach.display),
         parent.map(link(_, p.current)).whenDefined,
         <.g(
           ModelerCss.joint,
           ModelerCss.jointActive.when(isActive(tn)),
           ModelerCss.jointEditing.when(isEditing(tn)),
           ModelerCss.jointFolded.when(isFolded(tn)),
-          ModelerCss.hidden.unless(tn.rootLabel.attach.display),
           ModelerCss.moving.when(isMoving(tn)),
           keyAttr := tn.rootLabel.uuid.toString,
           ^.transform := transform(tn.rootLabel.attach.y, tn.rootLabel.attach.x),

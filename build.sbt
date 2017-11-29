@@ -40,7 +40,7 @@ lazy val client = (project in file("client")).settings(
   scalaJSUseMainModuleInitializer := true,// no need for scalajs-bundler
   mainClass in Compile := Some("b9.ModelerApp"),
   libraryDependencies ++= Seq(
-    "com.github.japgolly.scalajs-react" %%% "core" % "1.0.0",
+    "com.github.japgolly.scalajs-react" %%% "core" % "1.1.1",
 //    "com.github.japgolly.scalajs-react" %%% "ext-monocle" % "1.0.0",
 //    "com.github.julien-truffaut" %%%  "monocle-core"  % "1.4.0",
 //    "com.github.julien-truffaut" %%%  "monocle-macro" % "1.4.0",

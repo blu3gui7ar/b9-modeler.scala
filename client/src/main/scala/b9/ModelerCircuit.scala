@@ -173,8 +173,6 @@ object ModelerCircuit extends Circuit[ModelerState] with ReactConnector[ModelerS
         else NoChange
       }
       case CreateAction(node, name, meta) =>  {
-        println(name)
-        println(meta)
         val graphRW = modelRW.zoomTo(_.graph)
         val display = displayRW()
         display.find(loc => loc.tree.rootLabel eq node.rootLabel) map { loc =>

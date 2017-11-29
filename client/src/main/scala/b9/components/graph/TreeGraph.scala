@@ -66,8 +66,8 @@ object TreeGraph {
       val displayRoot = p.model.zoom(_.display)
       val treeRoot = p.model.zoom(_.root)
       <.svg(
-        ^.width := p.width.toString, //[BUG] https://github.com/japgolly/scalajs-react/issues/388
-        ^.height:= p.height.toString,
+        ^.width := p.width,
+        ^.height:= p.height,
         <.g(
           ^.transform := transform(p.left, p.top),
           breadcrums(displayRoot, p.top),

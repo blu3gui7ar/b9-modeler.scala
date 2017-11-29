@@ -1,10 +1,10 @@
 package b9
 
-import b9.short.{TM, TMLoc, TN}
+import b9.short.{TM, TMLoc}
 import diode.Action
 import meta.MetaAst
 import meta.MetaAst.AttrDef
-import upickle.Js
+import play.api.libs.json.JsValue
 
 /**
   * Created by blu3gui7ar on 2017/5/23.
@@ -34,6 +34,6 @@ case class FoldAction(node: TM) extends Action
 case class ActiveAction(node: TM) extends Action
 case class CreateAction(node: TM, name: String, meta: AttrDef) extends Action
 
-case class ValueSetAction(node: TM, ref: String, value: Js.Value) extends Action
-case class ValueAddAction(node: TM, ref: String, value: Js.Value) extends Action
-case class ValueDelAction(node: TM, ref: String, value: Js.Value) extends Action
+case class ValueSetAction(node: TM, ref: String, value: JsValue) extends Action
+case class ValueAddAction(node: TM, ref: String, value: JsValue) extends Action
+case class ValueDelAction(node: TM, ref: String, value: JsValue) extends Action

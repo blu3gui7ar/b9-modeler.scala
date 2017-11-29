@@ -68,7 +68,8 @@ lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared")).
     scalaVersion := scalaV,
     libraryDependencies ++= Seq(
       "org.scalaz" %%% "scalaz-core" % "7.2.17",
-      "com.lihaoyi" %%% "upickle" % "0.4.4",
+//      "com.lihaoyi" %%% "upickle" % "0.4.4",
+      "com.typesafe.play" %%% "play-json" % "2.6.7",
       "com.lihaoyi" %%% "autowire" % "0.2.6",
       "com.lihaoyi" %%% "fastparse" % "1.0.0",
       "org.scalactic" %%% "scalactic" % "3.0.1",

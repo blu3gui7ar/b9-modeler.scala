@@ -1,9 +1,7 @@
-import japgolly.scalajs.react.vdom.TagMod
 import japgolly.scalajs.react.vdom.all.VdomAttr
 import meta.TreeNode
 
 import scala.scalajs.js
-import scala.scalajs.js.annotation.ScalaJSDefined
 import scalaz.{Show, Tree, TreeLoc}
 
 /**
@@ -15,11 +13,6 @@ package object b9 {
   object short {
     @js.native
     trait IdNode[D] extends facades.d3js.treeModule.Node[D, IdNode[D]] {
-      var id: js.UndefOr[Int] = js.native
-      var fold: js.UndefOr[Boolean] = js.native
-      var display: js.UndefOr[Boolean] = js.native
-      var nextDisplay: js.UndefOr[Boolean] = js.native
-      var diffDescendants: js.UndefOr[Int] = js.native
     }
 
     class TreeAttach (
@@ -32,19 +25,10 @@ package object b9 {
 
     type TM = Tree[TreeNode[TreeAttach]]
     type TMLoc = TreeLoc[TreeNode[TreeAttach]]
-    type TN = IdNode[TM]
-    type LN = facades.d3js.Link[TN]
-    type ZoomFunc = TN => TN
 
     implicit val TreeShows: Show[TreeNode[TreeAttach]] = Show.shows { tn: TreeNode[TreeAttach] =>
       tn.toString
     }
-
-
-
-    class RealNode(val data: TreeNode[TreeAttach], val parent: TN, val x: js.UndefOr[Double], val y: js.UndefOr[Double],
-                   val id: js.UndefOr[Int]) extends js.Object
-
 
     val keyAttr = VdomAttr("key")
 

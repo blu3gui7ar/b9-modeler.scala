@@ -1,6 +1,6 @@
 package b9.components.editor
 
-import b9.short.{TM, TMLoc}
+import b9.short.TMLoc
 import diode.react.ModelProxy
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -19,6 +19,7 @@ object Editor {
     def render(p: Props): VdomTag = {
       val tn = p.mp.zoom(_.tree);
       val data = tn();
+//      println(data.rootLabel.meta)
       <.div(
         <.span(data.rootLabel.name),
         <.span(" : "),
@@ -26,6 +27,7 @@ object Editor {
         data.rootLabel.meta.widget flatMap { widget =>
           WidgetRegistry(widget.name)
         } map {
+//          println(data.rootLabel.value)
           _.render(data.rootLabel.uuid.toString, data.rootLabel.meta, data.rootLabel.value, tn);
         } getOrElse {
           data.subForest.zipWithIndex.map { case (_, idx) =>

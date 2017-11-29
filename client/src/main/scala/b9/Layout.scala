@@ -3,7 +3,6 @@ package b9
 import b9.short.{IdNode, TM}
 import facades.d3js.Hierarchy
 
-import scala.annotation.tailrec
 import scala.scalajs.js
 
 /**

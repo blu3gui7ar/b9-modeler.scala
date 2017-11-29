@@ -3,6 +3,7 @@ package b9
 import b9.CssSettings._
 import b9.components.editor.Editor
 import b9.components.graph.TreeGraph
+import b9.components.json.JsonView
 import japgolly.scalajs.react._
 import org.scalajs.dom
 import org.scalajs.dom.raw.Element
@@ -20,11 +21,12 @@ object ModelerApp {
     ModelerCss.addToDocument()
     init(
       dom.document.getElementById(Apps.ModelerApp),
-      dom.document.getElementById(Apps.EditorApp)
+      dom.document.getElementById(Apps.EditorApp),
+      dom.document.getElementById(Apps.ViewApp)
     )
   }
 
-  def init(graphEle: Element, editorEle: Element): Unit = {
+  def init(graphEle: Element, editorEle: Element, viewEle: Element): Unit = {
     import japgolly.scalajs.react.vdom.Implicits._
 
     val modelerConnection = ModelerCircuit.connect(s => s.graph)
@@ -36,5 +38,8 @@ object ModelerApp {
 
     modelerConnection(p => Editor(p.zoom(_.display)))
       .renderIntoDOM(editorEle)
+
+    modelerConnection(p => JsonView(p.zoom(_.root)))
+      .renderIntoDOM(viewEle)
   }
 }

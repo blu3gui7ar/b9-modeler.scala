@@ -56,11 +56,12 @@ object JsonExpr {
       if (attrs.isEmpty) {
         v.rootLabel.value.toString
       } else {
-        val subJsons = v.subForest flatMap { child =>
-          val attr = attrs.get(child.rootLabel.name)
-          attr flatMap {
-            _.json(Some(child))
-          }
+        val subJsons = for {
+          child <- v.subForest
+          attr <- attrs.get(child.rootLabel.name)
+          subJson <- attr.json(Some(child))
+        } yield {
+          s""""${attr.name}": ${subJson}"""
         }
         "{" + subJsons.mkString(", ") + "}"
       }

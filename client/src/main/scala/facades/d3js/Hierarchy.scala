@@ -27,7 +27,7 @@ trait Link[Node] extends js.Object {
 trait BaseNode[D, N <: BaseNode[D, N]] extends js.Object {
   var data: js.UndefOr[D] = js.native
   var depth: js.UndefOr[Int] = js.native
-  def height: js.UndefOr[Int] = js.native
+  var height: js.UndefOr[Int] = js.native
   var parent: js.UndefOr[N] = js.native
   var children: js.UndefOr[js.Array[N]] = js.native
   var value: js.UndefOr[Double] = js.native

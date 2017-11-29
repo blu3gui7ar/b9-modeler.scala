@@ -8,34 +8,34 @@ import japgolly.scalajs.react.vdom.TagMod
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{Callback, ReactEventTypes}
 import meta.MetaAst.AttrDef
-import upickle.Js
+import play.api.libs.json._
 
 object TextWidget extends Widget with ReactEventTypes {
   val name = "Text"
 
   def onTextChange(mp: ModelProxy[TM], ref: String)(e: ReactEventFromInput): Callback =
-    mp.dispatchCB(ValueSetAction(mp(), ref, Js.Str(e.target.value)))
+    mp.dispatchCB(ValueSetAction(mp(), ref, JsString(e.target.value)))
 
   def onNumChange(mp: ModelProxy[TM], ref: String)(e: ReactEventFromInput): Callback =
-    mp.dispatchCB(ValueSetAction(mp(), ref, Js.Num(e.target.value.toDouble)))
+    mp.dispatchCB(ValueSetAction(mp(), ref, JsNumber(e.target.value.toDouble)))
 
-  def render(ref: String, meta: AttrDef, value: Js.Value, mp: ModelProxy[TM]): TagMod = value match {
-    case n: Js.Num => <.input(
+  def render(ref: String, meta: AttrDef, value: JsValue, mp: ModelProxy[TM]): TagMod = value match {
+    case n: JsNumber => <.input(
       ^.name := ref,
-      ^.defaultValue := n.num.toString,
+      ^.defaultValue := n.value.toString,
       onChange ==> onNumChange(mp, ref)
     )
-    case s: Js.Str => <.input(
+    case s: JsString => <.input(
       ^.name := ref,
-      ^.defaultValue := s.str,
+      ^.defaultValue := s.value,
       onChange ==> onTextChange(mp, ref)
     )
-    case o: Js.Obj => <.input(
+    case o: JsObject => <.input(
       ^.name := ref,
       ^.defaultValue := o.toString,
       onChange ==> onTextChange(mp, ref)
     )
-    case a: Js.Arr => <.input(
+    case a: JsArray => <.input(
       ^.name := ref,
       ^.defaultValue := a.toString,
       onChange ==> onTextChange(mp, ref)

@@ -22,6 +22,9 @@ object Joint {
     private val activeRO = ModelerCircuit.zoom(_.graph.active)
     private val editingRO = ModelerCircuit.zoom(_.graph.editing)
     private val metaRO = ModelerCircuit.zoom(_.meta)
+    private val metaRoot = metaRO()
+    private val types = MetaAst.types(metaRoot)
+    private val macros = MetaAst.macros(metaRoot)
 
     def click(proxy: ModelProxy[TMLoc], target: TM)(e: ReactMouseEvent): Callback =
       if (e.altKey)
@@ -46,11 +49,7 @@ object Joint {
     def canEdit(tn: TM): Boolean = true
 
     def creates(proxy: ModelProxy[TMLoc], node: TM): TagMod  = {
-      val metaRoot = metaRO()
-      val types = MetaAst.types(metaRoot)
-
       val meta = node.rootLabel.meta
-
       val children =
         if (meta.widget.isEmpty)
           meta.t flatMap {
@@ -73,7 +72,7 @@ object Joint {
         else None
 
       children.getOrElse(Seq.empty).zipWithIndex.toTagMod { case ((name, meta), idx) =>
-        CreateButton(name, 18 + 30 * idx, 10, true, proxy.dispatchCB(CreateAction(node, name, meta)))
+        CreateButton(name, 18 + 30 * idx, 10, true, proxy.dispatchCB(CreateAction(node, name, MetaAst.expand(meta, macros))))
       }
     }
 

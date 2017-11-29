@@ -4,8 +4,8 @@ import b9.short.TM
 import diode.react.ModelProxy
 import japgolly.scalajs.react.vdom.TagMod
 import meta.MetaAst.AttrDef
-import upickle.Js
+import play.api.libs.json.JsValue
 
 trait Widget {
-  def render(id: String, meta: AttrDef, value: Js.Value, proxy: ModelProxy[TM]): TagMod
+  def render(id: String, meta: AttrDef, value: JsValue, proxy: ModelProxy[TM]): TagMod
 }

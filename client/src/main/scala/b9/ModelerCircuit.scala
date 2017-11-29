@@ -6,7 +6,7 @@ import diode._
 import diode.react.ReactConnector
 import facades.d3js.Hierarchy
 import meta._
-import upickle.Js
+import play.api.libs.json._
 
 import scala.annotation.tailrec
 import scala.concurrent.Promise
@@ -33,17 +33,16 @@ object ModelerCircuit extends Circuit[ModelerState] with ReactConnector[ModelerS
 
   protected def init(root: TM): TM = {
     import js.JSConverters._
-    val hroot = Hierarchy.hierarchy[TM, TN](root, { n => n.subForest.toJSArray }: js.Function1[TM, js.Array[TM]])
-    val troot = Layout.gather(Idx.reindex(hroot))
+    val hroot = Hierarchy.hierarchy[TM, IdNode[TM]](root, { n => n.subForest.toJSArray }: js.Function1[TM, js.Array[TM]])
+    val troot = Layout.gather(hroot)
     pushAttach(troot).get
   }
 
-  protected def pushAttach(transientTree: TN): Option[TM] = {
-    val tTree = transientTree.eachBefore { n: TN =>
+  protected def pushAttach(transientTree: IdNode[TM]): Option[TM] = {
+    val tTree = transientTree.eachBefore { n: IdNode[TM] =>
       n.data map { m: TM =>
         m.rootLabel.attach.x = n.x.getOrElse(0)
         m.rootLabel.attach.y = n.y.getOrElse(0)
-        m.rootLabel.attach.fold = n.fold.getOrElse(false)
       }
     }
     tTree.data.toOption
@@ -54,15 +53,17 @@ object ModelerCircuit extends Circuit[ModelerState] with ReactConnector[ModelerS
     val ds = new MetaSource(Sample.meta)
     import ds._
 
-    val dataJs = upickle.json.read(Sample.data)
+//    println(ds.meta)
+
+    val dataJs = Json.parse(Sample.data)
     import treeExtractor._
     val tree = ds.meta.tree("meta", Some(dataJs), RootAttrDef).getOrElse(emptyTree)
 //    println(tree.drawTree)
 
     val r = init(tree)
-    import JsonExpr._
-    val d: Option[TM] = Some(r)
-    println(ds.meta.json(d))
+//    import JsonExpr._
+//    val d: Option[TM] = Some(r)
+//    println(ds.meta.json(d))
 
     ModelerState(ds.meta, tree, GraphState(r,r.loc,r,r))
   }
@@ -172,6 +173,8 @@ object ModelerCircuit extends Circuit[ModelerState] with ReactConnector[ModelerS
         else NoChange
       }
       case CreateAction(node, name, meta) =>  {
+        println(name)
+        println(meta)
         val graphRW = modelRW.zoomTo(_.graph)
         val display = displayRW()
         display.find(loc => loc.tree.rootLabel eq node.rootLabel) map { loc =>
@@ -239,11 +242,11 @@ object ModelerCircuit extends Circuit[ModelerState] with ReactConnector[ModelerS
         val display = displayRW()
         display.find(_.tree.rootLabel eq node.rootLabel) map { loc =>
           loc.modifyTree { case Node(rootLabel, subForest) =>
-            val newV: Seq[Js.Value] = rootLabel.value match {
-              case arr: Js.Arr => value +: arr.value
+            val newV: Seq[JsValue] = rootLabel.value match {
+              case arr: JsArray => value +: arr.value
               case _ => Seq.empty
             }
-            Node(rootLabel.copy(value = Js.Arr(newV: _*)), subForest)
+            Node(rootLabel.copy(value = JsArray(newV)), subForest)
           }
         } map { newNodeLoc =>
           ModelUpdate(graphRW.updated {
@@ -257,11 +260,11 @@ object ModelerCircuit extends Circuit[ModelerState] with ReactConnector[ModelerS
         val display = displayRW()
         display.find(_.tree.rootLabel eq node.rootLabel) map { loc =>
           loc.modifyTree { case Node(rootLabel, subForest) =>
-            val newV: Seq[Js.Value] = rootLabel.value match {
-              case arr: Js.Arr => arr.value.filter(_ != value)
+            val newV: Seq[JsValue] = rootLabel.value match {
+              case arr: JsArray => arr.value.filter(_ != value)
               case _ => Seq.empty
             }
-            Node(rootLabel.copy(value = Js.Arr(newV: _*)), subForest)
+            Node(rootLabel.copy(value = JsArray(newV)), subForest)
           }
         } map { newNodeLoc =>
           ModelUpdate(graphRW.updated {
@@ -271,17 +274,5 @@ object ModelerCircuit extends Circuit[ModelerState] with ReactConnector[ModelerS
         } getOrElse(NoChange)
       }
     }
-
-//    private def printTree(): Unit = {
-//      val state = modelRW()
-//      val meta = modelRW().meta
-//      state.graph.root.data map { _ =>
-//        import JsonExpr._
-//        implicit val macros = MetaAst.macros(meta)
-//        implicit val types = MetaAst.types(meta)
-//        val tree = Some(state.graph.root)
-//        println("set: " + meta.json(tree))
-//      }
-//    }
   }
 }

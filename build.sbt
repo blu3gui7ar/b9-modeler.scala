@@ -1,7 +1,9 @@
-lazy val scalaV = "2.12.2"
+lazy val scalaV = "2.12.6"
 lazy val sharedJvm = shared.jvm
 lazy val sharedJs = shared.js
 
+// shadow sbt-scalajs' crossProject and CrossType from Scala.js 0.6.x
+import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 // enablePlugins(DockerPlugin)
 
@@ -38,21 +40,22 @@ lazy val client = (project in file("client")).settings(
   scalaVersion := scalaV,
   // This is an application with a main method
   scalaJSUseMainModuleInitializer := true,// no need for scalajs-bundler
+  useYarn := true,
   mainClass in Compile := Some("b9.ModelerApp"),
   libraryDependencies ++= Seq(
-    "com.github.japgolly.scalajs-react" %%% "core" % "1.1.1",
+    "com.github.japgolly.scalajs-react" %%% "core" % "1.3.1",
 //    "com.github.japgolly.scalajs-react" %%% "ext-monocle" % "1.0.0",
 //    "com.github.julien-truffaut" %%%  "monocle-core"  % "1.4.0",
 //    "com.github.julien-truffaut" %%%  "monocle-macro" % "1.4.0",
-    "io.suzaku" %%% "diode" % "1.1.2",
-    "io.suzaku" %%% "diode-react" % "1.1.2",
+    "io.suzaku" %%% "diode" % "1.1.4",
+    "io.suzaku" %%% "diode-react" % "1.1.4.131",
     "com.github.japgolly.scalacss" %%% "ext-react" % "0.5.3",
     "org.scala-js" %%% "scalajs-dom" % "0.9.1"
   ),
   webpackBundlingMode := BundlingMode.LibraryOnly(),
   npmDependencies in Compile ++= Seq(
-    "react" -> "15.5.4",
-    "react-dom" -> "15.5.4",
+    "react" -> "16.5.1",
+    "react-dom" -> "16.5.1",
     "d3-hierarchy" -> "1.1.5",
     "d3-shape" -> "1.2.0",
     "font-awesome" -> "4.7.0",
@@ -63,8 +66,7 @@ lazy val client = (project in file("client")).settings(
 
 val monocleVersion = "1.4.0" // 1.5.0-cats-M1 based on cats 1.0.0-MF
 
-lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared")).
-  settings(
+lazy val shared = (crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure) in file("shared")).settings(
     scalaVersion := scalaV,
     libraryDependencies ++= Seq(
       "org.scalaz" %%% "scalaz-core" % "7.2.17",

@@ -4,20 +4,12 @@ import b9.CssSettings._
 import b9.components.editor.Editor
 import b9.components.graph.TreeGraph
 import b9.components.json.JsonView
-import japgolly.scalajs.react._
 import org.scalajs.dom
 import org.scalajs.dom.raw.Element
 import shared.Apps
 
 object ModelerApp {
-  def require(): Unit = {
-    WebpackRequire.React
-    WebpackRequire.ReactDOM
-    ()
-  }
-
   def main(args: Array[String]): Unit = {
-    require()
     ModelerCss.addToDocument()
     init(
       dom.document.getElementById(Apps.ModelerApp),

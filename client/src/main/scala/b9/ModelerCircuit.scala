@@ -65,7 +65,7 @@ object ModelerCircuit extends Circuit[ModelerState] with ReactConnector[ModelerS
 //    val d: Option[TM] = Some(r)
 //    println(ds.meta.json(d))
 
-    ModelerState(ds.meta, tree, GraphState(r,r.loc,r,r))
+    ModelerState(ds.meta, GraphState(r,r.loc,r,r))
   }
 
   override protected def actionHandler: ModelerCircuit.HandlerFunction = new ModelerActionHandler(ModelerCircuit.zoomRW(identity)((last, current) => current))

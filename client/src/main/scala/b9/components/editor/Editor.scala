@@ -15,7 +15,7 @@ object Editor {
       val tn = p.mp.zoom(_.tree);
       val data = tn();
       <.div(
-        <.span(data.rootLabel.name),
+        <.span(data.rootLabel.name), //TODO use input to modify map key
         <.span(" : "),
 
         data.rootLabel.meta.widget flatMap { widget =>

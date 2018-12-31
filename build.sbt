@@ -3,7 +3,7 @@ lazy val sharedJvm = shared.jvm
 lazy val sharedJs = shared.js
 
 
-enablePlugins(DockerPlugin)
+// enablePlugins(DockerPlugin)
 
 scalacOptions ++= Seq("-feature")
 

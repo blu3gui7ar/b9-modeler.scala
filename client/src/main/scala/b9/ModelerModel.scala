@@ -18,7 +18,6 @@ case class GraphState(
 
 case class ModelerState(
                          meta: MetaAst.Root,
-                         editor: TM,
                          graph: GraphState,
                        )
 

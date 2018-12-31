@@ -21,5 +21,5 @@ addSbtPlugin("ch.epfl.scala" % "sbt-web-scalajs-bundler" % "0.9.0")
 
 // addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "4.0.0")
 
-addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.3.2")
+addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.3.4")
 

@@ -56,7 +56,7 @@ object TreeGraph {
 
     def joints(proxy: ModelProxy[TMLoc], root: TM): Stream[TagMod] = {
       val tagMods = root.cobind { tree: TM =>
-        tree.subForest.toTagMod { child => Joint(proxy, Some(tree), child) }
+        tree.subForest.reverse.toTagMod { child => Joint(proxy, Some(tree), child) }
       }
       val rootTag: TagMod = Joint(proxy, None, root)
       rootTag +: tagMods.flatten reverse

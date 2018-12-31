@@ -14,6 +14,7 @@ object SelectWidget extends Widget with ReactEventTypes {
   val name = "Select"
 
   override def render(ref: String, meta: AttrDef, value: JsValue, mp: ModelProxy[TM]): TagMod = {
+    val selected = value.asOpt[String].getOrElse("")
     val subs = meta.values map { choices =>
       choices map { choice =>
         <.option(
@@ -23,13 +24,12 @@ object SelectWidget extends Widget with ReactEventTypes {
       }
     } getOrElse(Seq.empty)
 
-    val selected = if (value eq JsNull)  "" else value.toString
 
     <.select(
       onChange ==> { (e: ReactEventFromInput) =>
         mp.dispatchCB(ValueSetAction(mp(), ref, JsString(e.target.value)))
       },
-      (^.value := selected).when(value ne JsNull),
+      ^.value := selected,
       subs.toTagMod
     )
   }

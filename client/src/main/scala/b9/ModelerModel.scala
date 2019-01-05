@@ -1,10 +1,10 @@
 package b9
 
 import b9.short.{TM, TMLoc}
-import diode.Action
+//import diode.Action
 import meta.MetaAst
-import meta.MetaAst.AttrDef
-import play.api.libs.json.JsValue
+//import meta.MetaAst.AttrDef
+//import play.api.libs.json.JsValue
 
 /**
   * Created by blu3gui7ar on 2017/5/23.
@@ -21,18 +21,3 @@ case class ModelerState(
                          graph: GraphState,
                        )
 
-
-case class FlushDisplayAction(node: TM) extends Action
-case class FlushHierarchyAction() extends Action
-case class GoUpAction(node: TM) extends Action
-case class GoDownAction(node: TM) extends Action
-case class RemoveFromAction(node: TM, parent: TM) extends Action
-case class FlushRemoveFromAction(node: TM, parent: TM) extends Action
-case class EditAction(node: TM) extends Action
-case class FoldAction(node: TM) extends Action
-case class ActiveAction(node: TM) extends Action
-case class CreateAction(node: TM, name: String, meta: AttrDef) extends Action
-
-case class ValueSetAction(node: TM, ref: String, value: JsValue) extends Action
-case class ValueAddAction(node: TM, ref: String, value: JsValue) extends Action
-case class ValueDelAction(node: TM, ref: String, value: JsValue) extends Action

@@ -1,54 +1,51 @@
 package b9.components.graph
 
 import b9._
-import b9.short.{TM, TMLoc, keyAttr}
-import diode.react.ModelProxy
+import b9.short.{TM, keyAttr}
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.HtmlAttrs.{onClick, onDoubleClick, onMouseOver}
 import japgolly.scalajs.react.vdom.svg_<^._
 import meta.MetaAst
 import meta.MetaAst._
-
 import scalacss.ScalaCssReact._
 
 /**
   * Created by blu3gui7ar on 2017/5/25.
   */
 object Joint {
-  case class Props(proxy: ModelProxy[TMLoc], parent: Option[TM], current: TM)
+  case class Props(dispatcher: Dispatcher[ModelerState], modeler: ModelerState, parent: Option[TM], current: TM)
 
   class Backend($: BackendScope[Props, Unit]) {
-    private val displayRootRO = ModelerCircuit.zoom(_.graph.display)
-    private val activeRO = ModelerCircuit.zoom(_.graph.active)
-    private val editingRO = ModelerCircuit.zoom(_.graph.editing)
-    private val metaRO = ModelerCircuit.zoom(_.meta)
-    private val metaRoot = metaRO()
-    private val types = MetaAst.types(metaRoot)
-    private val macros = MetaAst.macros(metaRoot)
 
-    def click(proxy: ModelProxy[TMLoc], target: TM)(e: ReactMouseEvent): Callback =
+    def click(target: TM)(e: ReactMouseEvent)(implicit dispatcher: Dispatcher[ModelerState]): Callback =
       if (e.altKey)
-        proxy.dispatchCB(GoDownAction(target))
+        Callback {
+          dispatcher.dispatch(ModelerOps.goDown(target))
+          ModelerOps.deferAction {
+            dispatcher.dispatch(ModelerOps.flushDisplay(target))
+          }
+        }
       else
         Callback.empty
 
     def transform(x: Double, y: Double) = s"translate($x, $y)"
 
-    def isActive(tn: TM): Boolean = activeRO() eq tn
+    def isActive(tn: TM)(implicit graph: GraphState): Boolean = graph.active eq tn
 
-    def isEditing(tn: TM): Boolean = editingRO() eq tn
+    def isEditing(tn: TM)(implicit graph: GraphState): Boolean = graph.editing eq tn
 
     def isFolded(tn: TM): Boolean = tn.rootLabel.attach.fold
 
     def isMoving(tn: TM): Boolean = tn.rootLabel.attach.display != tn.rootLabel.attach.nextDisplay
 
-    def canGoParent(tn: TM): Boolean = displayRootRO().tree.rootLabel.attach eq tn.rootLabel.attach
+    def canGoParent(tn: TM)(implicit graph: GraphState): Boolean = graph.display.tree.rootLabel.attach eq tn.rootLabel.attach
 
-    def canRemove(tn: TM): Boolean = isActive(tn)
+    def canRemove(tn: TM)(implicit graph: GraphState): Boolean = isActive(tn)
 
     def canEdit(tn: TM): Boolean = true
 
-    def creates(proxy: ModelProxy[TMLoc], node: TM): TagMod  = {
+    def creates(node: TM, macros: Map[String, MetaAst.Macro], types: Map[String, MetaAst.AstNodeWithMembers])
+               (implicit dispatcher: Dispatcher[ModelerState]): TagMod  = {
       val meta = node.rootLabel.meta
       val children =
         if (meta.widget.isEmpty)
@@ -72,15 +69,30 @@ object Joint {
         else None
 
       children.getOrElse(Seq.empty).zipWithIndex.toTagMod { case ((name, meta), idx) =>
-        CreateButton(name, 18 + 30 * idx, 10, true, proxy.dispatchCB(CreateAction(node, name, MetaAst.expand(meta, macros))))
+        CreateButton(name, 18 + 30 * idx, 10, true, Callback {
+          dispatcher.dispatch(ModelerOps.create(node, name, MetaAst.expand(meta, macros)))
+          ModelerOps.deferAction {
+            dispatcher.dispatch(ModelerOps.flushHierarchy())
+          }
+        })
       }
     }
 
-    def parentBtn(proxy: ModelProxy[TMLoc], parent: TM): TagMod =
-       ParentButton(-41, -25, proxy.dispatchCB(GoUpAction(parent)))
+    def parentBtn(parent: TM)(implicit dispatcher: Dispatcher[ModelerState]): TagMod =
+       ParentButton(-41, -25, Callback {
+         dispatcher.dispatch(ModelerOps.goUp(parent))
+         ModelerOps.deferAction {
+           dispatcher.dispatch(ModelerOps.flushHierarchy())
+         }
+       })
 
-    def removeBtn(proxy: ModelProxy[TMLoc], current: TM, parent: TM): TagMod =
-      RemoveButton(-42, 10, proxy.dispatchCB(RemoveFromAction(current, parent)))
+    def removeBtn(current: TM, parent: TM)(implicit dispatcher: Dispatcher[ModelerState]): TagMod =
+      RemoveButton(-42, 10, Callback {
+        dispatcher.dispatch(ModelerOps.removeFrom(current, parent))
+        ModelerOps.deferAction {
+          dispatcher.dispatch(ModelerOps.flushRemoveFrom(current, parent))
+        }
+      })
 
     def link(parent: TM, current: TM): TagMod = {
       val pInfo = parent.rootLabel.attach
@@ -97,9 +109,14 @@ object Joint {
     }
 
     def render(p: Props): VdomElement = {
+      implicit val dispatcher = p.dispatcher
+      implicit val graph = p.modeler.graph
+      val metaRoot = p.modeler.meta
+      val types = MetaAst.types(metaRoot)
+      val macros = MetaAst.macros(metaRoot)
+
       val tn = p.current
       val parent = p.parent
-      val proxy = p.proxy
       <.g(
         ModelerCss.hidden.unless(tn.rootLabel.attach.display),
         parent.map(link(_, p.current)).whenDefined,
@@ -111,11 +128,13 @@ object Joint {
           ModelerCss.moving.when(isMoving(tn)),
           keyAttr := tn.rootLabel.uuid.toString,
           ^.transform := transform(tn.rootLabel.attach.y, tn.rootLabel.attach.x),
-          onDoubleClick --> proxy.dispatchCB(FoldAction(tn)),
+          onDoubleClick --> Callback { dispatcher.dispatch(ModelerOps.fold(tn)) },
           <.circle(
             ^.r := 6,
-            (onMouseOver --> proxy.dispatchCB(ActiveAction(tn))).when(!isActive(tn)),
-            onClick ==> click(proxy, tn)
+            (onMouseOver --> Callback {
+               dispatcher.dispatch(ModelerOps.active(tn))
+            }).when(!isActive(tn)),
+            onClick ==> click(tn)
           ),
           <.text(
             ^.x := 15,
@@ -124,10 +143,10 @@ object Joint {
             onClick --> Callback.empty,
             tn.rootLabel.name
           ),
-          parent.map(parentBtn(proxy, _)).whenDefined.when(canGoParent(tn)),
-          parent.map(removeBtn(proxy, tn, _)).whenDefined,
-          EditButton(-12, 10, proxy.dispatchCB(EditAction(tn))).when(canEdit(tn)),
-          creates(proxy, tn)
+          parent.map(parentBtn(_)).whenDefined.when(canGoParent(tn)),
+          parent.map(removeBtn(tn, _)).whenDefined,
+          EditButton(-12, 10, Callback { dispatcher.dispatch(ModelerOps.edit(tn))} ).when(canEdit(tn)),
+          creates(tn, macros, types)
         )
       )
     }
@@ -138,5 +157,6 @@ object Joint {
     .renderBackend[Backend]
     .build
 
-  def apply(proxy: ModelProxy[TMLoc], parent: Option[TM], current: TM) = component(Props(proxy, parent, current))
+  def apply(dispatcher: Dispatcher[ModelerState], modeler: ModelerState, parent: Option[TM], current: TM) =
+    component(Props(dispatcher, modeler, parent, current))
 }

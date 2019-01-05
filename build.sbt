@@ -47,10 +47,9 @@ lazy val client = (project in file("client")).settings(
 //    "com.github.japgolly.scalajs-react" %%% "ext-monocle" % "1.0.0",
 //    "com.github.julien-truffaut" %%%  "monocle-core"  % "1.4.0",
 //    "com.github.julien-truffaut" %%%  "monocle-macro" % "1.4.0",
-    "io.suzaku" %%% "diode" % "1.1.4",
-    "io.suzaku" %%% "diode-react" % "1.1.4.131",
-    "com.github.japgolly.scalacss" %%% "ext-react" % "0.5.3",
-    "org.scala-js" %%% "scalajs-dom" % "0.9.1"
+    "io.monix" %%% "monix" % "3.0.0-RC2",
+    "com.github.japgolly.scalacss" %%% "ext-react" % "0.5.5",
+    "org.scala-js" %%% "scalajs-dom" % "0.9.6"
   ),
   webpackBundlingMode := BundlingMode.LibraryOnly(),
   npmDependencies in Compile ++= Seq(

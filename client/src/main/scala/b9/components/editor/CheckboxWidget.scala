@@ -2,7 +2,7 @@ package b9.components.editor
 
 import b9._
 import b9.short.TM
-import diode.react.ModelProxy
+import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.vdom.HtmlAttrs.onChange
 import japgolly.scalajs.react.vdom.TagMod
 import japgolly.scalajs.react.vdom.html_<^._
@@ -12,7 +12,7 @@ import play.api.libs.json._
 object CheckboxWidget extends Widget {
   val name = "Checkbox"
 
-  override def render(ref: String, meta: AttrDef, value: JsValue, mp: ModelProxy[TM]): TagMod = {
+  override def render(ref: String, meta: AttrDef, value: JsValue, node: TM, dispatcher: Dispatcher[ModelerState]): TagMod = {
     val checked = value match {
       case vs: JsArray => vs.value
       case _ => Seq.empty
@@ -27,14 +27,14 @@ object CheckboxWidget extends Widget {
             ^.name := ref,
             ^.value := choice.name,
             ^.checked := active,
-            onChange --> mp.dispatchCB(
+            onChange --> Callback {
               if(active){
-                ValueDelAction(mp(), ref, JsString(choice.name))
+                dispatcher.dispatch(ModelerOps.valueDel(node, ref, JsString(choice.name)))
               }
               else {
-                ValueAddAction(mp(), ref, JsString(choice.name))
+                dispatcher.dispatch(ModelerOps.valueAdd(node, ref, JsString(choice.name)))
               }
-            ),
+            },
           ),
           choice.name
         )

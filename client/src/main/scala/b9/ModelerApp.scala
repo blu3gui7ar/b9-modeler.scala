@@ -1,14 +1,15 @@
 package b9
 
 import b9.CssSettings._
-import b9.components.editor.Editor
-import b9.components.graph.TreeGraph
-import b9.components.json.JsonView
+import b9.components.MetaIDE
 import org.scalajs.dom
 import org.scalajs.dom.raw.Element
 import shared.Apps
 
+import scala.scalajs.js.annotation.JSExportTopLevel
+
 object ModelerApp {
+  @JSExportTopLevel("main")
   def main(args: Array[String]): Unit = {
     ModelerCss.addToDocument()
     init(
@@ -19,19 +20,8 @@ object ModelerApp {
   }
 
   def init(graphEle: Element, editorEle: Element, viewEle: Element): Unit = {
-    import japgolly.scalajs.react.vdom.Implicits._
+    val dispatcher = new Dispatcher[ModelerState](ModelerOps.initialModel)
 
-    val modelerConnection = ModelerCircuit.connect(s => s.graph)
-
-    modelerConnection(p => TreeGraph(p, 700, 500))
-      .renderIntoDOM(graphEle)
-    //    val dc = ModelerCircuit.wrap(_.graph)(TreeGraph(_, 700, 500))
-    //    dc.renderIntoDOM(ele)
-
-    modelerConnection(p => Editor(p.zoom(_.display)))
-      .renderIntoDOM(editorEle)
-
-    modelerConnection(p => JsonView(p.zoom(_.root)))
-      .renderIntoDOM(viewEle)
+    MetaIDE(dispatcher).renderIntoDOM(graphEle)
   }
 }

@@ -12,7 +12,8 @@ trait Validator {
 object Validator {
 
   implicit class RestrictValidator (restrict: Restrict) extends Validator {
-    override def validate(value: Option[JsValue]): Boolean = ???
+    //TODO
+    override def validate(value: Option[JsValue]): Boolean = true
   }
 
   implicit class ListDefValidator(r: ListRef)(implicit macros: Map[String, Macro], types: Map[String, Type]) extends Validator {

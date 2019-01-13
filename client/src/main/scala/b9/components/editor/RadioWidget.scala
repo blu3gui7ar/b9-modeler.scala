@@ -1,24 +1,23 @@
 package b9.components.editor
 
-import b9.short.TM
-import b9.{Dispatcher, ModelerOps, ModelerState}
-import japgolly.scalajs.react.Callback
+import b9.Dispatcher
+import b9.TreeOps.{LLens, TN, TTN}
 import japgolly.scalajs.react.vdom.HtmlAttrs.onChange
 import japgolly.scalajs.react.vdom.TagMod
 import japgolly.scalajs.react.vdom.html_<^._
-import meta.MetaAst.{AttrDef, TypeRef}
+import meta.MetaAst.TypeRef
 import play.api.libs.json._
 
 object RadioWidget extends Widget {
   val name = "Radio"
 
-  override def render(ref: String, meta: AttrDef, value: JsValue, node: TM, dispatcher: Dispatcher[ModelerState]): TagMod =
-    meta.values map { choices =>
+  override def render(label: TN, lens: LLens, dispatcher: Dispatcher[TTN]): TagMod = {
+    label.meta.values map { choices =>
       val boxes = choices map { choice =>
-        val newVal: Option[JsValue] = meta.t.map {
+        val newVal: Option[JsValue] = label.meta.t.map {
           case TypeRef(name) =>
-            if(name == "Boolean") {
-              if(choice.name == "true") {
+            if (name == "Boolean") {
+              if (choice.name == "true") {
                 JsTrue
               } else {
                 JsFalse
@@ -31,16 +30,15 @@ object RadioWidget extends Widget {
         <.span(
           <.input(
             ^.`type` := "radio",
-            ^.name := ref,
+            ^.name := label.uuid.toString,
             ^.value := choice.name,
-            ^.checked := value.toString() == choice.name,
-            onChange --> Callback {
-              dispatcher.dispatch(ModelerOps.valueSet(node, ref, newVal.getOrElse(JsNull)))
-            }
+            ^.checked := label.value.toString == choice.name,
+            onChange --> updateCB(newVal.getOrElse(JsNull))(label, lens, dispatcher)
           ),
           choice.name
         )
       }
       boxes.toTagMod
     } getOrElse EmptyVdom
+  }
 }

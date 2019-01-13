@@ -59,6 +59,12 @@ object Sample {
       |}
     """.stripMargin
 
+//  val data: String =
+//    """
+//      |{
+//      |   "processor": "aaa"
+//      |}
+//    """.stripMargin
   val data: String =
     """
       |{

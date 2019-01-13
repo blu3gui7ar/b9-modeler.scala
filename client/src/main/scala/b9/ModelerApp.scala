@@ -1,6 +1,7 @@
 package b9
 
 import b9.CssSettings._
+import b9.TreeOps.TTN
 import b9.components.MetaIDE
 import org.scalajs.dom
 import org.scalajs.dom.raw.Element
@@ -20,8 +21,10 @@ object ModelerApp {
   }
 
   def init(graphEle: Element, editorEle: Element, viewEle: Element): Unit = {
-    val dispatcher = new Dispatcher[ModelerState](ModelerOps.initialModel)
+//    val dispatcher = new Dispatcher[ModelerState](ModelerOps.initialModel)
+    val (tree, meta) = TreeOps.initialModel
+    val dispatcher = new Dispatcher[TTN](tree)
 
-    MetaIDE(dispatcher).renderIntoDOM(graphEle)
+    MetaIDE(dispatcher, meta).renderIntoDOM(graphEle)
   }
 }

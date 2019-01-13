@@ -1,5 +1,6 @@
 package b9
 
+import japgolly.scalajs.react.Callback
 import monix.execution.{Ack, Cancelable}
 import monix.execution.Ack.Continue
 import monix.reactive.{Observable, Observer}
@@ -17,6 +18,8 @@ class Dispatcher [ModelerState](val initialModelerState: ModelerState){
 
 
   def dispatch(f:ModelerState => ModelerState): Unit = dispatcher.onNext(f)
+
+  def dispatchCB(f: ModelerState => ModelerState): Callback = Callback { dispatch(f) }
 
   def observer(f:ModelerState => Unit)= new Observer[ModelerState] {
     def onNext(s: ModelerState): Future[Ack] = {

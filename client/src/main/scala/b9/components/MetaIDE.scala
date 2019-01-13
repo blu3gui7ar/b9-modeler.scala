@@ -1,26 +1,29 @@
 package b9.components
 
+import b9.Dispatcher
+import b9.TreeOps.TTN
 import b9.components.editor.Editor
-import b9.components.graph.TreeGraph
 import b9.components.json.JsonView
-import b9.{Dispatcher, ModelerCss, ModelerOps, ModelerState}
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import meta.MetaAst.Root
 import monix.execution.Cancelable
 
 object MetaIDE {
-  def apply(dispatcher: Dispatcher[ModelerState]) = component(Props(dispatcher))
+//  def apply(dispatcher: Dispatcher[ModelerState]) = component(Props(dispatcher))
+//  case class Props(dispatcher: Dispatcher[ModelerState])
 
-  case class Props(dispatcher: Dispatcher[ModelerState])
+  def apply(dispatcher: Dispatcher[TTN], meta: Root) = component(Props(dispatcher, meta))
+  case class Props(dispatcher: Dispatcher[TTN], meta: Root)
 
-  class Backend($: BackendScope[Props, ModelerState]) {
+  class Backend($: BackendScope[Props, TTN]) {
     var end: Option[Cancelable] = None
 
-    def render(p: Props, s: ModelerState): VdomTag = {
+    def render(p: Props, s: TTN): VdomTag = {
       <.div(
-        TreeGraph(p.dispatcher, s, 700, 500),
-        Editor(s.graph.display, p.dispatcher),
-        JsonView(s)
+//        TreeGraph(p.dispatcher, s, 700, 500),
+        Editor(s, None, p.dispatcher),
+        JsonView(s, p.meta)
       )
     }
   }

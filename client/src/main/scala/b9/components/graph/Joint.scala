@@ -40,9 +40,9 @@ object Joint {
 
     def canGoParent(tn: TM)(implicit graph: GraphState): Boolean = graph.display.tree.rootLabel.attach eq tn.rootLabel.attach
 
-    def canRemove(tn: TM)(implicit graph: GraphState): Boolean = isActive(tn)
+    def canRemove(tn: TM)(implicit graph: GraphState): Boolean = isActive(tn) && !canGoParent(tn)
 
-    def canEdit(tn: TM): Boolean = true
+    def canEdit(tn: TM)(implicit graph: GraphState): Boolean = true && !isEditing(tn)
 
     def creates(node: TM, macros: Map[String, MetaAst.Macro], types: Map[String, MetaAst.AstNodeWithMembers])
                (implicit dispatcher: Dispatcher[ModelerState]): TagMod  = {
@@ -128,12 +128,23 @@ object Joint {
           ModelerCss.moving.when(isMoving(tn)),
           keyAttr := tn.rootLabel.uuid.toString,
           ^.transform := transform(tn.rootLabel.attach.y, tn.rootLabel.attach.x),
-          onDoubleClick --> Callback { dispatcher.dispatch(ModelerOps.fold(tn)) },
+          (onDoubleClick --> Callback {
+            if (tn.rootLabel.attach.fold) {
+              dispatcher.dispatch(ModelerOps.unfold(tn))
+              ModelerOps.deferAction {
+                dispatcher.dispatch(ModelerOps.flushHierarchy())
+              }
+            } else {
+              dispatcher.dispatch(ModelerOps.fold(tn))
+              ModelerOps.deferAction {
+                dispatcher.dispatch(ModelerOps.flushDisplay(graph.display.tree))
+              }
+            }
+          }).when(tn.subForest.nonEmpty),
           <.circle(
             ^.r := 6,
-            (onMouseOver --> Callback {
-               dispatcher.dispatch(ModelerOps.active(tn))
-            }).when(!isActive(tn)),
+            (onMouseOver --> dispatcher.dispatchCB(ModelerOps.active(tn)))
+              .when(!isActive(tn)),
             onClick ==> click(tn)
           ),
           <.text(
@@ -144,8 +155,8 @@ object Joint {
             tn.rootLabel.name
           ),
           parent.map(parentBtn(_)).whenDefined.when(canGoParent(tn)),
-          parent.map(removeBtn(tn, _)).whenDefined,
-          EditButton(-12, 10, Callback { dispatcher.dispatch(ModelerOps.edit(tn))} ).when(canEdit(tn)),
+          parent.map(removeBtn(tn, _)).whenDefined.when(canRemove(tn)),
+          EditButton(-12, 10, dispatcher.dispatchCB(ModelerOps.edit(tn))).when(canEdit(tn)),
           creates(tn, macros, types)
         )
       )

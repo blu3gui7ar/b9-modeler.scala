@@ -7,9 +7,11 @@ import play.api.libs.json._
 
 import scalaz.Tree
 import scalaz.Tree.Node
+
 /**
   * Created by blu3gui7ar on 2017/6/1.
   */
+
 case class TreeNode[T](uuid: UUID, name: String, meta: AttrDef, value: play.api.libs.json.JsValue, attach: T)
 
 class TreeExtractorTpl[T](defaultT: => T) {

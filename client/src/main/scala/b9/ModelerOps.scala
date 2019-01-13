@@ -152,37 +152,32 @@ object ModelerOps {
 
   //TODO
   def fold(node: TM) = { state: ModelerState =>
-    if (node.subForest.nonEmpty) {
-      //TODO: direct update is not right
-      val fold = !node.rootLabel.attach.fold
-      node.rootLabel.attach.fold = fold
-      val tree = state.graph.root
-      val display = state.graph.display.tree
-      if (fold) {
-        redisplay(tree, display)
-        rehierarchy(display)
-        compact(tree, display)(_.rootLabel.attach.nextDisplay)
-        state
-        //actionEffect(FlushDisplayAction(display), ModelerCss.delay)
-      } else {
-        redisplay(tree, display)
-        applyDisplay(tree)
-        //actionEffect(FlushHierarchyAction())
-        state
-      }
-    } else state
+    val tree = state.graph.root
+    val display = state.graph.display.tree
+    node.rootLabel.attach.fold = true
+    redisplay(tree, display)
+    rehierarchy(display)
+    compact(tree, display)(_.rootLabel.attach.nextDisplay)
+    state
+    //actionEffect(FlushDisplayAction(display), ModelerCss.delay)
+  }
+
+  def unfold(node: TM) = { state: ModelerState =>
+    val tree = state.graph.root
+    val display = state.graph.display.tree
+    node.rootLabel.attach.fold = false
+    redisplay(tree, display)
+    applyDisplay(tree)
+    //actionEffect(FlushHierarchyAction())
+    state
   }
 
   def edit(node: TM) = { state: ModelerState =>
-    if (state.graph.editing ne node)
       state.copy(graph = state.graph.copy(editing = node))
-    else state
   }
 
   def active(node: TM) = { state: ModelerState =>
-    if (state.graph.active ne node)
-      state.copy(graph = state.graph.copy(active = node))
-    else state
+    state.copy(graph = state.graph.copy(active = node))
   }
 
   def create(node: TM, name: String, meta: AttrDef) =  { state: ModelerState =>

@@ -36,6 +36,8 @@ lazy val server = (project in file("server")).settings(
 ).enablePlugins(PlayScala, WebScalaJSBundlerPlugin).
   dependsOn(sharedJvm)
 
+val monocleVersion = "1.5.0"
+
 lazy val client = (project in file("client")).settings(
   scalaVersion := scalaV,
   // This is an application with a main method
@@ -44,9 +46,10 @@ lazy val client = (project in file("client")).settings(
   mainClass in Compile := Some("b9.ModelerApp"),
   libraryDependencies ++= Seq(
     "com.github.japgolly.scalajs-react" %%% "core" % "1.3.1",
-//    "com.github.japgolly.scalajs-react" %%% "ext-monocle" % "1.0.0",
-//    "com.github.julien-truffaut" %%%  "monocle-core"  % "1.4.0",
-//    "com.github.julien-truffaut" %%%  "monocle-macro" % "1.4.0",
+    "com.github.japgolly.scalajs-react" %%% "ext-monocle" % "1.3.1",
+    "com.github.julien-truffaut" %%%  "monocle-core"  % monocleVersion,
+    "com.github.julien-truffaut" %%%  "monocle-macro" % monocleVersion,
+//      "com.github.julien-truffaut" %%% "monocle-law"   % monocleVersion % Test,
     "io.monix" %%% "monix" % "3.0.0-RC2",
     "com.github.japgolly.scalacss" %%% "ext-react" % "0.5.5",
     "org.scala-js" %%% "scalajs-dom" % "0.9.6"
@@ -63,7 +66,7 @@ lazy val client = (project in file("client")).settings(
 ).enablePlugins(ScalaJSBundlerPlugin, ScalaJSWeb).
   dependsOn(sharedJs)
 
-val monocleVersion = "1.4.0" // 1.5.0-cats-M1 based on cats 1.0.0-MF
+addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full)
 
 lazy val shared = (crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure) in file("shared")).settings(
     scalaVersion := scalaV,
@@ -74,10 +77,7 @@ lazy val shared = (crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pur
       "com.lihaoyi" %%% "autowire" % "0.2.6",
       "com.lihaoyi" %%% "fastparse" % "1.0.0",
       "org.scalactic" %%% "scalactic" % "3.0.1",
-      "org.scalatest" %%% "scalatest" % "3.0.1" % Test
-//      "com.github.julien-truffaut" %%% "monocle-core"  % monocleVersion,
-//      "com.github.julien-truffaut" %%% "monocle-macro" % monocleVersion,
-//      "com.github.julien-truffaut" %%% "monocle-law"   % monocleVersion % Test,
+      "org.scalatest" %%% "scalatest" % "3.0.1" % Test,
 //      "com.github.kenbot" %% "goggles-dsl" % "1.0",
 //      "com.github.kenbot" %% "goggles-macros" % "1.0"
     )

@@ -4,6 +4,8 @@ import meta.TreeNode
 import scala.scalajs.js
 import scalaz.{Show, Tree, TreeLoc}
 
+import monocle.macros._
+
 /**
   * Created by blu3gui7ar on 2017/6/23.
   */

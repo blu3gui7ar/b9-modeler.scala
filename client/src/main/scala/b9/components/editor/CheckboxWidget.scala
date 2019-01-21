@@ -17,9 +17,6 @@ object CheckboxWidget extends Widget {
       case _ => Seq.empty
     }
 
-    checked map { case s: JsString => s.value }
-
-
     label.meta.values map { choices =>
       val boxes = choices map { choice =>
         val active = checked.contains(JsString(choice.name))
@@ -36,9 +33,9 @@ object CheckboxWidget extends Widget {
                   case _ => false
                 }
                 update(JsArray(filtered))(label, lens, dispatcher)
-            }
-              else
+              } else {
                 update(JsArray(JsString(choice.name) +: checked))(label, lens, dispatcher)
+              }
             },
           ),
           choice.name

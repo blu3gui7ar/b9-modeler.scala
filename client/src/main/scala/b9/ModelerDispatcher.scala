@@ -10,19 +10,19 @@ import monix.execution.Scheduler.Implicits.global
 import scala.concurrent.Future
 
 
-class Dispatcher [ModelerState](val initialModelerState: ModelerState){
+class Dispatcher [S](val initialModelerState: S){
 
-  private val dispatcher: BehaviorSubject[ModelerState => ModelerState] =  BehaviorSubject.apply(identity)
+  private val dispatcher: BehaviorSubject[S => S] =  BehaviorSubject.apply(identity)
 
-  val stream: Observable[ModelerState] = dispatcher.scan(initialModelerState)((s, x) => x(s))
+  val stream: Observable[S] = dispatcher.scan(initialModelerState)((s, x) => x(s))
 
 
-  def dispatch(f:ModelerState => ModelerState): Unit = dispatcher.onNext(f)
+  def dispatch(f:S => S): Unit = dispatcher.onNext(f)
 
-  def dispatchCB(f: ModelerState => ModelerState): Callback = Callback { dispatch(f) }
+  def dispatchCB(f: S => S): Callback = Callback { dispatch(f) }
 
-  def observer(f:ModelerState => Unit)= new Observer[ModelerState] {
-    def onNext(s: ModelerState): Future[Ack] = {
+  def observer(f:S => Unit)= new Observer[S] {
+    def onNext(s: S): Future[Ack] = {
 
       f(s)
 
@@ -34,16 +34,16 @@ class Dispatcher [ModelerState](val initialModelerState: ModelerState){
     def onComplete(): Unit = println("Completed")
   }
 
-  def subscribe(modeState: ModelerState => Unit, filter: ModelerState => Boolean): Cancelable =
+  def subscribe(modeState: S => Unit, filter: S => Boolean): Cancelable =
     stream.filter(filter).subscribe(observer(modeState))
 
-  def subscribe(modeState: ModelerState => Unit): Cancelable =
+  def subscribe(modeState: S => Unit): Cancelable =
     stream.subscribe(observer(modeState))
 
 
-  def subscribeOpt(modeState: ModelerState => Unit, filter: ModelerState => Boolean): Option[Cancelable] =
+  def subscribeOpt(modeState: S => Unit, filter: S => Boolean): Option[Cancelable] =
     Option(stream.filter(filter).subscribe(observer(modeState)))
 
-  def subscribeOpt(modeState: ModelerState => Unit): Option[Cancelable] =
+  def subscribeOpt(modeState: S => Unit): Option[Cancelable] =
     Option(stream.subscribe(observer(modeState)))
 }

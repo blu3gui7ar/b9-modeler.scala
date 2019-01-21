@@ -24,6 +24,7 @@ object JsonView {
   }
 
   private val component = ScalaComponent.builder[Props]("Editor")
+    .stateless
     .renderBackend[Backend]
     .build
 

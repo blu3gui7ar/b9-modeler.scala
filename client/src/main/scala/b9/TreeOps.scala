@@ -1,23 +1,38 @@
 package b9
 
-import b9.short._
 import meta._
 import monix.execution.Cancelable
+import monocle.Lens
 import monocle.std.tree._
 import monocle.syntax.ApplyLens
 import monocle.syntax.all._
 import play.api.libs.json._
+import scalaz.{Tree, TreeLoc}
 
 /**
   * Created by blu3gui7ar on 2017/6/24.
   */
 object TreeOps {
 
-  protected lazy val treeExtractor = new TreeExtractorTpl[Unit]()
+  lazy val treeExtractor = new TreeExtractorTpl[Unit]()
+
   type TN = TreeNode[Unit]
-  type TTN = treeExtractor.N
-  type TLens = monocle.Lens[TTN, TTN]
-  type LLens = monocle.Lens[TTN, TN]
+  type TTN = Tree[TreeNode[Unit]]
+  type TTNLoc = TreeLoc[TreeNode[Unit]]
+
+  type SLens = Lens[TTN, Stream[TTN]]
+  type TLens = Lens[TTN, TTN]
+  type LLens = Lens[TTN, TN]
+
+  def at(idx: Int): Lens[Stream[TTN], TTN] = {
+    Lens[Stream[TTN], TTN](_.apply(idx))(node => _.zipWithIndex map { case (on, i) => if (idx == i) node else on})
+  }
+
+  def at(node: TTN): Lens[Stream[TTN], TTN] = Lens[Stream[TTN], TTN]
+    { stream => stream.find(_ eq node).getOrElse(stream.head) }
+    { newNode => stream => stream.map { n => if (n eq node) newNode else n } }
+
+  val asSet = Lens[Stream[TTN], Set[TTN]](_.toSet)(set => _ => set.toStream)
 
   import monix.execution.Scheduler.{global => scheduler}
 

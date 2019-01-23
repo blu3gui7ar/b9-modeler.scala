@@ -134,4 +134,7 @@ object ModelerCss extends StyleSheet.Inline {
     opacity(0.1)
   )
 
+  val fade = style (
+    opacity(0.1)
+  )
 }

@@ -1,6 +1,6 @@
 package b9
 
-import b9.short.IdNode
+import b9.short._
 import facades.d3js.Hierarchy
 
 import scala.scalajs.js
@@ -36,19 +36,29 @@ object Layout {
   def gather[N](node: IdNode[N]): IdNode[N] =
     gather(node, (width - left - right) / 2 + left, (height - top - bottom) / 2 + top)()
 
-//  def compact(treeRoot: TM, displayRoot: TM)(f: TM => Boolean = { n: TM => n.rootLabel.attach.display }): TM = {
-//    if(!f(treeRoot)) {
-//      treeRoot.rootLabel.attach.x = displayRoot.rootLabel.attach.x
-//      treeRoot.rootLabel.attach.y = displayRoot.rootLabel.attach.y
-//    }
-//    traverse(treeRoot, { (parent: TM, child: TM) =>
-//      if (!f(child)) {
-//        child.rootLabel.attach.x = parent.rootLabel.attach.x
-//        child.rootLabel.attach.y = parent.rootLabel.attach.y
-//      }
-//    })
-//    treeRoot
-//  }
+  def compact[N](treeRoot: IdNode[N], x: Double, y: Double): IdNode[N] = {
+    treeRoot.eachBefore { n =>
+      if (!n.display) {
+        n.x = x
+        n.y = y
+      } else if (n.parent.map(_.fold).getOrElse(false)) {
+        n.x = n.parent.map(_.x).getOrElse(x)
+        n.y = n.parent.map(_.y).getOrElse(y)
+      }
+    }
+    treeRoot
+  }
+
+  def rehierarchy[N](n: IdNode[N], children: js.Function1[IdNode[N], js.Array[IdNode[N]]]): IdNode[N] = {
+    val rhroot = Hierarchy.hierarchy[IdNode[N], IdNode[IdNode[N]]](n, children)
+    apply(rhroot) eachBefore { wrapped : IdNode[IdNode[N]] =>
+      wrapped.data.map { inner =>
+        inner.x = wrapped.x
+        inner.y = wrapped.y
+      }
+    }
+    rhroot.data.get
+  }
 
   def relocate[N](node: IdNode[N]): IdNode[N] = {
     //rebuild depth
@@ -77,12 +87,6 @@ object Layout {
 //      child.rootLabel.attach.display = child.rootLabel.attach.nextDisplay
 //    })
 //  }
-
-//  protected def traverse(node: TM, f: (TM, TM) => Unit): Unit =
-//    node.subForest.foreach { child: TM =>
-//      f(node, child)
-//      traverse(child, f)
-//    }
 
 //  protected def eq(a: TM, b: TM): Boolean = a.rootLabel eq b.rootLabel
 

@@ -2,9 +2,8 @@ package b9
 
 import b9.CssSettings._
 import b9.TreeOps.TTN
-import b9.components.graph.TreeGraph.GraphState
 import b9.components.MetaIDE
-import japgolly.scalajs.react.Callback
+import b9.components.graph.TreeGraph.GraphState
 import org.scalajs.dom
 import org.scalajs.dom.raw.Element
 import shared.Apps
@@ -24,9 +23,9 @@ object ModelerApp {
 
   def init(graphEle: Element, editorEle: Element, viewEle: Element): Unit = {
     val (tree, meta) = TreeOps.initialModel
-    val treeDispatcher = new Dispatcher[(TTN, Callback)](tree, Callback.empty)
+    val treeDispatcher = new Dispatcher[TTN](tree)
     val rootId = tree.rootLabel.uuid
-    val graphDispatcher = new Dispatcher[(GraphState, Callback)](GraphState(rootId, rootId, rootId, Set.empty), Callback.empty)
+    val graphDispatcher = new Dispatcher[GraphState](GraphState(rootId, rootId, rootId, Set.empty))
 
     MetaIDE(treeDispatcher, graphDispatcher, meta).renderIntoDOM(graphEle)
   }

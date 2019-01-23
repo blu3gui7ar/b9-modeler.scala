@@ -16,9 +16,9 @@ object MetaIDE {
 //  def apply(dispatcher: Dispatcher[ModelerState]) = component(Props(dispatcher))
 //  case class Props(dispatcher: Dispatcher[ModelerState])
 
-  def apply(treeDisp: Dispatcher[(TTN, Callback)], graphDisp: Dispatcher[(GraphState, Callback)], meta: Root) =
+  def apply(treeDisp: Dispatcher[TTN], graphDisp: Dispatcher[GraphState], meta: Root) =
     component(Props(treeDisp, graphDisp, meta))
-  case class Props(treeDisp: Dispatcher[(TTN, Callback)], graphDisp: Dispatcher[(GraphState, Callback)], meta: Root)
+  case class Props(treeDisp: Dispatcher[TTN], graphDisp: Dispatcher[GraphState], meta: Root)
 
   class Backend($: BackendScope[Props, TTN]) {
     var end: Option[Cancelable] = None

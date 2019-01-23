@@ -1,10 +1,6 @@
 import japgolly.scalajs.react.vdom.all.VdomAttr
-import meta.TreeNode
 
 import scala.scalajs.js
-import scalaz.{Show, Tree, TreeLoc}
-import monocle.macros._
-
 import scala.scalajs.js.UndefOr
 
 /**
@@ -14,6 +10,16 @@ package object b9 {
   val CssSettings = scalacss.devOrProdDefaults
 
   object short {
+    implicit def underToOption[N](in: UndefOr[N]): Option[N] = asOption(in)
+
+    def asOption[N](in: UndefOr[N]): Option[N] = {
+//      println("asOption")
+      in.toOption match {
+        case Some(null) => None
+        case a  => a
+      }
+    }
+
     @js.native
     trait IdNode[D] extends facades.d3js.treeModule.Node[D, IdNode[D]] {
       var fold: Boolean = false
@@ -24,7 +30,6 @@ package object b9 {
       var edit: Boolean = false
     }
 
-    implicit def underToOption[N](in: UndefOr[N]): Option[N] = if (in == null) None else in.toOption
 
 //    class TreeAttach (
 //      var x: Double = 0,

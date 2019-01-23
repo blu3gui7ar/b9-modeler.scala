@@ -24,28 +24,19 @@ object Joint {
     def click(target: TTN)(e: ReactMouseEvent)(implicit gd: Dispatcher[GraphState]): Callback =
       if (e.altKey)
         gd.dispatchCB { s => s.copy(display = target.rootLabel.uuid)}
-//        Callback {
-//          gd.dispatch(ModelerOps.goDown(target))
-//          ModelerOps.deferAction {
-//            dispatcher.dispatch(ModelerOps.flushDisplay(target))
-//          }
-//        }
       else
         Callback.empty
 
     def transform(x: Double, y: Double) = s"translate($x, $y)"
 
-    def isActive(tn: TTN)(implicit graph: GraphState): Boolean = graph.active eq tn.rootLabel.uuid
+    def canGoParent(tn: IdNode[TTN]): Boolean = {
+      val p: Option[IdNode[TTN]] = tn.parent
+      tn.display && p.map(!_.display).getOrElse(false)
+    }
 
-    def isEditing(tn: TTN)(implicit graph: GraphState): Boolean = graph.edit eq tn.rootLabel.uuid
+    def canRemove(tn: IdNode[TTN])(implicit graph: GraphState): Boolean = tn.active && !canGoParent(tn)
 
-//    def isMoving(tn: TTN): Boolean = tn.rootLabel.attach.display != tn.rootLabel.attach.nextDisplay
-
-    def canGoParent(tn: TTN)(implicit graph: GraphState): Boolean = graph.display == tn.rootLabel.uuid
-
-    def canRemove(tn: TTN)(implicit graph: GraphState): Boolean = isActive(tn) && !canGoParent(tn)
-
-    def canEdit(tn: TTN)(implicit graph: GraphState): Boolean = true && !isEditing(tn)
+    def canEdit(tn: IdNode[TTN])(implicit graph: GraphState): Boolean = true && !tn.edit
 
     def creates(node: TTN, lens: TLens, macros: Map[String, MetaAst.Macro], types: Map[String, MetaAst.AstNodeWithMembers])
                (implicit dispatcher: Dispatcher[TTN]): TagMod  = {
@@ -78,52 +69,28 @@ object Joint {
             val newNode = treeExtractor.create(name, Stream.empty, expanded)
             (lens composeLens subForest).set(newNode +: node.subForest)
           }
-//          Callback {
-//          dispatcher.dispatch(ModelerOps.create(node, name, MetaAst.expand(meta, macros)))
-//          ModelerOps.deferAction {
-//            dispatcher.dispatch(ModelerOps.flushHierarchy())
-//          }
-//        }
         )
       }
     }
 
     def parentBtn(parent: TTN)(implicit dispatcher: Dispatcher[GraphState]): TagMod =
-       ParentButton(-41, -25, dispatcher.dispatchCB { s => s.copy(display = parent.rootLabel.uuid ) })
-
-//         Callback {
-//         dispatcher.dispatch(ModelerOps.goUp(parent))
-//         ModelerOps.deferAction {
-//           dispatcher.dispatch(ModelerOps.flushHierarchy())
-//         }
-//       })
+       ParentButton(-41, -25, dispatcher.dispatchCB { s => s.copy(display = parent.rootLabel.uuid) })
 
     def removeBtn(current: TTN, parent: TTN, slens: SLens)(implicit dispatcher: Dispatcher[TTN]): TagMod =
       RemoveButton(-42, 10, dispatcher.dispatchCB {
         slens.set(parent.subForest.filterNot { child => child.rootLabel.uuid == current.rootLabel.uuid })
       })
 
-//        Callback {
-//        dispatcher.dispatch(ModelerOps.removeFrom(current, parent))
-//        ModelerOps.deferAction {
-//          dispatcher.dispatch(ModelerOps.flushRemoveFrom(current, parent))
-//        }
-//      })
-
-    def link(parent: IdNode[TTN], current: IdNode[TTN]): TagMod = {
-      if (parent.display && current.display)
-        Link(Path(
-          id = "%s-%s".format(parent.data.get.rootLabel.uuid, current.data.get.rootLabel.uuid),
-          display = parent.display && current.display,
-          //        moving = isMoving(current),
-          moving = false,
-          sx = parent.x.get,
-          sy = parent.y.get,
-          tx = current.x.get,
-          ty = current.y.get
-        ))
-      else TagMod.empty
-    }
+    def link(parent: IdNode[TTN], current: IdNode[TTN]): TagMod =
+      Link(Path(
+        id = "%s-%s".format(parent.data.get.rootLabel.uuid, current.data.get.rootLabel.uuid),
+        display = parent.display && current.display,
+        moving = false,
+        sx = parent.x.get,
+        sy = parent.y.get,
+        tx = current.x.get,
+        ty = current.y.get
+      ))
 
     def render(p: Props): VdomElement = {
       implicit val treeDisp = p.td
@@ -134,46 +101,48 @@ object Joint {
       val macros = MetaAst.macros(metaRoot)
 
       val tn = p.current
-      val parent: Option[IdNode[TTN]] = p.current.parent
+      val parent = tn.parent
+      val parentFold = tn.parent.map(_.fold).getOrElse(false)
+      val show = tn.display && !parentFold
       <.g(
-        ModelerCss.hidden.unless(tn.display),
         parent.map(link(_, p.current)).whenDefined,
         <.g(
           ModelerCss.joint,
           ModelerCss.jointActive.when(tn.active),
           ModelerCss.jointEditing.when(tn.edit),
           ModelerCss.jointFolded.when(tn.fold),
-//          ModelerCss.moving.when(isMoving(tn)),
+          ModelerCss.fade.when(!show),
           keyAttr := tn.data.get.rootLabel.uuid.toString,
           ^.transform := transform(tn.y.get, tn.x.get),
-          (onDoubleClick --> Callback {
-            if (tn.fold) {
-              graphDisp.dispatch { gs =>
-                gs.copy(fold = gs.fold.filterNot(_ == tn.data.get.rootLabel.uuid))
-              }
-            } else {
-              graphDisp.dispatch { gs =>
-                gs.copy(fold = gs.fold + tn.data.get.rootLabel.uuid)
-              }
-            }
-          }).when(tn.data.get.subForest.nonEmpty),
           <.circle(
             ^.r := 6,
             (onMouseOver --> graphDisp.dispatchCB { s =>
               s.copy(active = tn.data.get.rootLabel.uuid)
-            }).when(!tn.active),
-            onClick ==> click(tn.data.get)
+            }).when(!tn.active && show),
+            (onClick ==> click(tn.data.get)).when(show),
+            (onDoubleClick --> Callback {
+              if (tn.fold) {
+                graphDisp.dispatch { gs =>
+                  gs.copy(fold = gs.fold.filterNot(_ == tn.data.get.rootLabel.uuid))
+                }
+              } else {
+                graphDisp.dispatch { gs =>
+                  gs.copy(fold = gs.fold + tn.data.get.rootLabel.uuid)
+                }
+              }
+            }).when(tn.data.get.subForest.nonEmpty && show),
           ),
           <.text(
             ^.x := 15,
             ^.y := 3,
             ^.textAnchor := "start",
-            onClick --> Callback.empty,
+            ModelerCss.fade.when(!show),
+            (onClick --> Callback.empty).when(show),
             tn.data.get.rootLabel.name
           ),
-          parent.map(_p => parentBtn(_p.data.get)).whenDefined.when(canGoParent(tn.data.get)),
-          parent.map(_p => removeBtn(tn.data.get, _p.data.get, p.slens.get)).whenDefined.when(canRemove(tn.data.get)),
-          EditButton(-12, 10, graphDisp.dispatchCB(gs => gs.copy(edit = tn.data.get.rootLabel.uuid))).when(canEdit(tn.data.get)),
+          parent.map(_p => parentBtn(_p.data.get)).whenDefined.when(canGoParent(tn)),
+          parent.map(_p => removeBtn(tn.data.get, _p.data.get, p.slens.get)).whenDefined.when(canRemove(tn)),
+          EditButton(-12, 10, graphDisp.dispatchCB(gs => gs.copy(edit = tn.data.get.rootLabel.uuid))).when(canEdit(tn)),
           creates(tn.data.get, p.lens, macros, types)
         )
       )
@@ -184,10 +153,6 @@ object Joint {
   private val component = ScalaComponent.builder[Props]("Joint")
     .renderBackend[Backend]
     .build
-
-//  def apply(td: Dispatcher[TTN], gd: Dispatcher[GraphState], lens: TLens, parent: Option[TTN], current: TTN,
-//            gs: GraphState, display: Boolean, fold: Boolean) =
-//    component(Props(td, gd, lens, parent, current, gs, display, fold))
 
   def apply(td: Dispatcher[TTN], gd: Dispatcher[GraphState], meta: MetaAst.Root, lens: TLens, slens: Option[SLens],
             current: IdNode[TTN], gs: GraphState) =

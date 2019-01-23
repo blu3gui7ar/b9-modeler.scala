@@ -30,8 +30,8 @@ object Link {
       <.path(
         keyAttr := p.path.id,
         ModelerCss.link,
-        ModelerCss.hidden.unless(p.path.display),
-        ModelerCss.moving.when(p.path.moving),
+        ModelerCss.fade.unless(p.path.display),
+//        ModelerCss.moving.when(p.path.moving),
         ^.d := diagonal(p.path)
       )
     }

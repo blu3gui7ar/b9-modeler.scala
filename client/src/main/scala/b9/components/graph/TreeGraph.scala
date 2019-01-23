@@ -24,8 +24,8 @@ object TreeGraph {
 
   case class Props(tree: TTN, meta: MetaAst.Root,
 
-                   treeDisp: Dispatcher[(TTN, Callback)],
-                   graphDisp: Dispatcher[(GraphState, Callback)],
+                   treeDisp: Dispatcher[TTN],
+                   graphDisp: Dispatcher[GraphState],
 
                    width: Double,
                    height: Double,
@@ -34,6 +34,8 @@ object TreeGraph {
                    right: Int = 200,
                    top: Int = 10,
                    bottom: Int = 10,
+
+                   shift: Int = 10,
                   )
 
   class Backend($ : BackendScope[Props, GraphState]) {
@@ -41,16 +43,8 @@ object TreeGraph {
 
     def transform(x: Int, y: Int) = s"translate($x, $y)"
 
-    def breadcrums(display: IdNode[TTN], top: Int)(implicit dispatcher: Dispatcher[GraphState]): TagMod = {
-      val parents: Stream[IdNode[TTN]] =  {
-        def loop(node: Option[IdNode[TTN]]): Stream[IdNode[TTN]] = node match {
-          case Some(n) => n +: loop(n.parent)
-          case _ => Stream.empty
-        }
-        loop(Some(display))
-      }
-
-      val levels = parents.reverse.toTagMod { node =>
+    def breadcrums(display: IdNode[TTN], x: Double, y: Double)(implicit dispatcher: Dispatcher[GraphState]): TagMod = {
+      val levels = display.ancestors().reverse.toTagMod { node =>
         val label = node.data.get.rootLabel
         BreadCrum(
           label.name + "> ",
@@ -59,70 +53,65 @@ object TreeGraph {
       }
 
       <.text(
-        ^.x := 0,
-        ^.y := top,
+        ^.dominantBaseline := "middle",
+        ^.x := x,
+        ^.y := y,
         ModelerCss.breadcrum,
         levels
       )
     }
 
     def joints(node: IdNode[TTN], lens: TLens, slens: Option[SLens], gs: GraphState, meta: MetaAst.Root)
-              (implicit td: Dispatcher[TTN], gd: Dispatcher[GraphState], top: Int): Stream[TagMod]  = {
-
-      val parent: Option[IdNode[TTN]] = node.parent
-
-      val parentDisplay = parent.map(_.display).getOrElse(false)
-      node.display =
-        node.data.map(_.rootLabel.uuid == gs.display).getOrElse(false) || parentDisplay
-
-      if (node.display != parentDisplay) {
-        Layout.apply(node)
-      }
+              (implicit td: Dispatcher[TTN], gd: Dispatcher[GraphState]): Stream[TagMod] = {
 
 
-      node.fold =
-        node.data.map(tn => gs.fold.contains(tn.rootLabel.uuid)).getOrElse(false) || parent.map(_.fold).getOrElse(false)
-      node.active = node.data.map(gs.active == _.rootLabel.uuid).getOrElse(false)
-      node.edit = node.data.map(gs.edit == _.rootLabel.uuid).getOrElse(false)
+      val jp: TagMod = Joint(td, gd, meta, lens, slens, node, gs)
 
+      val sub = node.children map { _.toStream flatMap { child =>
+        val cslens = lens composeLens subForest
+        val nl = cslens composeLens at(child.data.get)
+        joints(child, nl, Some(cslens), gs, meta)
+      }} getOrElse Stream.empty[TagMod]
 
-      val children: Option[js.Array[IdNode[TTN]]] = node.children
-      val sub: Stream[TagMod] = children map { _.toStream flatMap { child =>
-        val slens = lens composeLens subForest
-        val nl = slens composeLens at(child.data.get)
-        joints(child, nl, Some(slens), gs, meta)
-      }} getOrElse(Stream.empty)
-
-      if (node.display) {
-        val j: TagMod = Joint(td, gd, meta, lens, slens, node, gs)
-        val tagmods = j +: sub.reverse
-        if (!parentDisplay)
-          breadcrums(node, top)  +: tagmods
-        else
-          tagmods
-      }
-      else sub
+      jp +: sub
     }
 
     def render(p: Props, gs: GraphState) = {
       implicit val td = p.treeDisp
       implicit val gd = p.graphDisp
-      implicit val top = p.top
 
       import js.JSConverters._
-      val rhroot = Hierarchy.hierarchy[TTN, IdNode[TTN]](p.tree,
-        { n: TTN =>
-          if (gs.fold.contains(n.rootLabel.uuid)) new js.Array[TTN]()
-          else n.subForest.toJSArray
-        }: js.Function1[TTN, js.Array[TTN]]
+      val rhroot = Hierarchy.hierarchy[TTN, IdNode[TTN]](p.tree, { n: TTN => n.subForest.toJSArray}: js.Function1[TTN, js.Array[TTN]])
+
+      var displayRoot: IdNode[TTN] = rhroot
+
+      rhroot.eachBefore { node =>
+        val parentDisplay = node.parent.map(_.display).getOrElse(false)
+        node.display =
+          node.data.map(_.rootLabel.uuid == gs.display).getOrElse(false) || parentDisplay
+
+        if ( !parentDisplay && node.display) displayRoot = node
+
+
+        node.fold =
+          node.data.map(tn => gs.fold.contains(tn.rootLabel.uuid)).getOrElse(false) || node.parent.map(_.fold).getOrElse(false)
+        node.active = node.data.map(gs.active == _.rootLabel.uuid).getOrElse(false)
+        node.edit = node.data.map(gs.edit == _.rootLabel.uuid).getOrElse(false)
+      }
+
+      val emptyJsArray = new js.Array[IdNode[TTN]]()
+      Layout.rehierarchy(displayRoot,
+        { n: IdNode[TTN] => if (n.fold) emptyJsArray else n.children.getOrElse(emptyJsArray) }
       )
+      Layout.compact(rhroot, p.top, 0.0)
 
       <.svg(
         ^.width := p.width,
         ^.height:= p.height,
         <.g(
           ^.transform := transform(p.left, p.top),
-          joints(rhroot, Iso.id.asLens, None, gs, p.meta).toTagMod
+          joints(rhroot, Iso.id.asLens, None, gs, p.meta).reverse.toTagMod,
+          breadcrums(displayRoot, p.top, p.shift)
         )
       )
     }
@@ -135,24 +124,15 @@ object TreeGraph {
       Callback {
         val p = scope.props
         scope.backend.end = p.graphDisp.subscribeOpt { newState =>
-          scope.modState(_ => newState._1, newState._2).runNow()
+          scope.modState(_ => newState).runNow()
         }
       }
     }
     .componentWillUnmount { scope =>
       Callback(scope.backend.end.map(_.cancel))
     }
-//    .componentDidMount { scope =>
-//      Callback {
-//        val p = scope.props
-//        p.graphDisp.dispatch(ModelerOps.goUp(p.modeler.graph.root))
-//        ModelerOps.deferAction {
-//          p.dispatcher.dispatch(ModelerOps.flushHierarchy())
-//        }
-//      }
-//    }
     .build
 
-  def apply(tree: TTN, meta: MetaAst.Root, td: Dispatcher[(TTN, Callback)], gd: Dispatcher[(GraphState, Callback)], width: Double, height: Double) =
+  def apply(tree: TTN, meta: MetaAst.Root, td: Dispatcher[TTN], gd: Dispatcher[GraphState], width: Double, height: Double) =
     component(Props(tree, meta, td, gd, width, height))
 }

@@ -13,7 +13,6 @@ package object b9 {
     implicit def underToOption[N](in: UndefOr[N]): Option[N] = asOption(in)
 
     def asOption[N](in: UndefOr[N]): Option[N] = {
-//      println("asOption")
       in.toOption match {
         case Some(null) => None
         case a  => a

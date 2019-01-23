@@ -13,9 +13,6 @@ import monix.execution.Cancelable
 import monocle.Iso
 
 object MetaIDE {
-//  def apply(dispatcher: Dispatcher[ModelerState]) = component(Props(dispatcher))
-//  case class Props(dispatcher: Dispatcher[ModelerState])
-
   def apply(treeDisp: Dispatcher[TTN], graphDisp: Dispatcher[GraphState], meta: Root) =
     component(Props(treeDisp, graphDisp, meta))
   case class Props(treeDisp: Dispatcher[TTN], graphDisp: Dispatcher[GraphState], meta: Root)

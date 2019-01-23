@@ -15,13 +15,11 @@ object ModelerApp {
   def main(args: Array[String]): Unit = {
     ModelerCss.addToDocument()
     init(
-      dom.document.getElementById(Apps.ModelerApp),
-      dom.document.getElementById(Apps.EditorApp),
-      dom.document.getElementById(Apps.ViewApp)
+      dom.document.getElementById(Apps.ModelerApp)
     )
   }
 
-  def init(graphEle: Element, editorEle: Element, viewEle: Element): Unit = {
+  def init(graphEle: Element): Unit = {
     val (tree, meta) = TreeOps.initialModel
     val treeDispatcher = new Dispatcher[TTN](tree)
     val rootId = tree.rootLabel.uuid

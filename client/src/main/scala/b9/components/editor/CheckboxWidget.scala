@@ -17,8 +17,8 @@ object CheckboxWidget extends Widget {
       case _ => Seq.empty
     }
 
-    label.meta.values map { choices =>
-      val boxes = choices map { choice =>
+    label.meta.widget map { w =>
+      val boxes = w.parameters map { choice =>
         val active = checked.contains(JsString(choice.name))
         <.span(
           <.input(

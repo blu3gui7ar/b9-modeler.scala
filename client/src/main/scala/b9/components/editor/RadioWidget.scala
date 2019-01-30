@@ -12,8 +12,8 @@ object RadioWidget extends Widget {
   val name = "Radio"
 
   override def render(label: TN, lens: LLens, dispatcher: Dispatcher[TTN]): TagMod = {
-    label.meta.values map { choices =>
-      val boxes = choices map { choice =>
+    label.meta.widget map { w =>
+      val boxes = w.parameters map { choice =>
         val newVal: Option[JsValue] = label.meta.t.map {
           case TypeRef(name) =>
             if (name == "Boolean") {

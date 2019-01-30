@@ -8,14 +8,11 @@ object Sample {
   val meta: String =
     """
       |Meta {
-      |  %DEFAULT = String :: Text
-      |  %DATE = String :: Text | /[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])/
-      |  %CHECK = [String] :: Checkbox
-      |  %RADIO = String :: Radio
-      |  %BOOL = Boolean :: Radio $ true, false
-      |  %SELECT = String :: Select
-      |  %HREF = String :: Text | /(https?|mail|ftps?|sftp):\/\/.*/
-      |  %INT = Int :: Text | /[0-9]*/
+      |  %DEFAULT = String @Widget(Text)
+      |  %DATE = String @Widget(Text) @Restrict(/[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])/)
+      |  %BOOL = Boolean @Widget(Radio : true, false)
+      |  %HREF = String @Widget(Text)  @Restrict(/(https?|mail|ftps?|sftp):\/\/.*/)
+      |  %INT = Int @Widget(Text) @Restrict(/[0-9]*/)
       |  String {}
       |  Boolean {}
       |  Int {}
@@ -26,23 +23,23 @@ object Sample {
       |  size: Size
       |  time: Time
       |  urlRoot
-      |  imgs: [[Img]] | [1,]
+      |  imgs: [[Img]] @Restrict([1,])
       |  effect: Effect
-      |  marks: <Mark> | [1,]
+      |  marks: <Mark> @Restrict([1,])
       |
       |  Size { height: %INT; width: %INT }
       |  Time { start: %DATE; end: %DATE }
       |  Img {
-      |    id: %INT | (0, 100000)
+      |    id: %INT @Restrict((0, 100000))
       |    enable: %LANGS
       |    time: %DATE
       |    title: Nl
       |    url
       |    active: %BOOL
-      |    type: %SELECT $ link, shuffle
+      |    type: String @Widget(Select: link, shuffle)
       |    areas: [Area]
       |  }
-      |  %LANGS = %CHECK $ en,de,fr,es,se,no,it,pt,da,fi,ru,nl | [1,4]
+      |  %LANGS = [String] @Widget(Checkbox: en,de,fr,es,se,no,it,pt,da,fi,ru,nl) @Restrict([1,4])
       |  Nl { en; de; fr; es; se; no; it; pt; da; fi; ru; nl }
       |  Effect { type; event; auto: %BOOL; time: %DATE }
       |  Area {
@@ -53,7 +50,7 @@ object Sample {
       |  }
       |
       |  Mark {
-      |    location: :: Select $ header,banner,body
+      |    location: String @Widget(Select: header,banner,body)
       |    url
       |  }
       |}
@@ -120,6 +117,8 @@ object Sample {
 //  }
 
 //  def main(args: Array[String]): Unit = {
+//    val ds = new MetaSource(Sample.meta)
+//    print(ds.meta)
 //    tree() match { case(_meta, _data, _) =>
 //      println(_meta)
 //      println(_data)

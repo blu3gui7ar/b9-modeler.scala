@@ -75,7 +75,7 @@ lazy val shared = (crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pur
 //      "com.lihaoyi" %%% "upickle" % "0.4.4",
       "com.typesafe.play" %%% "play-json" % "2.6.7",
       "com.lihaoyi" %%% "autowire" % "0.2.6",
-      "com.lihaoyi" %%% "fastparse" % "1.0.0",
+      "com.lihaoyi" %%% "fastparse" % "2.1.0",
       "org.scalactic" %%% "scalactic" % "3.0.1",
       "org.scalatest" %%% "scalatest" % "3.0.1" % Test,
 //      "com.github.kenbot" %% "goggles-dsl" % "1.0",

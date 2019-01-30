@@ -1,101 +1,95 @@
 package meta
 
+import meta.MetaAst.{Restrict, Widget}
+
 /**
   * Created by blu3gui7ar on 2017/4/27.
   */
-object WsApi extends fastparse.WhitespaceApi.Wrapper({
-  import fastparse.all._
-  NoTrace(StringIn(" ", "\t").rep)
-})
-
 object MetaParser {
-  import WsApi._
-  import fastparse.noApi._
+  import fastparse._
+  import SingleLineWhitespace._
 
   //Basic
-  val digits = "0123456789"
-  val Digit = P(CharIn(digits))
+  def Digit[_: P] = P(CharIn("0-9"))
 
-  val Newline = P(StringIn("\n", "\r\n", "\r"))
-  val Semi = P( ";" | Newline )
-  val Semis = P(Semi.rep(1))
+  def Newline[_: P] = P(StringIn("\n", "\r\n", "\r"))
+  def Semi[_: P] = P( ";" | Newline )
+  def Semis[_: P] = P(Semi.rep(1))
 
   //Literals
-  val Comment = P( "#" ~/ AnyChar.rep ~/ Newline )
+  def Comment[_: P] = P( "#" ~/ AnyChar.rep ~/ Newline )
 
-  val Number = P( Digit.rep(1).! ).map(_.toInt)
+  def Number[_: P] = P( Digit.rep(1).! ).map(_.toInt)
 
-  val ValueTerm = {
-    val first = P( CharIn('a' to 'z', 'A' to 'Z', "_") )
-    val rest = P( CharIn('a' to 'z', 'A' to 'Z', '0' to '9', "_").rep )
-    P( first ~ rest ).!.map(MetaAst.Value)
-  }
+  def ValueTerm[_: P] =
+    P( CharIn("_a-zA-Z") ~ CharIn("_a-zA-Z0-9").rep ).!.map(MetaAst.Value)
 
-  val IdentTerm = {
-    val first = P( CharIn('a' to 'z') )
-    val rest = P( CharIn('a' to 'z', 'A' to 'Z', '0' to '9', "_").rep )
-    P( first ~ rest ).!.map(MetaAst.Ident)
-  }
-  val TypeTerm = {
-    val first = P( CharIn('A' to 'Z') )
-    val rest = P( CharIn('a' to 'z', 'A' to 'Z', '0' to '9', "_").rep )
-    P( first ~ rest ).!
-  }
+  def IdentTerm[_: P] =
+    P( CharIn("_a-z") ~ CharIn("_a-zA-Z0-9").rep ).!.map(MetaAst.Ident)
 
-  val MacroTerm = {
-    val first = P( "%" )
-    val rest = P( CharIn('A' to 'Z', "_").rep )
-    P( first ~/ rest ).!
-  }
+  def TypeTerm[_: P] =
+    P( CharIn("A-Z") ~ CharIn("_a-zA-Z0-9").rep ).!.map(MetaAst.Ident)
 
-  val Attr = P( IdentTerm.! ~/ ":".? ~/ AttrDef).map {
+  def MacroTerm[_: P] = P( "%" ~ CharIn("A-Z_").rep(1) )
+
+  def Attr[_: P] = P( IdentTerm.! ~/ ":".? ~/ AttrDef).map {
     case (ident, attrdef) => MetaAst.Attr(ident, attrdef)
   }
 
-  val AttrDef : P[MetaAst.AttrDef] = P( MacroDesc.? ~ TypeDesc.? ~ WidgetDesc.? ~ ValueDesc.? ~ Restrictions.? ).map {
-    case (md, td, wd, vd, res) => MetaAst.AttrDef(md, td, wd, vd, res)
+  def AttrDef[_: P] : P[MetaAst.AttrDef] = P(MacroDesc.? ~ TypeDesc.? ~ Annotation.rep).map { case (macrodesc, typedesc, annos) =>
+    val widget = annos.collectFirst {
+      case wd: Widget => wd
+    }
+    val restricts = annos.filter(_.isInstanceOf[Restrict]).map(_.asInstanceOf[Restrict])
+    MetaAst.AttrDef(macrodesc, typedesc, widget, restricts)
   }
 
-  var MacroDesc = MacroTerm.map(MetaAst.MacroRef)
-  val TypeDesc : P[MetaAst.Reference] = P(
-      TypeTerm.map(MetaAst.TypeRef) |
+  def Annotation[_: P] = (WidgetDesc | Restriction)
+
+  def MacroDesc[_: P] = MacroTerm.!.map(MetaAst.MacroRef)
+
+  def TypeDesc[_: P]: fastparse.P[MetaAst.Reference] = P(
+      TypeTerm.!.map(term => MetaAst.TypeRef(term)) |
       NoCut("[" ~/ TypeDesc ~ "]").map(t => MetaAst.ListRef(t)) |
       NoCut("<" ~/ TypeDesc ~ ">").map(t => MetaAst.MapRef(t))
     )
 
-  val WidgetDesc = P( "::" ~/ StringIn("Text", "Checkbox", "Radio", "Select", "TextArea").!).map(MetaAst.Widget)
-  val ValueDesc = P( "$" ~/ ValueTerm.rep(1, sep = ","))
-  val Restrictions = P( "|" ~/ Restriction.rep(1, sep = ","))
-  val Restriction : P[MetaAst.Restrict] = P( Regexp | NumRange |  Custom )
+  def WidgetDesc[_: P] = P( "@Widget(" ~/ CharIn("a-zA-Z0-9_").rep(1).! ~ (":" ~ ValueTerm.rep(sep = ",")).? ~ ")").map {
+    case (name, params) => MetaAst.Widget(name, params.getOrElse(Seq.empty))
+  }
+
+//  def ValueDesc[_: P] = P( "@Value(" ~/ ValueTerm.rep(1, sep = ",") ~/ ")")
+//  def Restrictions[_: P] = P( "@Restrict(" ~/ Restriction.rep(1, sep = ",") ~/ ")")
+  def Restriction[_: P] : P[MetaAst.Restrict] = P( "@Restrict(" ~/ (Regexp | NumRange |  Custom) ~/ ")" )
   /* MultiChoices | SingleChoice */
 
-  val EscapeSeq = P( "\\" ~~ AnyChar )
-  val RegexpChar = P( CharPred((c) => c != '/' && c != '\\') | EscapeSeq )
-  val Regexp = P( "/" ~~ RegexpChar.repX.! ~~ "/" ).map(MetaAst.RegexpR)
-  val NumRange = P( CharIn("[(").! ~/ Number.? ~ "," ~ Number.? ~ CharIn(")]").!).map {
+  def EscapeSeq[_: P] = P( "\\" ~~ AnyChar )
+  def RegexpChar[_: P] = P( CharPred((c) => c != '/' && c != '\\') | EscapeSeq )
+  def Regexp[_: P] = P( "/" ~~ RegexpChar.repX.! ~~ "/" ).map(MetaAst.RegexpR)
+  def NumRange[_: P] = P( CharIn("[(").! ~/ Number.? ~ "," ~ Number.? ~ CharIn(")]").!).map {
     case (open, min, max, close) => MetaAst.NumberRangeR(min, max, open == '(', close == ')')
   }
-  val Custom = P( "Custom(" ~/ (!")" ~ AnyChar).rep.! ~/ ")" ).map(MetaAst.CustomR)
+  def Custom[_: P] = P( "Custom(" ~/ (!")" ~ AnyChar).rep.! ~/ ")" ).map(MetaAst.CustomR)
 //  val MultiChoices = P( "[" ~/ ValueTerm.rep(sep = ",") ~ "]").map(MetaAst.MultiChoicesR)
 //  val SingleChoice = P( "<" ~/ ValueTerm.rep(sep = ",") ~ ">").map(MetaAst.SingleChoiceR)
 
-  val Meta = P(Semis.? ~ "Meta" ~/ BlockExpr ~ Semis.?).map(MetaAst.Root)
-  val BlockExpr : P[Seq[MetaAst.AstNode]] = P(Semis.? ~ "{" ~/ Block ~ "}")
-  val Block = {
-    val BlockEnd = P(Semis.? ~ &("}"))
-    val Body = P(Chunk.rep(sep = Semis))
-    P(Semis.? ~ Body ~ BlockEnd)
-  }
-  val Chunk = P(NoCut(Attr | Type | Macro))
+  def Meta[_: P] = P(Semis.? ~ "Meta" ~/ BlockExpr ~ Semis.?).map(MetaAst.Root)
 
-  val Type = P(TypeTerm ~/ BlockExpr).map {
-    case (name, members) => MetaAst.Type(name, members)
+  def BlockExpr[_: P] : P[Seq[MetaAst.AstNode]] = P(Semis.? ~ "{" ~/ Block ~ "}")
+//  def Body[_: P] = Chunk.rep(sep = Semis)
+//  def BlockEnd[_: P] = Semis.? ~ &("}")
+  def Block[_: P] = P(Semis.? ~ Chunk.rep(sep = Semis) ~ Semis.? ~ &("}"))
+
+  def Chunk[_: P] = P(NoCut(Attr | Type | Macro))
+
+  def Type[_: P] = P(TypeTerm.! ~/ BlockExpr).map {
+    case (term, members) => MetaAst.Type(term, members)
   }
-  val Macro = P(MacroTerm ~/ "=" ~/ AttrDef).map {
+  def Macro[_: P] = P(MacroTerm.! ~/ "=" ~/ AttrDef).map {
     case (name, definition) => MetaAst.Macro(name, definition)
   }
 
-  def main(args: Array[String]): Unit = {
+//  def main(args: Array[String]): Unit = {
 
 //    val dataJs = upickle.json.read(Sample.data)
 //    val rs = Meta.parse(Sample.meta)
@@ -115,5 +109,5 @@ object MetaParser {
 //    )
 //
 //    print(d)
-  }
+//  }
 }

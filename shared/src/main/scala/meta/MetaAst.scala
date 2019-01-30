@@ -14,15 +14,14 @@ object MetaAst {
   case class Root(override val members: Seq[AstNode]) extends AstNodeWithMembers("Meta", members)
 
   case class Attr(name: String, definition: AttrDef) extends AstNode
-  case class AttrDef(m: Option[MacroRef], t: Option[Reference], widget: Option[Widget],
-                     values: Option[Seq[Value]], restricts: Option[Seq[Restrict]]) extends AstNode {
+  case class AttrDef(m: Option[MacroRef], t: Option[Reference], widget: Option[Widget], restricts: Seq[Restrict]) extends AstNode {
     def isLeaf: Boolean = widget.isDefined
   }
 
   case class Macro(name: String, definition: AttrDef) extends AstNode
   case class Type(override val name: String, override val members: Seq[AstNode]) extends AstNodeWithMembers(name, members)
 
-  case class Widget(name: String) extends AstNode
+  case class Widget(name: String, parameters: Seq[Value]) extends AstNode
   case class Value(name: String) extends AstNode
 
   sealed abstract class Restrict extends AstNode
@@ -44,7 +43,7 @@ object MetaAst {
   def expand(attrDef: AttrDef, macros: Map[String, Macro]): AttrDef = {
     val expanded = expand0(attrDef, macros)
     expanded match {
-      case AttrDef(_, None, _, _, _) =>
+      case AttrDef(_, None, _,  _) =>
         val default = macros.get(DEFAULT) map { m => MacroRef(m.name)}
         expand0(expanded.copy(m = default), macros)
       case _ => expanded
@@ -53,8 +52,8 @@ object MetaAst {
 
   protected def expand0(attrDef: AttrDef, macros: Map[String, Macro]): AttrDef = {
     attrDef match {
-      case AttrDef(None, _, _, _, _) => attrDef
-      case AttrDef(m, _, _, _, _) =>
+      case AttrDef(None, _, _,  _) => attrDef
+      case AttrDef(m, _, _, _) =>
         val merged = for {
           mf <- m
           md <- macros.get(mf.name)
@@ -69,9 +68,8 @@ object MetaAst {
   def merge(defMacro: AttrDef, defRefined: AttrDef): AttrDef = AttrDef(
     defMacro.m,
     (defRefined.t ++ defMacro.t).reduceLeftOption((a, _) => a),
-    (defRefined.widget ++ defMacro.widget).reduceLeftOption((a, _) => a),
-    (defRefined.values ++ defMacro.values).reduceLeftOption((a, _) => a),
-    (defRefined.restricts ++ defMacro.restricts).reduceLeftOption((a, _) => a)
+    (defRefined.widget ++ defMacro.widget).reduceLeftOption((a, b) => Widget(a.name, a.parameters ++ b.parameters)),
+    defRefined.restricts ++ defMacro.restricts
   )
 
   def macros(r: Root): Map[String, Macro] = (r.members collect { case m: Macro =>

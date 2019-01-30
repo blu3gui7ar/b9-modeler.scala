@@ -1,15 +1,19 @@
 package meta
 
-import fastparse.core.Parsed.Success
+import fastparse.Parsed.{Failure, Success}
+import fastparse._
 import meta.MetaAst.Root
 
 class MetaSource(val metadata: String) {
 
   val meta: Root = {
-    val rs = MetaParser.Meta.parse(metadata)
+    val rs = parse(metadata, MetaParser.Meta(_))
     rs match {
       case Success(meta, _) => meta
-      case _ => Root(Seq.empty)
+      case Failure(label, index, extra) => {
+        print(extra.trace(true))
+        Root(Seq.empty)
+      }
     }
   }
 

@@ -10,7 +10,7 @@ trait QExpr {
 
 object QExpr {
   implicit class ReferenceToQExpr(ref: Reference) extends QExpr {
-    def expr() = ref match {
+    def expr(): String = ref match {
       case TypeRef(n) => n
       case ListRef(n) => s"Seq[${n.expr()}]"
       case MapRef(n) => s"Map[String, ${n.expr()}]"

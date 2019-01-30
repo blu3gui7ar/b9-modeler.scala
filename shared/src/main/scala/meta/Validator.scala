@@ -47,7 +47,7 @@ object Validator {
         case t: TypeRef => t.validate(value)
         case l: ListRef => l.validate(value)
       })
-      val restrictValid = expanded.restricts.forall(_.forall(_.validate(value)))
+      val restrictValid = expanded.restricts.forall(_.validate(value))
       typeValid && restrictValid
     }
   }

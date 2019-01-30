@@ -15,8 +15,8 @@ object SelectWidget extends Widget with ReactEventTypes {
     val value = label.value
 
     val selected = value.asOpt[String].getOrElse("")
-    val subs = label.meta.values map { choices =>
-      choices map { choice =>
+    val subs = label.meta.widget map { w =>
+      w.parameters map { choice =>
         <.option(
           ^.value := choice.name,
           choice.name

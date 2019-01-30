@@ -44,7 +44,7 @@ object TreeOps {
 
   def subLens: TTN => ApplyLens[TTN, TTN, Stream[TTN], Stream[TTN]] = _ applyLens subForest
 
-  lazy val initialModel: (TTN, MetaAst.Root) = {
+  def initialModel: (TTN, MetaAst.Root) = {
     import meta.Sample
     val ds = new MetaSource(Sample.meta)
     import ds._

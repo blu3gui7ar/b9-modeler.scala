@@ -20,8 +20,8 @@ class TreeExtractorTpl[T](defaultT: => T) {
     def tree(name: String, value: Option[JsValue], meta: AttrDef): Option[N]
   }
 
-  val emptyAttrDef = AttrDef(None, None, None, None, None)
-  val RootAttrDef = AttrDef(None, Some(TypeRef("Meta")), None, None, None)
+  val emptyAttrDef = AttrDef(None, None, None, Seq.empty)
+  val RootAttrDef = AttrDef(None, Some(TypeRef("Meta")), None, Seq.empty)
   val emptyTree = create("empty", Stream.empty, emptyAttrDef)
 
   def create(name: String, children: Stream[N], meta: AttrDef, value: JsValue = JsNull): N = Node(

@@ -15,9 +15,7 @@ object TextWidget extends Widget with ReactEventTypes {
   def onInputChange(label:TN, lens: LLens, dispatcher: Dispatcher[TTN], toValue: ReactEventFromInput => JsValue)
                  (e: ReactEventFromInput): Callback = {
     val value = toValue(e)
-    val validated = label.meta.restricts map { restricts =>
-      restricts map { _.validate(Some(value)) } forall(identity)
-    } getOrElse(true)
+    val validated = label.meta.restricts map { _.validate(Some(value)) } forall(identity)
 
     if (validated)
       updateCB(value)(label, lens, dispatcher)

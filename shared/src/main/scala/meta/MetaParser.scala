@@ -36,13 +36,16 @@ object MetaParser {
     case (ident, attrdef) => MetaAst.Attr(ident, attrdef)
   }
 
-  def AttrDef[_: P] : P[MetaAst.AttrDef] = P(MacroDesc.? ~ TypeDesc.? ~ Annotation.rep).map { case (macrodesc, typedesc, annos) =>
-    val widget = annos.collectFirst {
-      case wd: Widget => wd
+  def AnnoSep[_: P] = (Newline ~ &("@")).?
+
+  def AttrDef[_: P] : P[MetaAst.AttrDef] = P(MacroDesc.? ~ TypeDesc.? ~ AnnoSep ~ Annotation.rep(sep = AnnoSep))
+    .map { case (macrodesc, typedesc, annos) =>
+      val widget = annos.collectFirst {
+        case wd: Widget => wd
+      }
+      val restricts = annos.filter(_.isInstanceOf[Restrict]).map(_.asInstanceOf[Restrict])
+      MetaAst.AttrDef(macrodesc, typedesc, widget, restricts)
     }
-    val restricts = annos.filter(_.isInstanceOf[Restrict]).map(_.asInstanceOf[Restrict])
-    MetaAst.AttrDef(macrodesc, typedesc, widget, restricts)
-  }
 
   def Annotation[_: P] = (WidgetDesc | Restriction)
 

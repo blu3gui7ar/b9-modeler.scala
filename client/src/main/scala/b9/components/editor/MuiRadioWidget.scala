@@ -5,7 +5,7 @@ import b9.Dispatcher
 import b9.TreeOps.{LLens, TN, TTN}
 import facades.materialui.{FormControlLabel, Radio, RadioGroup}
 import japgolly.scalajs.react.raw.SyntheticEvent
-import japgolly.scalajs.react.vdom.TagMod
+import japgolly.scalajs.react.vdom.{TagMod, VdomNode}
 import japgolly.scalajs.react.vdom.html_<^._
 import meta.MetaAst.TypeRef
 import org.scalajs.dom.html
@@ -29,7 +29,7 @@ object MuiRadioWidget extends Widget {
       case _ => JsString(v)
     } getOrElse(JsNull)
 
-  override def render(label: TN, lens: LLens, dispatcher: Dispatcher[TTN]): TagMod = {
+  override def render(label: TN, lens: LLens, dispatcher: Dispatcher[TTN]): VdomNode = {
     label.meta.widget map { w =>
       val boxes = w.parameters map { choice =>
         val r = Radio(value = choice.name)()

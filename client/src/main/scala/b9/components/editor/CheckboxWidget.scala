@@ -11,7 +11,7 @@ import play.api.libs.json._
 object CheckboxWidget extends Widget {
   val name = "Checkbox"
 
-  override def render(label: TN, lens: LLens, dispatcher: Dispatcher[TTN]): TagMod = {
+  override def render(label: TN, lens: LLens, dispatcher: Dispatcher[TTN]): VdomNode = {
     val checked = label.value match {
       case vs: JsArray => vs.value
       case _ => Seq.empty
@@ -41,7 +41,7 @@ object CheckboxWidget extends Widget {
           choice.name
         )
       }
-      boxes.toTagMod
+      boxes.toVdomArray
     } getOrElse EmptyVdom
   }
 }

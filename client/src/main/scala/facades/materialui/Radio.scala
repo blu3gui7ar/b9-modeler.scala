@@ -3,7 +3,6 @@ package facades.materialui
 import com.payalabs.scalajs.react.bridge.{ReactBridgeComponent, WithProps}
 import japgolly.scalajs.react.raw.SyntheticEvent
 import org.scalajs.dom.html
-import play.api.libs.json.JsValue
 
 import scala.scalajs.js
 

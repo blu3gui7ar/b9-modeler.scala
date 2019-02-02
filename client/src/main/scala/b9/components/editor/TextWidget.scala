@@ -3,7 +3,7 @@ package b9.components.editor
 import b9.Dispatcher
 import b9.TreeOps._
 import japgolly.scalajs.react.vdom.HtmlAttrs.onChange
-import japgolly.scalajs.react.vdom.TagMod
+import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{Callback, ReactEventTypes}
 import meta.Validator._
@@ -23,7 +23,7 @@ object TextWidget extends Widget with ReactEventTypes {
       Callback.empty
   }
 
-  override def render(label: TN, lens: LLens, dispatcher: Dispatcher[TTN]): TagMod = label.value match {
+  override def render(label: TN, lens: LLens, dispatcher: Dispatcher[TTN]): VdomNode = label.value match {
     case n: JsNumber => <.input(
       ^.name := ref(label),
       ^.defaultValue := n.value.toString,

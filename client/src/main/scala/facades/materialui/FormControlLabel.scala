@@ -10,7 +10,7 @@ object FormControlLabel extends ReactBridgeComponent {
 
   def apply(name: js.UndefOr[String] = js.undefined,
             value: js.UndefOr[String] = js.undefined,
-            control: js.UndefOr[js.Any] = js.undefined,
+            control: js.UndefOr[js.Object] = js.undefined,
             label: js.UndefOr[String] = js.undefined,
             labelPlacement: js.UndefOr[String] = js.undefined,
             onChange: js.UndefOr[ReactEvent => Callback] = js.undefined

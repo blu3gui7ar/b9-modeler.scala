@@ -14,6 +14,10 @@ package object materialui {
     val Radio: js.Any = js.native
     val RadioGroup: js.Any = js.native
     val FormControlLabel: js.Any = js.native
+    val ExpansionPanel: js.Any = js.native
+    val ExpansionPanelSummary: js.Any = js.native
+    val ExpansionPanelDetails: js.Any = js.native
+//    val styles: js.Dynamic = js.native
   }
 
   implicit val JsValueToJs: JsWriter[JsValue] = JsWriter { value: JsValue =>

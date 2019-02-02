@@ -4,14 +4,14 @@ import b9.Dispatcher
 import b9.TreeOps._
 import japgolly.scalajs.react.ReactEventTypes
 import japgolly.scalajs.react.vdom.HtmlAttrs.onChange
-import japgolly.scalajs.react.vdom.TagMod
+import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^._
 import play.api.libs.json.JsString
 
 object SelectWidget extends Widget with ReactEventTypes {
   val name = "Select"
 
-  override def render(label: TN, lens: LLens, dispatcher: Dispatcher[TTN]): TagMod = {
+  override def render(label: TN, lens: LLens, dispatcher: Dispatcher[TTN]): VdomNode = {
     val value = label.value
 
     val selected = value.asOpt[String].getOrElse("")

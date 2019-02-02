@@ -137,4 +137,8 @@ object ModelerCss extends StyleSheet.Inline {
   val fade = style (
     opacity(0.1)
   )
+
+  val panel = style (
+    display.block.important
+  )
 }

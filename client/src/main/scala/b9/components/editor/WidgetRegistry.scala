@@ -7,6 +7,7 @@ object WidgetRegistry {
     CheckboxWidget.name -> CheckboxWidget,
     RadioWidget.name -> RadioWidget,
     SelectWidget.name -> SelectWidget,
+    MuiRadioWidget.name -> MuiRadioWidget,
   )
 
   def register(name: String, widget: Widget): Unit = {

@@ -1,4 +1,5 @@
 import japgolly.scalajs.react.vdom.all.VdomAttr
+import play.api.libs.json._
 
 import scala.scalajs.js
 import scala.scalajs.js.UndefOr
@@ -27,6 +28,15 @@ package object b9 {
 
       var active: Boolean = false
       var edit: Boolean = false
+    }
+
+    implicit def JsValueToString(value: JsValue): String = value match {
+      case b: JsBoolean => b.value.toString
+      case s: JsString => s.value
+      case o: JsObject => o.value.toString
+      case a: JsArray => a.value.toString
+      case n: JsNumber => n.value.toString
+      case _ => "null"
     }
 
 

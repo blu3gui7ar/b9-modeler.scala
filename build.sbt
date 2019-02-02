@@ -52,6 +52,7 @@ lazy val client = (project in file("client")).settings(
 //      "com.github.julien-truffaut" %%% "monocle-law"   % monocleVersion % Test,
     "io.monix" %%% "monix" % "3.0.0-RC2",
     "com.github.japgolly.scalacss" %%% "ext-react" % "0.5.5",
+    "com.payalabs" %%% "scalajs-react-bridge" % "0.7.0",
     "org.scala-js" %%% "scalajs-dom" % "0.9.6"
   ),
   webpackBundlingMode := BundlingMode.LibraryOnly(),
@@ -61,6 +62,7 @@ lazy val client = (project in file("client")).settings(
     "d3-hierarchy" -> "1.1.5",
     "d3-shape" -> "1.2.0",
     "font-awesome" -> "4.7.0",
+    "@material-ui/core" -> "3.9.1",
     "bulma" -> "0.4.1"
   ), npmDevDependencies in Compile += "expose-loader" -> "0.7.1"
 ).enablePlugins(ScalaJSBundlerPlugin, ScalaJSWeb).

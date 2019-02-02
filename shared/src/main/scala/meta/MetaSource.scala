@@ -16,6 +16,7 @@ class MetaSource(val metadata: String) {
       }
     }
   }
+//  println(meta)
 
   implicit val macros = MetaAst.macros(meta)
   implicit val types = MetaAst.types(meta)

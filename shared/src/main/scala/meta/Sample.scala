@@ -11,7 +11,7 @@ object Sample {
       |  %DEFAULT = String @Widget(Text)
       |  %DATE = String @Widget(Text)
       |     @Restrict(/[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])/)
-      |  %BOOL = Boolean @Widget(Radio : true, false)
+      |  %BOOL = Boolean @Widget(MuiRadio : true, false)
       |  %HREF = String @Widget(Text)
       |     @Restrict(/(https?|mail|ftps?|sftp):\/\/.*/)
       |  %INT = Int @Widget(Text) @Restrict(/[0-9]*/)

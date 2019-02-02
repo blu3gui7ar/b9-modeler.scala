@@ -1,6 +1,7 @@
 package facades
 
 import com.payalabs.scalajs.react.bridge.JsWriter
+import japgolly.scalajs.react.vdom.VdomElement
 import play.api.libs.json._
 
 import scala.scalajs.js
@@ -17,7 +18,9 @@ package object materialui {
     val ExpansionPanel: js.Any = js.native
     val ExpansionPanelSummary: js.Any = js.native
     val ExpansionPanelDetails: js.Any = js.native
-//    val styles: js.Dynamic = js.native
+//    val styles = {
+//      def withStyles(f: js.Function1[js.Any, js.Any])(component: js.Any)
+//    }
   }
 
   implicit val JsValueToJs: JsWriter[JsValue] = JsWriter { value: JsValue =>

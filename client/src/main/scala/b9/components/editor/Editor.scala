@@ -34,12 +34,20 @@ object Editor {
         val subEditors = sub.map { node =>
           Editor(node, p.lens composeLens subForest composeLens at(node), p.dispatcher)
         }
-        ExpansionPanel(defaultExpanded = true)(
-          ExpansionPanelSummary()(
-            label.name
-          ),
-          ExpansionPanelDetails(classes = js.Dictionary("root" -> ModelerCss.panel.htmlClass))(subEditors.toVdomArray)
-        )
+        if (false) {
+          ExpansionPanel(defaultExpanded = true)(
+            ExpansionPanelSummary()(
+              label.name
+            ),
+            ExpansionPanelDetails(classes = js.Dictionary("root" -> ModelerCss.panel.htmlClass))(subEditors.toVdomArray)
+          )
+        } else {
+          <.div(
+            label.name,
+            " : ",
+            subEditors.toVdomArray
+          ).render
+        }
       }
     }
   }

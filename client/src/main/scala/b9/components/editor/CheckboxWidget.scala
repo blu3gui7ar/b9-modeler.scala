@@ -2,9 +2,9 @@ package b9.components.editor
 
 import b9.Dispatcher
 import b9.TreeOps._
+import b9.short._
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.vdom.HtmlAttrs.onChange
-import japgolly.scalajs.react.vdom.TagMod
 import japgolly.scalajs.react.vdom.html_<^._
 import play.api.libs.json._
 
@@ -21,6 +21,7 @@ object CheckboxWidget extends Widget {
       val boxes = w.parameters map { choice =>
         val active = checked.contains(JsString(choice.name))
         <.span(
+          keyAttr := ref(label) + "-" + choice.name,
           <.input(
             ^.`type` := "checkbox",
             ^.name := ref(label),
@@ -41,7 +42,10 @@ object CheckboxWidget extends Widget {
           choice.name
         )
       }
-      boxes.toVdomArray
+      <.span(
+        keyAttr := ref(label),
+        boxes.toVdomArray
+      ).render
     } getOrElse EmptyVdom
   }
 }

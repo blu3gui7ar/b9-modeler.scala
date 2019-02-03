@@ -2,6 +2,7 @@ package b9.components.editor
 
 import b9.Dispatcher
 import b9.TreeOps._
+import b9.short._
 import japgolly.scalajs.react.ReactEventTypes
 import japgolly.scalajs.react.vdom.HtmlAttrs.onChange
 import japgolly.scalajs.react.vdom.VdomNode
@@ -18,6 +19,7 @@ object SelectWidget extends Widget with ReactEventTypes {
     val subs = label.meta.widget map { w =>
       w.parameters map { choice =>
         <.option(
+          keyAttr := ref(label) + "-" + choice.name,
           ^.value := choice.name,
           choice.name
         )
@@ -26,6 +28,7 @@ object SelectWidget extends Widget with ReactEventTypes {
 
 
     <.select(
+      keyAttr := ref(label),
       onChange ==> { (e: ReactEventFromInput) =>
         updateCB(JsString(e.target.value))(label, lens, dispatcher)
       },

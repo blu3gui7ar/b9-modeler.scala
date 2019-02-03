@@ -12,6 +12,7 @@ object ExpansionPanel extends ReactBridgeComponent {
   def apply(classes: js.UndefOr[js.Any] = js.undefined,
             disabled: js.UndefOr[Boolean] = js.undefined,
             expanded: js.UndefOr[Boolean] = js.undefined,
+            CollapseProps: js.UndefOr[js.Any] = js.undefined,
             defaultExpanded: js.UndefOr[Boolean] = js.undefined,
             onChange: js.UndefOr[(SyntheticEvent[html.Input], Boolean) => Unit] = js.undefined
            ): WithProps = auto

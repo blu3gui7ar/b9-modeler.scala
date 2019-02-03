@@ -2,6 +2,7 @@ package b9.components.editor
 
 import b9.Dispatcher
 import b9.TreeOps.{LLens, TN, TTN}
+import b9.short._
 import japgolly.scalajs.react.vdom.HtmlAttrs.onChange
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^._
@@ -28,9 +29,10 @@ object RadioWidget extends Widget {
           case _ => JsString(choice.name)
         }
         <.span(
+          keyAttr := ref(label) + "-" + choice.name,
           <.input(
             ^.`type` := "radio",
-            ^.name := label.uuid.toString,
+            ^.name := ref(label),
             ^.value := choice.name,
             ^.checked := label.value.toString == choice.name,
             onChange --> updateCB(newVal.getOrElse(JsNull))(label, lens, dispatcher)
@@ -38,7 +40,10 @@ object RadioWidget extends Widget {
           choice.name
         )
       }
-      boxes.toVdomArray
+      <.span(
+        keyAttr := ref(label),
+        boxes.toVdomArray
+      ).render
     } getOrElse EmptyVdom
   }
 }

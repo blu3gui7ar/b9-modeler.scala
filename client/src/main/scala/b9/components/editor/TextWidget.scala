@@ -2,6 +2,7 @@ package b9.components.editor
 
 import b9.Dispatcher
 import b9.TreeOps._
+import b9.short._
 import japgolly.scalajs.react.vdom.HtmlAttrs.onChange
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^._
@@ -26,26 +27,31 @@ object TextWidget extends Widget with ReactEventTypes {
   override def render(label: TN, lens: LLens, dispatcher: Dispatcher[TTN]): VdomNode = label.value match {
     case n: JsNumber => <.input(
       ^.name := ref(label),
+      keyAttr := ref(label),
       ^.defaultValue := n.value.toString,
       onChange ==> onInputChange(label, lens, dispatcher, {e => JsNumber(BigDecimal(e.target.value))})
     )
     case s: JsString => <.input(
       ^.name := ref(label),
+      keyAttr := ref(label),
       ^.defaultValue := s.value,
       onChange ==> onInputChange(label, lens, dispatcher, {e => JsString(e.target.value)})
     )
     case o: JsObject => <.input(
       ^.name := ref(label),
+      keyAttr := ref(label),
       ^.defaultValue := o.toString,
       onChange ==> onInputChange(label, lens, dispatcher, {e => JsString(e.target.value)})
     )
     case a: JsArray => <.input(
       ^.name := ref(label),
+      keyAttr := ref(label),
       ^.defaultValue := a.toString,
       onChange ==> onInputChange(label, lens, dispatcher, {e => JsString(e.target.value)})
     )
     case _ => <.input(
       ^.name := ref(label),
+      keyAttr := ref(label),
       ^.defaultValue := "",
       onChange ==> onInputChange(label, lens, dispatcher, {e => JsString(e.target.value)})
     )

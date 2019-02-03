@@ -141,4 +141,14 @@ object ModelerCss extends StyleSheet.Inline {
   val panel = style (
     display.block.important
   )
+
+  val panelBorder = style (
+    borderTopStyle.dotted,
+    borderTopWidth.thin,
+    borderTopColor.lightskyblue,
+    borderLeftStyle.dashed,
+    borderLeftWidth.thin,
+    borderLeftColor.lightblue,
+    paddingLeft(20 px)
+  )
 }

@@ -1,11 +1,11 @@
 package b9.components.editor
 
-import b9.short._
 import b9.Dispatcher
 import b9.TreeOps.{LLens, TN, TTN}
+import b9.short._
 import facades.materialui.{FormControlLabel, Radio, RadioGroup}
 import japgolly.scalajs.react.raw.SyntheticEvent
-import japgolly.scalajs.react.vdom.{TagMod, VdomNode}
+import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^._
 import meta.MetaAst.TypeRef
 import org.scalajs.dom.html
@@ -36,7 +36,7 @@ object MuiRadioWidget extends Widget {
         FormControlLabel(value = choice.name, control = r.rawElement, label = choice.name)()
       }
       RadioGroup(
-        name = label.uuid.toString,
+        name = ref(label),
         value = JsValueToString(label.value),
         row = true,
         onChange = { (_: SyntheticEvent[html.Input], value: String) =>

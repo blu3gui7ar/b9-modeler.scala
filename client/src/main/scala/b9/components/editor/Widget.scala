@@ -9,7 +9,7 @@ import play.api.libs.json.JsValue
 trait Widget {
   def render(node: TN, nodeLens: LLens, dispatcher: Dispatcher[TTN]): VdomNode
 
-  def ref(node: TN) = node.uuid.toString
+  def ref(node: TN) = "editor-widget-" + node.uuid.toString
 
   def updateCB(value: JsValue)(implicit node: TN, lens: LLens, dispatcher: Dispatcher[TTN]) =
     Callback { update(value) }

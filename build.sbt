@@ -53,6 +53,7 @@ lazy val client = (project in file("client")).settings(
     "io.monix" %%% "monix" % "3.0.0-RC2",
     "com.github.japgolly.scalacss" %%% "ext-react" % "0.5.5",
     "com.payalabs" %%% "scalajs-react-bridge" % "0.7.0",
+//    "com.payalabs" %%% "scalajs-react-mdl" % "0.2.0-SNAPSHOT",
     "org.scala-js" %%% "scalajs-dom" % "0.9.6"
   ),
   webpackBundlingMode := BundlingMode.LibraryOnly(),

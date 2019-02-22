@@ -51,9 +51,6 @@ package object b9 {
 //    type TM = Tree[TreeNode[TreeAttach]]
 //    type TMLoc = TreeLoc[TreeNode[TreeAttach]]
 
-//    implicit val TreeShows: Show[TreeNode[TreeAttach]] = Show.shows { tn: TreeNode[TreeAttach] =>
-//      tn.toString
-//    }
 
     val keyAttr = VdomAttr("key")
 

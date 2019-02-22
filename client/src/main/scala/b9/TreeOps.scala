@@ -7,7 +7,7 @@ import monocle.std.tree._
 import monocle.syntax.ApplyLens
 import monocle.syntax.all._
 import play.api.libs.json._
-import scalaz.{Tree, TreeLoc}
+import scalaz.{Show, Tree, TreeLoc}
 
 /**
   * Created by blu3gui7ar on 2017/6/24.
@@ -19,6 +19,10 @@ object TreeOps {
   type TN = TreeNode[Unit]
   type TTN = Tree[TreeNode[Unit]]
   type TTNLoc = TreeLoc[TreeNode[Unit]]
+
+  implicit val TreeShows: Show[TN] = Show.shows { tn: TN =>
+    tn.toString
+  }
 
   type SLens = Lens[TTN, Stream[TTN]]
   type TLens = Lens[TTN, TTN]
@@ -53,9 +57,9 @@ object TreeOps {
 
     val dataJs = Json.parse(Sample.data)
     import treeExtractor._
-    val tree = ds.meta.tree("meta", Some(dataJs), RootAttrDef).getOrElse(emptyTree)
-    (tree, ds.meta)
+    val tree = ds.meta.tree("meta", Some(dataJs), rootAttrDef()).getOrElse(emptyTree)
 //    println(tree.drawTree)
+    (tree, ds.meta)
 
 //    val r = init(tree)
 //    import JsonExpr._
@@ -63,5 +67,6 @@ object TreeOps {
 //    println(ds.meta.json(d))
 
 //    ModelerState(ds.meta, GraphState(r,r.loc,r,r))
+
   }
 }

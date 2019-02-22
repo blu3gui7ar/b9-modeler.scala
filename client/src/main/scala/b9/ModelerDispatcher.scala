@@ -23,9 +23,7 @@ class Dispatcher [S](val initialModelerState: S){
 
   def observer(f:S => Unit)= new Observer[S] {
     def onNext(s: S): Future[Ack] = {
-
       f(s)
-
       Continue
     }
 

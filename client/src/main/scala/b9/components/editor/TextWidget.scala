@@ -24,36 +24,40 @@ object TextWidget extends Widget with ReactEventTypes {
       Callback.empty
   }
 
-  override def render(label: TN, lens: LLens, dispatcher: Dispatcher[TTN]): VdomNode = label.value match {
-    case n: JsNumber => <.input(
-      ^.name := ref(label),
-      keyAttr := ref(label),
-      ^.defaultValue := n.value.toString,
-      onChange ==> onInputChange(label, lens, dispatcher, {e => JsNumber(BigDecimal(e.target.value))})
-    )
-    case s: JsString => <.input(
-      ^.name := ref(label),
-      keyAttr := ref(label),
-      ^.defaultValue := s.value,
-      onChange ==> onInputChange(label, lens, dispatcher, {e => JsString(e.target.value)})
-    )
-    case o: JsObject => <.input(
-      ^.name := ref(label),
-      keyAttr := ref(label),
-      ^.defaultValue := o.toString,
-      onChange ==> onInputChange(label, lens, dispatcher, {e => JsString(e.target.value)})
-    )
-    case a: JsArray => <.input(
-      ^.name := ref(label),
-      keyAttr := ref(label),
-      ^.defaultValue := a.toString,
-      onChange ==> onInputChange(label, lens, dispatcher, {e => JsString(e.target.value)})
-    )
-    case _ => <.input(
-      ^.name := ref(label),
-      keyAttr := ref(label),
-      ^.defaultValue := "",
-      onChange ==> onInputChange(label, lens, dispatcher, {e => JsString(e.target.value)})
-    )
+  override def render(tree: TTN, tlens: TLens, dispatcher: Dispatcher[TTN]): VdomNode = {
+    val label = tree.rootLabel
+    val lens = labelLens(tlens)
+    label.value match {
+      case n: JsNumber => <.input(
+        ^.name := ref(label),
+        keyAttr := ref(label),
+        ^.defaultValue := n.value.toString,
+        onChange ==> onInputChange(label, lens, dispatcher, {e => JsNumber(BigDecimal(e.target.value))})
+      )
+      case s: JsString => <.input(
+        ^.name := ref(label),
+        keyAttr := ref(label),
+        ^.defaultValue := s.value,
+        onChange ==> onInputChange(label, lens, dispatcher, {e => JsString(e.target.value)})
+      )
+      case o: JsObject => <.input(
+        ^.name := ref(label),
+        keyAttr := ref(label),
+        ^.defaultValue := o.toString,
+        onChange ==> onInputChange(label, lens, dispatcher, {e => JsString(e.target.value)})
+      )
+      case a: JsArray => <.input(
+        ^.name := ref(label),
+        keyAttr := ref(label),
+        ^.defaultValue := a.toString,
+        onChange ==> onInputChange(label, lens, dispatcher, {e => JsString(e.target.value)})
+      )
+      case _ => <.input(
+        ^.name := ref(label),
+        keyAttr := ref(label),
+        ^.defaultValue := "",
+        onChange ==> onInputChange(label, lens, dispatcher, {e => JsString(e.target.value)})
+      )
+    }
   }
 }

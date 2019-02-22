@@ -21,8 +21,10 @@ class TreeExtractorTpl[T](defaultT: => T) {
   }
 
   val emptyAttrDef = AttrDef(None, None, None, Seq.empty)
-  val RootAttrDef = AttrDef(None, Some(TypeRef("Meta")), None, Seq.empty)
   val emptyTree = create("empty", Stream.empty, emptyAttrDef)
+
+  def rootAttrDef()(implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]) =
+    AttrDef(None, Some(TypeRef(MetaAst.ROOT)), types.get(MetaAst.ROOT).flatMap(_.container), Seq.empty)
 
   def create(name: String, children: Stream[N], meta: AttrDef, value: JsValue = JsNull): N = Node(
     TreeNode(UUID.randomUUID(), name,  meta, value, defaultT),
@@ -31,8 +33,9 @@ class TreeExtractorTpl[T](defaultT: => T) {
 
   implicit class RefExtractor(ref: Reference)(implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]) extends TreeExtractor[T] {
     def tree(name: String, value: Option[JsValue], meta: AttrDef) : Option[N] = value flatMap { v =>
-      if(meta.isLeaf)
+      if(meta.isLeaf) {
         Some(create(name, Stream.empty, meta, v))
+      }
       else
         ref match {
           case t: TypeRef => t.tree(name, value, meta)
@@ -42,11 +45,26 @@ class TreeExtractorTpl[T](defaultT: => T) {
     }
   }
 
-  implicit class TypeRefExtractor(ref: TypeRef)(implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]) extends TreeExtractor[T] {
-    def tree(name: String, value: Option[JsValue], meta: AttrDef) : Option[N] = types.get(ref.name).flatMap(_.tree(name, value, meta))
+  def expandWidget(typeName: String, meta: AttrDef, container: Boolean)(implicit types: Map[String, AstNodeWithMembers]): AttrDef = {
+    val w: Option[Widget]  =
+      if (container)
+        types.get(typeName).flatMap(_.container)
+      else
+        meta.widget match {
+          case Some(_) => meta.widget
+          case _ => types.get(typeName).flatMap(_.container)
+        }
+
+    meta.copy(widget = w)
   }
 
-  implicit class ListDefExtractor(ref: ListRef)(implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]) extends TreeExtractor[T] {
+  implicit class TypeRefExtractor(ref: TypeRef)(implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]) extends TreeExtractor[T] {
+    def tree(name: String, value: Option[JsValue], meta: AttrDef) : Option[N] = types.get(ref.name).flatMap { t: AstNodeWithMembers =>
+      t.tree(name, value, expandWidget(ref.name, meta, false))
+    }
+  }
+
+  implicit class ListRefExtractor(ref: ListRef)(implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]) extends TreeExtractor[T] {
     def tree(name: String, value: Option[JsValue], meta: AttrDef) : Option[N] = value flatMap {
       case l : JsArray => {
         ref.ref match {
@@ -55,7 +73,7 @@ class TreeExtractorTpl[T](defaultT: => T) {
               case ll: Seq[JsValue] => {
                 Some(create(name,
                   ll.flatMap(child => subl.tree(name + "[?]", Some(child), meta.copy(t = Some(subl)))).toStream,
-                  meta,
+                  expandWidget(MetaAst.ROOT, meta, true),
                   l,
                 ))
               }
@@ -67,7 +85,7 @@ class TreeExtractorTpl[T](defaultT: => T) {
             typeDef.map { td: AstNodeWithMembers =>
               create(name,
                 l.value.flatMap(child => td.tree(name + "[?]", Some(child), meta.copy(t = Some(tr)))).toStream,
-                meta,
+                expandWidget(MetaAst.ROOT, meta, true),
                 l,
               )
             }
@@ -78,7 +96,7 @@ class TreeExtractorTpl[T](defaultT: => T) {
     }
   }
 
-  implicit class MapDefExtractor(ref: MapRef)(implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]) extends TreeExtractor[T] {
+  implicit class MapRefExtractor(ref: MapRef)(implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]) extends TreeExtractor[T] {
     def tree(name: String, value: Option[JsValue], meta: AttrDef) : Option[N] = value flatMap {
       case m : JsObject => {
         ref.ref match {
@@ -89,7 +107,7 @@ class TreeExtractorTpl[T](defaultT: => T) {
                   ll flatMap { case (key, child) =>
                     subl.tree(key, Some(child), meta.copy(t = Some(subl)))
                   } toStream,
-                  meta,
+                  expandWidget(MetaAst.ROOT, meta, true),
                   m,
                 ))
               }
@@ -103,7 +121,7 @@ class TreeExtractorTpl[T](defaultT: => T) {
                 m.value flatMap { case (key, child) =>
                   td.tree(key, Some(child), meta.copy(t = Some(tr)))
                 } toStream,
-                meta,
+                expandWidget(MetaAst.ROOT, meta, true),
                 m,
               )
             }

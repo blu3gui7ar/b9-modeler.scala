@@ -12,7 +12,8 @@ import play.api.libs.json.JsString
 object SelectWidget extends Widget with ReactEventTypes {
   val name = "Select"
 
-  override def render(label: TN, lens: LLens, dispatcher: Dispatcher[TTN]): VdomNode = {
+  override def render(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN]): VdomNode = {
+    val label = tree.rootLabel
     val value = label.value
 
     val selected = value.asOpt[String].getOrElse("")
@@ -30,7 +31,7 @@ object SelectWidget extends Widget with ReactEventTypes {
     <.select(
       keyAttr := ref(label),
       onChange ==> { (e: ReactEventFromInput) =>
-        updateCB(JsString(e.target.value))(label, lens, dispatcher)
+        updateCB(JsString(e.target.value))(label, labelLens(lens), dispatcher)
       },
       ^.value := selected,
       subs.toTagMod

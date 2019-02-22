@@ -17,7 +17,7 @@ object MetaParser {
   def Semis[_: P] = P(Semi.rep(1))
 
   //Literals
-  def Comment[_: P] = P( "#" ~/ AnyChar.rep ~/ Newline )
+  def Comment[_: P] = P( "#" ~/ (AnyChar.rep).! ~/ Newline ).map(MetaAst.Comment)
 
   def Number[_: P] = P( Digit.rep(1).! ).map(_.toInt)
 
@@ -47,7 +47,7 @@ object MetaParser {
       MetaAst.AttrDef(macrodesc, typedesc, widget, restricts)
     }
 
-  def Annotation[_: P] = (WidgetDesc | Restriction)
+  def Annotation[_: P] = (WidgetDesc | ContainerDesc | Restriction)
 
   def MacroDesc[_: P] = MacroTerm.!.map(MetaAst.MacroRef)
 
@@ -76,17 +76,22 @@ object MetaParser {
 //  val MultiChoices = P( "[" ~/ ValueTerm.rep(sep = ",") ~ "]").map(MetaAst.MultiChoicesR)
 //  val SingleChoice = P( "<" ~/ ValueTerm.rep(sep = ",") ~ ">").map(MetaAst.SingleChoiceR)
 
-  def Meta[_: P] = P(Semis.? ~ "Meta" ~/ BlockExpr ~ Semis.?).map(MetaAst.Root)
+  def ContainerDesc[_: P] = P( "@Container(" ~/ CharIn("a-zA-Z0-9_").rep(1).! ~ (":" ~ ValueTerm.rep(sep = ",")).? ~ ")").map {
+    case (name, params) => MetaAst.Widget(name, params.getOrElse(Seq.empty), false)
+  }
+  def Meta[_: P] = P(Semis.? ~ MetaAst.ROOT ~/ BlockExpr ~ AnnoSep ~ ContainerDesc.? ~ Semis.?).map {
+    case (nodes, container) => MetaAst.Root(nodes, container)
+  }
 
-  def BlockExpr[_: P] : P[Seq[MetaAst.AstNode]] = P(Semis.? ~ "{" ~/ Block ~ "}")
+  def BlockExpr[_: P] : P[Seq[MetaAst.AstNode]] = P(Semis.? ~ "{" ~/ Block ~ "}" )
 //  def Body[_: P] = Chunk.rep(sep = Semis)
 //  def BlockEnd[_: P] = Semis.? ~ &("}")
   def Block[_: P] = P(Semis.? ~ Chunk.rep(sep = Semis) ~ Semis.? ~ &("}"))
 
-  def Chunk[_: P] = P(NoCut(Attr | Type | Macro))
+  def Chunk[_: P] = P(NoCut(Attr | Type | Macro | Comment))
 
-  def Type[_: P] = P(TypeTerm.! ~/ BlockExpr).map {
-    case (term, members) => MetaAst.Type(term, members)
+  def Type[_: P] = P(TypeTerm.! ~/ BlockExpr ~ AnnoSep ~ ContainerDesc.?).map {
+    case (term, members, container) => MetaAst.Type(term, members, container)
   }
   def Macro[_: P] = P(MacroTerm.! ~/ "=" ~/ AttrDef).map {
     case (name, definition) => MetaAst.Macro(name, definition)

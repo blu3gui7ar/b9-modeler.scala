@@ -1,7 +1,7 @@
 package b9.components.editor
 
 import b9.Dispatcher
-import b9.TreeOps.{LLens, TN, TTN}
+import b9.TreeOps.{TLens, TN, TTN}
 import b9.short._
 import facades.materialui.{FormControlLabel, Radio, RadioGroup}
 import japgolly.scalajs.react.raw.SyntheticEvent
@@ -29,7 +29,8 @@ object MuiRadioWidget extends Widget {
       case _ => JsString(v)
     } getOrElse(JsNull)
 
-  override def render(label: TN, lens: LLens, dispatcher: Dispatcher[TTN]): VdomNode = {
+  override def render(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN]): VdomNode = {
+    val label = tree.rootLabel
     label.meta.widget map { w =>
       val boxes = w.parameters map { choice =>
         val r = Radio(value = choice.name)()
@@ -40,7 +41,7 @@ object MuiRadioWidget extends Widget {
         value = JsValueToString(label.value),
         row = true,
         onChange = { (_: SyntheticEvent[html.Input], value: String) =>
-          update(v2Js(label, value))(label, lens, dispatcher)
+          update(v2Js(label, value))(label, labelLens(lens), dispatcher)
         }
       )(boxes:_*)
     } getOrElse EmptyVdom

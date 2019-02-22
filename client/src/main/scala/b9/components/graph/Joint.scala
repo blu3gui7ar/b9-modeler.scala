@@ -42,7 +42,7 @@ object Joint {
                (implicit dispatcher: Dispatcher[TTN]): TagMod  = {
       val meta = node.rootLabel.meta
       val children =
-        if (meta.widget.isEmpty)
+        if (!meta.isLeaf)
           meta.t flatMap {
             case TypeRef(t) => {
               val cs = node.subForest.map(_.rootLabel.name)

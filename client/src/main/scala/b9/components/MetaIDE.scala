@@ -1,7 +1,7 @@
 package b9.components
 
 import b9.Dispatcher
-import b9.TreeOps.TTN
+import b9.TreeOps._
 import b9.components.editor.Editor
 import b9.components.graph.TreeGraph
 import b9.components.graph.TreeGraph.GraphState
@@ -36,7 +36,7 @@ object MetaIDE {
       Callback {
         val p = scope.props
         scope.backend.end = p.treeDisp.subscribeOpt { newState =>
-          scope.modState(_ => newState).runNow()
+          scope.modState { _ => newState }.runNow()
         }
       }
     }

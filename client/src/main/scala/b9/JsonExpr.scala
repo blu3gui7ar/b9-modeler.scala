@@ -40,7 +40,7 @@ trait JsonExtractor[A] {
   implicit class AttrToJsonExpr(attr: Attr)(implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]) extends JsonExpr[A] {
     def json(value: Option[TTN[A]]): Option[String] = value flatMap { v: TTN[A] =>
       val expandedAttrDef = expand(attr.definition, macros)
-      if(expandedAttrDef.widget.isDefined) {
+      if(expandedAttrDef.isLeaf) {
         Some(v.rootLabel.value.toString)
       } else
         expandedAttrDef.t flatMap { t =>

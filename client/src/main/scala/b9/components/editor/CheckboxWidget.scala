@@ -11,7 +11,8 @@ import play.api.libs.json._
 object CheckboxWidget extends Widget {
   val name = "Checkbox"
 
-  override def render(label: TN, lens: LLens, dispatcher: Dispatcher[TTN]): VdomNode = {
+  override def render(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN]): VdomNode = {
+    val label = tree.rootLabel
     val checked = label.value match {
       case vs: JsArray => vs.value
       case _ => Seq.empty
@@ -33,9 +34,9 @@ object CheckboxWidget extends Widget {
                   case s: JsString => s.value == choice.name
                   case _ => false
                 }
-                update(JsArray(filtered))(label, lens, dispatcher)
+                update(JsArray(filtered))(label, labelLens(lens), dispatcher)
               } else {
-                update(JsArray(JsString(choice.name) +: checked))(label, lens, dispatcher)
+                update(JsArray(JsString(choice.name) +: checked))(label, labelLens(lens), dispatcher)
               }
             },
           ),

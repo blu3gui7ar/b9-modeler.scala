@@ -8,6 +8,8 @@ object WidgetRegistry {
     RadioWidget.name -> RadioWidget,
     SelectWidget.name -> SelectWidget,
     MuiRadioWidget.name -> MuiRadioWidget,
+    SimpleContainerWidget.name -> SimpleContainerWidget,
+    ExpansionPanelWidget.name -> ExpansionPanelWidget,
   )
 
   def register(name: String, widget: Widget): Unit = {

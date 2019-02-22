@@ -2,7 +2,7 @@ package meta
 
 import fastparse.Parsed.{Failure, Success}
 import fastparse._
-import meta.MetaAst.Root
+import meta.MetaAst.{Root, Widget}
 
 class MetaSource(val metadata: String) {
 
@@ -12,11 +12,10 @@ class MetaSource(val metadata: String) {
       case Success(meta, _) => meta
       case Failure(label, index, extra) => {
         print(extra.trace(true))
-        Root(Seq.empty)
+        Root(Seq.empty, None)
       }
     }
   }
-//  println(meta)
 
   implicit val macros = MetaAst.macros(meta)
   implicit val types = MetaAst.types(meta)

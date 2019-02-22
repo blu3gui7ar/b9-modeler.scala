@@ -23,13 +23,14 @@ object Sample {
       |  tpl
       |  pattern
       |  size: Size
-      |  time: Time
+      |  size2: Size @Container(Container)
+      |  time: Time @Container(Container)
       |  urlRoot
-      |  imgs: [[Img]] @Restrict([1,])
-      |  effect: Effect
-      |  marks: <Mark> @Restrict([1,])
+      |  imgs: [[Img]] @Container(Container) @Restrict([1,])
+      |  effect: Effect @Container(Container)
+      |  marks: <Mark> @Container(Container) @Restrict([1,])
       |
-      |  Size { height: %INT; width: %INT }
+      |  Size { height: %INT; width: %INT } @Container(ExpansionPanel)
       |  Time { start: %DATE; end: %DATE }
       |  Img {
       |    id: %INT @Restrict((0, 100000))
@@ -39,10 +40,10 @@ object Sample {
       |    url
       |    active: %BOOL
       |    type: String @Widget(Select: link, shuffle)
-      |    areas: [Area]
+      |    areas: [Area] @Container(Container)
       |  }
       |  %LANGS = [String] @Widget(Checkbox: en,de,fr,es,se,no,it,pt,da,fi,ru,nl) @Restrict([1,4])
-      |  Nl { en; de; fr; es; se; no; it; pt; da; fi; ru; nl }
+      |  Nl { en; de; fr; es; se; no; it; pt; da; fi; ru; nl } @Container(Container)
       |  Effect { type; event; auto: %BOOL; time: %DATE }
       |  Area {
       |    title: Nl
@@ -55,7 +56,7 @@ object Sample {
       |    location: String @Widget(Select: header,banner,body)
       |    url
       |  }
-      |}
+      |} @Container(Container)
     """.stripMargin
 
 //  val data: String =
@@ -72,6 +73,10 @@ object Sample {
       |  "size": {
       |   "height": 150,
       |   "width": 30
+      |  },
+      |  "size2": {
+      |   "height": 160,
+      |   "width": 40
       |  },
       |  "imgs": [
       |    [

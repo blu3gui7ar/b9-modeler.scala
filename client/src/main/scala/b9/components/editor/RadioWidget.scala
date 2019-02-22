@@ -1,7 +1,7 @@
 package b9.components.editor
 
 import b9.Dispatcher
-import b9.TreeOps.{LLens, TN, TTN}
+import b9.TreeOps.{TLens, TTN}
 import b9.short._
 import japgolly.scalajs.react.vdom.HtmlAttrs.onChange
 import japgolly.scalajs.react.vdom.VdomNode
@@ -12,7 +12,8 @@ import play.api.libs.json._
 object RadioWidget extends Widget {
   val name = "Radio"
 
-  override def render(label: TN, lens: LLens, dispatcher: Dispatcher[TTN]): VdomNode = {
+  override def render(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN]): VdomNode = {
+    val label = tree.rootLabel
     label.meta.widget map { w =>
       val boxes = w.parameters map { choice =>
         val newVal: Option[JsValue] = label.meta.t.map {
@@ -35,7 +36,7 @@ object RadioWidget extends Widget {
             ^.name := ref(label),
             ^.value := choice.name,
             ^.checked := label.value.toString == choice.name,
-            onChange --> updateCB(newVal.getOrElse(JsNull))(label, lens, dispatcher)
+            onChange --> updateCB(newVal.getOrElse(JsNull))(label, labelLens(lens), dispatcher)
           ),
           choice.name
         )

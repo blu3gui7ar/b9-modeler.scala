@@ -22,13 +22,12 @@ object Sample {
       |  processor
       |  tpl
       |  pattern
-      |  size: Size
-      |  size2: Size @Container(Container)
-      |  time: Time @Container(Container)
+      |  size: Size @Container(Simple)
+      |  time: Time
       |  urlRoot
-      |  imgs: [[Img]] @Container(Container) @Restrict([1,])
-      |  effect: Effect @Container(Container)
-      |  marks: <Mark> @Container(Container) @Restrict([1,])
+      |  imgs: [[Img]] @Container(ExpansionPanel) @Restrict([1,])
+      |  effect: Effect
+      |  marks: <Mark> @Restrict([1,])
       |
       |  Size { height: %INT; width: %INT } @Container(ExpansionPanel)
       |  Time { start: %DATE; end: %DATE }
@@ -40,10 +39,10 @@ object Sample {
       |    url
       |    active: %BOOL
       |    type: String @Widget(Select: link, shuffle)
-      |    areas: [Area] @Container(Container)
-      |  }
+      |    areas: [Area]
+      |  } @Container(Simple)
       |  %LANGS = [String] @Widget(Checkbox: en,de,fr,es,se,no,it,pt,da,fi,ru,nl) @Restrict([1,4])
-      |  Nl { en; de; fr; es; se; no; it; pt; da; fi; ru; nl } @Container(Container)
+      |  Nl { en; de; fr; es; se; no; it; pt; da; fi; ru; nl } @Container(ExpansionPanel)
       |  Effect { type; event; auto: %BOOL; time: %DATE }
       |  Area {
       |    title: Nl
@@ -56,7 +55,7 @@ object Sample {
       |    location: String @Widget(Select: header,banner,body)
       |    url
       |  }
-      |} @Container(Container)
+      |} @Container(Simple)
     """.stripMargin
 
 //  val data: String =

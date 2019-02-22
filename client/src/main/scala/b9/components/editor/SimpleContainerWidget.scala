@@ -10,7 +10,7 @@ import scalacss.ScalaCssReact._
 import monocle.std.tree._
 
 object SimpleContainerWidget extends Widget with ReactEventTypes {
-  val name = "Container"
+  val name = "Simple"
 
   override def render(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN]): VdomNode = {
     val label = tree.rootLabel

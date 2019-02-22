@@ -46,13 +46,11 @@ class TreeExtractorTpl[T](defaultT: => T) {
   }
 
   def expandWidget(typeName: String, meta: AttrDef, container: Boolean)(implicit types: Map[String, AstNodeWithMembers]): AttrDef = {
+    val typeContainer = types.get(typeName).flatMap(_.container)
     val w: Option[Widget]  =
-      if (container)
-        types.get(typeName).flatMap(_.container)
-      else
         meta.widget match {
-          case Some(_) => meta.widget
-          case _ => types.get(typeName).flatMap(_.container)
+          case Some(_) => if (container) meta.widget else typeContainer
+          case _ => typeContainer
         }
 
     meta.copy(widget = w)
@@ -84,7 +82,9 @@ class TreeExtractorTpl[T](defaultT: => T) {
             val typeDef = types.get(tr.name)
             typeDef.map { td: AstNodeWithMembers =>
               create(name,
-                l.value.flatMap(child => td.tree(name + "[?]", Some(child), meta.copy(t = Some(tr)))).toStream,
+                l.value.flatMap(child => td.tree(name + "[?]", Some(child),
+                  expandWidget(td.name, meta.copy(t = Some(tr)), false)
+                )).toStream,
                 expandWidget(MetaAst.ROOT, meta, true),
                 l,
               )
@@ -119,7 +119,9 @@ class TreeExtractorTpl[T](defaultT: => T) {
             typeDef.map { td: AstNodeWithMembers =>
               create(name,
                 m.value flatMap { case (key, child) =>
-                  td.tree(key, Some(child), meta.copy(t = Some(tr)))
+                  td.tree(key, Some(child),
+                    expandWidget(td.name, meta.copy(t = Some(tr)), false)
+                  )
                 } toStream,
                 expandWidget(MetaAst.ROOT, meta, true),
                 m,

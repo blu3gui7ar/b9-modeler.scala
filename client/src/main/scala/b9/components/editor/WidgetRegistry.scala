@@ -10,6 +10,9 @@ object WidgetRegistry {
     MuiRadioWidget.name -> MuiRadioWidget,
     SimpleContainerWidget.name -> SimpleContainerWidget,
     ExpansionPanelWidget.name -> ExpansionPanelWidget,
+    NotFoundWidget.name -> NotFoundWidget,
+    NotMatchWidget.name -> NotMatchWidget,
+    NotValidWidget.name -> NotValidWidget,
   )
 
   def register(name: String, widget: Widget): Unit = {
@@ -22,5 +25,8 @@ object WidgetRegistry {
     w
   }
 
-  def apply(name: String): Option[Widget] = registry.get(name)
+  def apply(name: String, container: Boolean): Option[Widget] = registry.get(name) match {
+    case None => registry.get(NotFoundWidget.name)
+    case Some(w) => if(w.container == container) Some(w) else registry.get(NotMatchWidget.name)
+  }
 }

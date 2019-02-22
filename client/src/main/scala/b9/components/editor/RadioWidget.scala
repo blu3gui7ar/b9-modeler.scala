@@ -12,7 +12,7 @@ import play.api.libs.json._
 object RadioWidget extends Widget {
   val name = "Radio"
 
-  override def render(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN]): VdomNode = {
+  override def renderForm(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN]): VdomNode = {
     val label = tree.rootLabel
     label.meta.widget map { w =>
       val boxes = w.parameters map { choice =>

@@ -22,14 +22,16 @@ trait JsonExtractor[A] {
       }
       case l: ListRef => value flatMap { v =>
         val subJsons = v.subForest flatMap { child =>
-          l.ref.json(Some(child))
+          l.attr.t.map(_.json(Some(child)))
         }
         Some("[" + subJsons.mkString(", ") + "]")
       }
-      case m: MapRef => value flatMap { v =>
+      case m: MapRef =>  value flatMap { v =>
         val subJsons = v.subForest flatMap { child =>
-          m.ref.json(Some(child)) map { subJson =>
-            s""""${child.rootLabel.name}": $subJson"""
+          m.attr.t map {
+            _.json(Some(child)) map { subJson =>
+              s""""${child.rootLabel.name}": $subJson"""
+            }
           }
         }
         Some("{" + subJsons.mkString(", ") + "}")

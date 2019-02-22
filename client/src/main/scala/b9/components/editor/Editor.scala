@@ -16,19 +16,11 @@ object Editor {
     def render(p: Props): VdomNode = {
       val label = p.tree.rootLabel
       label.meta.widget flatMap { widget =>
-        WidgetRegistry(widget.name)
+        WidgetRegistry(widget.name, !widget.isLeaf)
       } map { w: Widget =>
-        <.div(
-          label.name,
-          " : ",
-          w.render(p.tree, p.lens, p.dispatcher)
-        ).render
+        w.render(p.tree, p.lens, p.dispatcher)
       } getOrElse {
-        <.div(
-          label.name,
-          ":",
-          <.span( "Widget Not Valid" )
-        )
+        NotValidWidget.render(p.tree, p.lens, p.dispatcher)
       }
     }
   }

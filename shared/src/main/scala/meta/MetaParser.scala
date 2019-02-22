@@ -52,9 +52,9 @@ object MetaParser {
   def MacroDesc[_: P] = MacroTerm.!.map(MetaAst.MacroRef)
 
   def TypeDesc[_: P]: fastparse.P[MetaAst.Reference] = P(
-      TypeTerm.!.map(term => MetaAst.TypeRef(term)) |
-      NoCut("[" ~/ TypeDesc ~ "]").map(t => MetaAst.ListRef(t)) |
-      NoCut("<" ~/ TypeDesc ~ ">").map(t => MetaAst.MapRef(t))
+      TypeTerm.!.map(t => MetaAst.TypeRef(t)) |
+      NoCut("[" ~/ AttrDef ~ "]" ).map { a => MetaAst.ListRef(a) } |
+      NoCut("<" ~/ AttrDef ~ ">" ).map { a => MetaAst.MapRef(a) }
     )
 
   def WidgetDesc[_: P] = P( "@Widget(" ~/ CharIn("a-zA-Z0-9_").rep(1).! ~ (":" ~ ValueTerm.rep(sep = ",")).? ~ ")").map {

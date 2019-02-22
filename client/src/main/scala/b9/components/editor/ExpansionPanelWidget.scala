@@ -14,6 +14,7 @@ import scala.scalajs.js.Dynamic.literal
 
 object ExpansionPanelWidget extends Widget with ReactEventTypes {
   val name = "ExpansionPanel"
+  override val container: Boolean = true
 
   override def render(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN]): VdomNode = {
     val label = tree.rootLabel

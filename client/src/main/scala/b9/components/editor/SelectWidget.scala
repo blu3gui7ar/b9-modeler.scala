@@ -12,7 +12,7 @@ import play.api.libs.json.JsString
 object SelectWidget extends Widget with ReactEventTypes {
   val name = "Select"
 
-  override def render(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN]): VdomNode = {
+  override def renderForm(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN]): VdomNode = {
     val label = tree.rootLabel
     val value = label.value
 

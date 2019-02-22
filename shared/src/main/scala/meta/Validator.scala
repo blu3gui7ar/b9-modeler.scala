@@ -17,22 +17,25 @@ object Validator {
   }
 
   implicit class ListDefValidator(r: ListRef)(implicit macros: Map[String, Macro], types: Map[String, Type]) extends Validator {
-    override def validate(value: Option[JsValue]): Boolean = value exists {
-      case l : JsArray => {
-        r.ref match {
-          case subl : ListRef => {
-            l.value match {
-              case ll: Seq[JsValue] => ll.forall(child => subl.validate(Some(child)))
-              case _ => false
+    override def validate(value: Option[JsValue]): Boolean = {
+      val expandedAttr = expand(r.attr, macros)
+      value exists {
+        case l : JsArray => {
+          expandedAttr.t match {
+            case Some(subl : ListRef) => {
+              l.value match {
+                case ll: Seq[JsValue] => ll.forall(child => subl.validate(Some(child)))
+                case _ => false
+              }
+            }
+            case Some(t : TypeRef) => {
+              val typeDef = types.get(t.name)
+              l.value.forall(child => typeDef.exists(_.validate(Some(child))))
             }
           }
-          case t : TypeRef => {
-            val typeDef = types.get(t.name)
-            l.value.forall(child => typeDef.exists(_.validate(Some(child))))
-          }
         }
+        case _ => false
       }
-      case _ => false
     }
   }
 

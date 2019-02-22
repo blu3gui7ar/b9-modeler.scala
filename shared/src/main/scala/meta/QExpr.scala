@@ -12,8 +12,8 @@ object QExpr {
   implicit class ReferenceToQExpr(ref: Reference) extends QExpr {
     def expr(): String = ref match {
       case TypeRef(n) => n
-      case ListRef(n) => s"Seq[${n.expr()}]"
-      case MapRef(n) => s"Map[String, ${n.expr()}]"
+//      case ListRef(a) => s"Seq[${n.expr()}]"
+//      case MapRef(a) => s"Map[String, ${n.expr()}]"
     }
   }
   implicit class AttrToQExpr(attr: Attr)(implicit macros: Map[String, Macro]) extends QExpr {

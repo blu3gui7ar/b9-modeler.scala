@@ -29,7 +29,7 @@ object MuiRadioWidget extends Widget {
       case _ => JsString(v)
     } getOrElse(JsNull)
 
-  override def render(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN]): VdomNode = {
+  override def renderForm(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN]): VdomNode = {
     val label = tree.rootLabel
     label.meta.widget map { w =>
       val boxes = w.parameters map { choice =>

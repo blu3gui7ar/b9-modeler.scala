@@ -45,92 +45,87 @@ class TreeExtractorTpl[T](defaultT: => T) {
     }
   }
 
-  def expandWidget(typeName: String, meta: AttrDef, container: Boolean)(implicit types: Map[String, AstNodeWithMembers]): AttrDef = {
-    val typeContainer = types.get(typeName).flatMap(_.container)
-    val w: Option[Widget]  =
-        meta.widget match {
-          case Some(_) => if (container) meta.widget else typeContainer
-          case _ => typeContainer
-        }
-
-    meta.copy(widget = w)
-  }
-
   implicit class TypeRefExtractor(ref: TypeRef)(implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]) extends TreeExtractor[T] {
     def tree(name: String, value: Option[JsValue], meta: AttrDef) : Option[N] = types.get(ref.name).flatMap { t: AstNodeWithMembers =>
-      t.tree(name, value, expandWidget(ref.name, meta, false))
+      t.tree(name, value, expandWidget(ref.name, meta))
     }
   }
 
   implicit class ListRefExtractor(ref: ListRef)(implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]) extends TreeExtractor[T] {
-    def tree(name: String, value: Option[JsValue], meta: AttrDef) : Option[N] = value flatMap {
-      case l : JsArray => {
-        ref.ref match {
-          case subl @ (_: ListRef | _: MapRef) => {
-            l.value match {
-              case ll: Seq[JsValue] => {
-                Some(create(name,
-                  ll.flatMap(child => subl.tree(name + "[?]", Some(child), meta.copy(t = Some(subl)))).toStream,
-                  expandWidget(MetaAst.ROOT, meta, true),
-                  l,
-                ))
+    def tree(name: String, value: Option[JsValue], meta: AttrDef): Option[N] = {
+      val expandedAttr = expand(ref.attr, macros)
+      value flatMap {
+        case l: JsArray => {
+          expandedAttr.t match {
+            case Some(subl@(_: ListRef | _: MapRef)) => {
+              l.value match {
+                case ll: Seq[JsValue] => {
+                  Some(create(name,
+                    ll.flatMap(child => subl.tree(name + "[?]", Some(child), expandedAttr)).toStream,
+                    expandWidget(MetaAst.ROOT, meta),
+                    l,
+                  ))
+                }
+                case _ => None
               }
-              case _ => None
             }
-          }
-          case tr : TypeRef => {
-            val typeDef = types.get(tr.name)
-            typeDef.map { td: AstNodeWithMembers =>
-              create(name,
-                l.value.flatMap(child => td.tree(name + "[?]", Some(child),
-                  expandWidget(td.name, meta.copy(t = Some(tr)), false)
-                )).toStream,
-                expandWidget(MetaAst.ROOT, meta, true),
-                l,
-              )
+            case Some(tr: TypeRef) => {
+              val typeDef = types.get(tr.name)
+              typeDef.map { td: AstNodeWithMembers =>
+                create(name,
+                  l.value.flatMap(child => td.tree(name + "[?]", Some(child),
+                    expandWidget(td.name, expandedAttr)
+                  )).toStream,
+                  expandWidget(MetaAst.ROOT, meta),
+                  l,
+                )
+              }
             }
           }
         }
+        case _ => None
       }
-      case _ => None
     }
   }
 
   implicit class MapRefExtractor(ref: MapRef)(implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]) extends TreeExtractor[T] {
-    def tree(name: String, value: Option[JsValue], meta: AttrDef) : Option[N] = value flatMap {
-      case m : JsObject => {
-        ref.ref match {
-          case subl @ (_: ListRef | _: MapRef) => {
-            m.value match {
-              case ll: Seq[(String, JsValue)] => {
-                Some(create(name,
-                  ll flatMap { case (key, child) =>
-                    subl.tree(key, Some(child), meta.copy(t = Some(subl)))
-                  } toStream,
-                  expandWidget(MetaAst.ROOT, meta, true),
-                  m,
-                ))
+    def tree(name: String, value: Option[JsValue], meta: AttrDef) : Option[N] = {
+      val expandedAttr = expand(ref.attr, macros)
+      value flatMap {
+        case m : JsObject => {
+          expandedAttr.t match {
+            case Some(subl @ (_: ListRef | _: MapRef)) => {
+              m.value match {
+                case ll: Seq[(String, JsValue)] => {
+                  Some(create(name,
+                    ll flatMap { case (key, child) =>
+                      subl.tree(key, Some(child), expandedAttr)
+                    } toStream,
+                    expandWidget(MetaAst.ROOT, meta),
+                    m,
+                  ))
+                }
+                case _ => None
               }
-              case _ => None
             }
-          }
-          case tr : TypeRef => {
-            val typeDef = types.get(tr.name)
-            typeDef.map { td: AstNodeWithMembers =>
-              create(name,
-                m.value flatMap { case (key, child) =>
-                  td.tree(key, Some(child),
-                    expandWidget(td.name, meta.copy(t = Some(tr)), false)
-                  )
-                } toStream,
-                expandWidget(MetaAst.ROOT, meta, true),
-                m,
-              )
+            case Some(tr : TypeRef) => {
+              val typeDef = types.get(tr.name)
+              typeDef.map { td: AstNodeWithMembers =>
+                create(name,
+                  m.value flatMap { case (key, child) =>
+                    td.tree(key, Some(child),
+                      expandWidget(td.name, expandedAttr)
+                    )
+                  } toStream,
+                  expandWidget(MetaAst.ROOT, meta),
+                  m,
+                )
+              }
             }
           }
         }
+        case _ => None
       }
-      case _ => None
     }
   }
 

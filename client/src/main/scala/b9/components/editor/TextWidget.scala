@@ -24,7 +24,7 @@ object TextWidget extends Widget with ReactEventTypes {
       Callback.empty
   }
 
-  override def render(tree: TTN, tlens: TLens, dispatcher: Dispatcher[TTN]): VdomNode = {
+  override def renderForm(tree: TTN, tlens: TLens, dispatcher: Dispatcher[TTN]): VdomNode = {
     val label = tree.rootLabel
     val lens = labelLens(tlens)
     label.value match {

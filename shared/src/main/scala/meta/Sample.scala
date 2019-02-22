@@ -25,7 +25,7 @@ object Sample {
       |  size: Size @Container(Simple)
       |  time: Time
       |  urlRoot
-      |  imgs: [[Img]] @Container(ExpansionPanel) @Restrict([1,])
+      |  imgs: [[Img @Container(ExpansionPanel)] @Container(Simple)] @Container(ExpansionPanel) @Restrict([1,])
       |  effect: Effect
       |  marks: <Mark> @Restrict([1,])
       |

@@ -53,11 +53,11 @@ object Joint {
               }
             }
             case ListRef(l) => Some(Seq(
-              (node.rootLabel.name + "[?]", meta.copy(t = Some(l)))
-            ))
+                (node.rootLabel.name + "[?]", meta.copy(t = l.t))
+              ))
             case MapRef(m) => Some(Seq(
-              (node.rootLabel.name + "[?]", meta.copy(t = Some(m)))
-            ))
+                (node.rootLabel.name + "[?]", meta.copy(t = m.t))
+              ))
             case _ => None
           }
         else None

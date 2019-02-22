@@ -11,6 +11,7 @@ import monocle.std.tree._
 
 object SimpleContainerWidget extends Widget with ReactEventTypes {
   val name = "Simple"
+  override val container: Boolean = true
 
   override def render(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN]): VdomNode = {
     val label = tree.rootLabel

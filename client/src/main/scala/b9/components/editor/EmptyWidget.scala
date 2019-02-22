@@ -8,5 +8,5 @@ import b9.TreeOps._
 object EmptyWidget extends Widget {
   val name = "Empty"
 
-  override def render(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN]): VdomNode = EmptyVdom
+  override def renderForm(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN]): VdomNode = EmptyVdom
 }

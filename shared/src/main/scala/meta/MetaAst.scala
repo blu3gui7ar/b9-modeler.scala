@@ -40,18 +40,10 @@ object MetaAst {
 
   case class MacroRef(name: String) extends AstNode
 
-  sealed trait Reference extends AstNode {
-    def realType(): TypeRef
-  }
-  case class TypeRef(name: String) extends Reference {
-    override def realType(): TypeRef = this
-  }
-  case class ListRef(ref: Reference) extends Reference {
-    override def realType(): TypeRef = ref.realType()
-  }
-  case class MapRef(ref: Reference) extends Reference {
-    override def realType(): TypeRef = ref.realType()
-  }
+  sealed trait Reference extends AstNode
+  case class TypeRef(name: String) extends Reference
+  case class ListRef(attr: AttrDef) extends Reference
+  case class MapRef(attr: AttrDef) extends Reference
 
   def expand(attrDef: AttrDef, macros: Map[String, Macro]): AttrDef = {
     val expanded = expand0(attrDef, macros)
@@ -89,6 +81,16 @@ object MetaAst {
     ),
     defRefined.restricts ++ defMacro.restricts
   )
+
+  def expandWidget(typeName: String, meta: AttrDef)(implicit types: Map[String, AstNodeWithMembers]): AttrDef = {
+    val w: Option[Widget]  =
+      meta.widget match {
+        case Some(_) => meta.widget
+        case _ => types.get(typeName).flatMap(_.container)
+      }
+
+    meta.copy(widget = w)
+  }
 
   def macros(r: Root): Map[String, Macro] = (r.members collect { case m: Macro =>
     (m.name, m)

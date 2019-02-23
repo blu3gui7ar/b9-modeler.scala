@@ -8,7 +8,10 @@ object MetaAst {
   val ROOT = "Meta"
 
   sealed abstract class AstNode
-  sealed abstract class AstNodeWithMembers(val name: String, val members: Seq[AstNode], val container: Option[Widget]) extends AstNode
+  sealed abstract class AstNodeWithMembers(val name: String, val members: Seq[AstNode], val container: Option[Widget]) extends AstNode {
+    def attrs = members.filter(_.isInstanceOf[Attr]).map(_.asInstanceOf[Attr])
+    def isSimple: Boolean = attrs.isEmpty
+  }
 
   case class Ident(ident: String) extends AstNode
 
@@ -42,10 +45,14 @@ object MetaAst {
 
   sealed trait Reference extends AstNode
   case class TypeRef(name: String) extends Reference
-  case class ListRef(attr: AttrDef) extends Reference
-  case class MapRef(attr: AttrDef) extends Reference
+  case class ListRef(definition: AttrDef) extends Reference
+  case class MapRef(definition: AttrDef) extends Reference
 
-  def expand(attrDef: AttrDef, macros: Map[String, Macro]): AttrDef = {
+
+  def rootAttrDef()(implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]) =
+    AttrDef(None, Some(TypeRef(ROOT)), types.get(ROOT).flatMap(_.container), Seq.empty)
+
+  def expandMacro(attrDef: AttrDef)(implicit macros: Map[String, Macro]): AttrDef = {
     val expanded = expand0(attrDef, macros)
     expanded match {
       case AttrDef(_, None, _,  _) =>

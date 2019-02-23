@@ -11,6 +11,7 @@ import meta.MetaAst
 import meta.MetaAst._
 import scalacss.ScalaCssReact._
 import monocle.std.tree._
+import play.api.libs.json.JsNull
 
 /**
   * Created by blu3gui7ar on 2017/5/25.
@@ -65,9 +66,11 @@ object Joint {
       children.getOrElse(Seq.empty).zipWithIndex.toTagMod { case ((name, meta), idx) =>
         CreateButton(name, 18 + 30 * idx, 10, true,
           dispatcher.dispatchCB {
-            val expanded = MetaAst.expand(meta, macros)
-            val newNode = treeExtractor.create(name, Stream.empty, expanded)
-            (lens composeLens subForest).set(newNode +: node.subForest)
+            val expanded = MetaAst.expandMacro(meta)(macros)
+            val newNode = treeExtractor.create(name, Stream.empty, expanded, Some(JsNull), meta.t)(macros,types)
+            newNode map { n =>
+              (lens composeLens subForest).set(n +: node.subForest)
+            } getOrElse(identity: TTN => TTN) //TODO error msg
           }
         )
       }

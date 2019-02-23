@@ -1,24 +1,26 @@
 package b9.components.json
 
 import b9.TreeOps.TTN
+import b9.TreeToJson
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import meta.MetaAst
+import meta.MetaAst._
 
 object JsonView {
-  def apply(tree: TTN, meta: MetaAst.Root) = component(Props(tree, meta))
+  def apply(tree: TTN, meta: Root) = component(Props(tree, meta))
 
-  case class Props(tree: TTN, meta: MetaAst.Root)
+  case class Props(tree: TTN, meta: Root)
 
   class Backend($: BackendScope[Props, Unit]) {
     def render(p: Props): VdomTag = {
       val tree = p.tree
       val meta = p.meta
-      import b9.JsonExpr._
-      implicit val macros = MetaAst.macros(meta)
-      implicit val types = MetaAst.types(meta)
+      implicit val m = macros(meta)
+      implicit val t = types(meta)
+      val jsonTransformer = new TreeToJson()
+      import jsonTransformer._
       <.div(
-        meta.json(Some(tree)).whenDefined
+        meta.transform("meta", Some(tree), rootAttrDef(), None).whenDefined
       )
     }
   }

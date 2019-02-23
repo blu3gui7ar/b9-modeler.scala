@@ -18,7 +18,7 @@ object Validator {
 
   implicit class ListDefValidator(r: ListRef)(implicit macros: Map[String, Macro], types: Map[String, Type]) extends Validator {
     override def validate(value: Option[JsValue]): Boolean = {
-      val expandedAttr = expand(r.attr, macros)
+      val expandedAttr = expandMacro(r.definition)(macros)
       value exists {
         case l : JsArray => {
           expandedAttr.t match {
@@ -45,7 +45,7 @@ object Validator {
 
   implicit class AttrValidator (attr: Attr)(implicit macros: Map[String, Macro], types: Map[String, Type]) extends Validator {
     override def validate(value: Option[JsValue]): Boolean = {
-      val expanded = expand(attr.definition, macros)
+      val expanded = expandMacro(attr.definition)(macros)
       val typeValid = expanded.t.forall({
         case t: TypeRef => t.validate(value)
         case l: ListRef => l.validate(value)

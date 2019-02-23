@@ -1,5 +1,8 @@
 package b9
 
+import java.util.UUID
+
+import meta.MetaAst._
 import meta._
 import monix.execution.Cancelable
 import monocle.Lens
@@ -14,11 +17,13 @@ import scalaz.{Show, Tree, TreeLoc}
   */
 object TreeOps {
 
-  lazy val treeExtractor = new TreeExtractorTpl[Unit]()
+  lazy val treeExtractor = new JsValueToTree()
 
-  type TN = TreeNode[Unit]
-  type TTN = Tree[TreeNode[Unit]]
-  type TTNLoc = TreeLoc[TreeNode[Unit]]
+  case class TreeNode(uuid: UUID, name: String, meta: AttrDef, value: play.api.libs.json.JsValue)
+
+  type TN = TreeNode
+  type TTN = Tree[TreeNode]
+  type TTNLoc = TreeLoc[TreeNode]
 
   implicit val TreeShows: Show[TN] = Show.shows { tn: TN =>
     tn.toString
@@ -57,7 +62,10 @@ object TreeOps {
 
     val dataJs = Json.parse(Sample.data)
     import treeExtractor._
-    val tree = ds.meta.tree("meta", Some(dataJs), rootAttrDef()).getOrElse(emptyTree)
+
+    val emptyAttrDef = AttrDef(None, None, None, Seq.empty)
+    val emptyTree = create("empty", Stream.empty, emptyAttrDef, Some(JsNull), None).get
+    val tree = ds.meta.transform("meta", Some(dataJs), rootAttrDef(), None).getOrElse(emptyTree)
 //    println(tree.drawTree)
     (tree, ds.meta)
 

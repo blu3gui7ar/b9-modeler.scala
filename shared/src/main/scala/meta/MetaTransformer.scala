@@ -6,8 +6,8 @@ trait MetaTransformerTrait[F, T] {
 
   def asMap(item: Option[F]): Map[String, F]
   def asSeq(item: Option[F]): Seq[F]
-  def create(name: String, children: Stream[T], meta: AttrDef, value: Option[F], parentRef: Option[Reference])
-            (implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]): Option[T]
+  def createT(name: String, children: Stream[T], meta: AttrDef, value: Option[F], parentRef: Option[Reference])
+             (implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]): Option[T]
 
   trait Transformer {
     def transform(name: String, value: Option[F], meta: AttrDef, parentRef: Option[Reference]): Option[T]
@@ -16,7 +16,7 @@ trait MetaTransformerTrait[F, T] {
   implicit class RefExtractor(ref: Reference)(implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]) extends Transformer {
     def transform(name: String, value: Option[F], meta: AttrDef, parentRef: Option[Reference]): Option[T] = {
       if(meta.isLeaf) {
-        create(name, Stream.empty, meta, value, parentRef)
+        createT(name, Stream.empty, meta, value, parentRef)
       }
       else
         ref match {
@@ -42,7 +42,7 @@ trait MetaTransformerTrait[F, T] {
         children.flatMap(child => ref.transform(name + "[?]", Some(child), expandedAttr, meta.t)).toStream
       } getOrElse(Stream.empty)
 
-      create(name, members, expandWidget(MetaAst.ROOT, meta), value, parentRef)
+      createT(name, members, expandWidget(MetaAst.ROOT, meta), value, parentRef)
     }
   }
 
@@ -56,7 +56,7 @@ trait MetaTransformerTrait[F, T] {
         } toStream
       } getOrElse(Stream.empty)
 
-      create(name, members, expandWidget(MetaAst.ROOT, meta), value, parentRef)
+      createT(name, members, expandWidget(MetaAst.ROOT, meta), value, parentRef)
     }
   }
 
@@ -64,7 +64,7 @@ trait MetaTransformerTrait[F, T] {
     def transform(name: String, value: Option[F], meta: AttrDef, parentRef: Option[Reference]): Option[T] = {
       val attrs =  t.attrs
       if (attrs.isEmpty)
-        create(name, Stream.empty, meta, value, parentRef)
+        createT(name, Stream.empty, meta, value, parentRef)
       else {
         val children = asMap(value)
         val members = attrs flatMap { attr =>
@@ -72,7 +72,7 @@ trait MetaTransformerTrait[F, T] {
           expandedAttrDef.t flatMap { _.transform(attr.name, children.get(attr.name), expandedAttrDef, meta.t) }
         } toStream
 
-        create(name, members, meta, value, parentRef)
+        createT(name, members, meta, value, parentRef)
       }
     }
   }

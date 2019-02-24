@@ -6,13 +6,14 @@ import b9.short._
 import japgolly.scalajs.react.vdom.HtmlAttrs.onChange
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^._
-import meta.MetaAst.TypeRef
+import meta.MetaAst.{AstNodeWithMembers, Macro, TypeRef}
+import meta.MetaSource
 import play.api.libs.json._
 
 object RadioWidget extends Widget {
   val name = "Radio"
 
-  override def renderForm(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN]): VdomNode = {
+  override def renderForm(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN], metaSource: MetaSource): VdomNode = {
     val label = tree.rootLabel
     label.meta.widget map { w =>
       val boxes = w.parameters map { choice =>
@@ -36,7 +37,7 @@ object RadioWidget extends Widget {
             ^.name := ref(label),
             ^.value := choice.name,
             ^.checked := label.value.toString == choice.name,
-            onChange --> updateCB(newVal.getOrElse(JsNull))(label, labelLens(lens), dispatcher)
+            onChange --> updateCB(newVal.getOrElse(JsNull))(label, labelLens(lens), dispatcher, metaSource)
           ),
           choice.name
         )

@@ -8,23 +8,23 @@ import b9.components.graph.TreeGraph.GraphState
 import b9.components.json.JsonView
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import meta.MetaAst.Root
+import meta.MetaSource
 import monix.execution.Cancelable
 import monocle.Iso
 
 object MetaIDE {
-  def apply(treeDisp: Dispatcher[TTN], graphDisp: Dispatcher[GraphState], meta: Root) =
-    component(Props(treeDisp, graphDisp, meta))
-  case class Props(treeDisp: Dispatcher[TTN], graphDisp: Dispatcher[GraphState], meta: Root)
+  def apply(treeDisp: Dispatcher[TTN], graphDisp: Dispatcher[GraphState], metaSrc: MetaSource) =
+    component(Props(treeDisp, graphDisp, metaSrc))
+  case class Props(treeDisp: Dispatcher[TTN], graphDisp: Dispatcher[GraphState], metaSrc: MetaSource)
 
   class Backend($: BackendScope[Props, TTN]) {
     var end: Option[Cancelable] = None
 
     def render(p: Props, s: TTN): VdomTag = {
       <.div(
-        TreeGraph(s, p.meta, p.treeDisp, p.graphDisp, 700, 500),
-        Editor(s, Iso.id.asLens, p.treeDisp),
-        JsonView(s, p.meta)
+        TreeGraph(s, p.metaSrc, p.treeDisp, p.graphDisp, 700, 500),
+        Editor(s, Iso.id.asLens, p.treeDisp, p.metaSrc),
+        JsonView(s, p.metaSrc.meta)
       )
     }
   }

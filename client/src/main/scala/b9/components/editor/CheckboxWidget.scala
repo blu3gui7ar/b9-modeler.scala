@@ -6,12 +6,14 @@ import b9.short._
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.vdom.HtmlAttrs.onChange
 import japgolly.scalajs.react.vdom.html_<^._
+import meta.MetaAst.{AstNodeWithMembers, Macro}
+import meta.MetaSource
 import play.api.libs.json._
 
 object CheckboxWidget extends Widget {
   val name = "Checkbox"
 
-  override def renderForm(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN]): VdomNode = {
+  override def renderForm(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN], metaSource: MetaSource) : VdomNode = {
     val label = tree.rootLabel
     val checked = label.value match {
       case vs: JsArray => vs.value
@@ -34,9 +36,9 @@ object CheckboxWidget extends Widget {
                   case s: JsString => s.value == choice.name
                   case _ => false
                 }
-                update(JsArray(filtered))(label, labelLens(lens), dispatcher)
+                update(JsArray(filtered))(label, labelLens(lens), dispatcher, metaSource)
               } else {
-                update(JsArray(JsString(choice.name) +: checked))(label, labelLens(lens), dispatcher)
+                update(JsArray(JsString(choice.name) +: checked))(label, labelLens(lens), dispatcher, metaSource)
               }
             },
           ),

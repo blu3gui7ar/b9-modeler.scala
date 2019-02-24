@@ -8,7 +8,7 @@ import b9.short._
 import facades.d3js.Hierarchy
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.svg_<^._
-import meta.MetaAst
+import meta.MetaSource
 import monix.execution.Cancelable
 import monocle.Iso
 import monocle.std.tree._
@@ -22,7 +22,7 @@ import scala.scalajs.js
 object TreeGraph {
   case class GraphState(display: UUID, edit: UUID, active: UUID, fold: Set[UUID])
 
-  case class Props(tree: TTN, meta: MetaAst.Root,
+  case class Props(tree: TTN, metaSrc: MetaSource,
 
                    treeDisp: Dispatcher[TTN],
                    graphDisp: Dispatcher[GraphState],
@@ -61,16 +61,16 @@ object TreeGraph {
       )
     }
 
-    def joints(node: IdNode[TTN], lens: TLens, slens: Option[SLens], gs: GraphState, meta: MetaAst.Root)
+    def joints(node: IdNode[TTN], lens: TLens, slens: Option[SLens], gs: GraphState, metaSrc: MetaSource)
               (implicit td: Dispatcher[TTN], gd: Dispatcher[GraphState]): Stream[TagMod] = {
 
 
-      val jp: TagMod = Joint(td, gd, meta, lens, slens, node, gs)
+      val jp: TagMod = Joint(td, gd, metaSrc, lens, slens, node, gs)
 
       val sub = node.children map { _.toStream flatMap { child =>
         val cslens = lens composeLens subForest
         val nl = cslens composeLens at(child.data.get)
-        joints(child, nl, Some(cslens), gs, meta)
+        joints(child, nl, Some(cslens), gs, metaSrc)
       }} getOrElse Stream.empty[TagMod]
 
       jp +: sub
@@ -110,7 +110,7 @@ object TreeGraph {
         ^.height:= p.height,
         <.g(
           ^.transform := transform(p.left, p.top),
-          joints(rhroot, Iso.id.asLens, None, gs, p.meta).reverse.toTagMod,
+          joints(rhroot, Iso.id.asLens, None, gs, p.metaSrc).reverse.toTagMod,
           breadcrums(displayRoot, p.top, p.shift)
         )
       )
@@ -133,6 +133,6 @@ object TreeGraph {
     }
     .build
 
-  def apply(tree: TTN, meta: MetaAst.Root, td: Dispatcher[TTN], gd: Dispatcher[GraphState], width: Double, height: Double) =
-    component(Props(tree, meta, td, gd, width, height))
+  def apply(tree: TTN, metaSrc: MetaSource, td: Dispatcher[TTN], gd: Dispatcher[GraphState], width: Double, height: Double) =
+    component(Props(tree, metaSrc, td, gd, width, height))
 }

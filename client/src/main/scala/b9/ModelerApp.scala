@@ -20,11 +20,11 @@ object ModelerApp {
   }
 
   def init(graphEle: Element): Unit = {
-    val (tree, meta) = TreeOps.initialModel
+    val (tree, metaSrc) = TreeOps.initialModel
     val treeDispatcher = new Dispatcher[TTN](tree)
     val rootId = tree.rootLabel.uuid
     val graphDispatcher = new Dispatcher[GraphState](GraphState(rootId, rootId, rootId, Set.empty))
 
-    MetaIDE(treeDispatcher, graphDispatcher, meta).renderIntoDOM(graphEle)
+    MetaIDE(treeDispatcher, graphDispatcher, metaSrc).renderIntoDOM(graphEle)
   }
 }

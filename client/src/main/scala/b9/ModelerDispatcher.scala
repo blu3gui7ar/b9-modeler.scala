@@ -16,7 +16,6 @@ class Dispatcher [S](val initialModelerState: S){
 
   val stream: Observable[S] = dispatcher.scan(initialModelerState)((s, x) => x(s))
 
-
   def dispatch(f:S => S): Unit = dispatcher.onNext(f)
 
   def dispatchCB(f: S => S): Callback = Callback { dispatch(f) }

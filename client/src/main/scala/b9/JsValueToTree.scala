@@ -20,8 +20,8 @@ class JsValueToTree extends MetaTransformerTrait[JsValue,TTN] {
     case l: JsArray => l.value
   } getOrElse(Seq.empty)
 
-  override def create(name: String, children: Stream[TTN], meta: AttrDef, value: Option[JsValue], parentRef: Option[Reference])
-                     (implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]): Option[TTN] =
+  override def createT(name: String, children: Stream[TTN], meta: AttrDef, value: Option[JsValue], parentRef: Option[Reference])
+                      (implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]): Option[TTN] =
     value map { v =>
       Node(
         TreeNode(UUID.randomUUID(), name,  meta, v),

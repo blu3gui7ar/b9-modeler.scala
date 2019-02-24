@@ -53,7 +53,7 @@ object TreeOps {
 
   def subLens: TTN => ApplyLens[TTN, TTN, Stream[TTN], Stream[TTN]] = _ applyLens subForest
 
-  def initialModel: (TTN, MetaAst.Root) = {
+  def initialModel: (TTN, MetaSource) = {
     import meta.Sample
     val ds = new MetaSource(Sample.meta)
     import ds._
@@ -64,10 +64,10 @@ object TreeOps {
     import treeExtractor._
 
     val emptyAttrDef = AttrDef(None, None, None, Seq.empty)
-    val emptyTree = create("empty", Stream.empty, emptyAttrDef, Some(JsNull), None).get
+    val emptyTree = createT("empty", Stream.empty, emptyAttrDef, Some(JsNull), None).get
     val tree = ds.meta.transform("meta", Some(dataJs), rootAttrDef(), None).getOrElse(emptyTree)
 //    println(tree.drawTree)
-    (tree, ds.meta)
+    (tree, ds)
 
 //    val r = init(tree)
 //    import JsonExpr._

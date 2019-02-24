@@ -10,11 +10,11 @@ object Sample {
       |Meta {
       |  %DEFAULT = String @Widget(Text)
       |  %DATE = String @Widget(Text)
-      |     @Restrict(/[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])/)
-      |  %BOOL = Boolean @Widget(MuiRadio : true, false)
+      |     @Restrict(regexp: "[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])")
+      |  %BOOL = Boolean @Widget(MuiRadio : "true", "false")
       |  %HREF = String @Widget(Text)
-      |     @Restrict(/(https?|mail|ftps?|sftp):\/\/.*/)
-      |  %INT = Int @Widget(Text) @Restrict(/[0-9]*/)
+      |     @Restrict(regexp: "(https?|mail|ftps?|sftp):\/\/.*")
+      |  %INT = Int @Widget(Text) @Restrict(regexp: "[0-9]*")
       |  String {}
       |  Boolean {}
       |  Int {}
@@ -25,23 +25,23 @@ object Sample {
       |  size: Size @Container(Simple)
       |  time: Time
       |  urlRoot
-      |  imgs: [[Img @Container(ExpansionPanel)] @Container(Simple)] @Container(ExpansionPanel) @Restrict([1,])
+      |  imgs: [[Img @Container(ExpansionPanel)] @Container(Simple)] @Container(ExpansionPanel) @Restrict(numRange: "[1,]")
       |  effect: Effect
-      |  marks: <Mark> @Restrict([1,])
+      |  marks: <Mark> @Restrict(numRange: "[1,]")
       |
       |  Size { height: %INT; width: %INT } @Container(ExpansionPanel)
       |  Time { start: %DATE; end: %DATE }
       |  Img {
-      |    id: %INT @Restrict((0, 100000))
+      |    id: %INT @Restrict(numRage: "(0, 100000)")
       |    enable: %LANGS
       |    time: %DATE
       |    title: Nl
       |    url
       |    active: %BOOL
-      |    type: String @Widget(Select: link, shuffle)
+      |    type: String @Widget(Select: "link", "shuffle")
       |    areas: [Area]
       |  } @Container(Simple)
-      |  %LANGS = [String] @Widget(Checkbox: en,de,fr,es,se,no,it,pt,da,fi,ru,nl) @Restrict([1,4])
+      |  %LANGS = [String] @Widget(Checkbox: "en","de","fr","es","se","no","it","pt","da","fi","ru","nl") @Restrict(numRange: "[1","4]")
       |  Nl { en; de; fr; es; se; no; it; pt; da; fi; ru; nl } @Container(ExpansionPanel)
       |  Effect { type; event; auto: %BOOL; time: %DATE }
       |  Area {
@@ -52,7 +52,7 @@ object Sample {
       |  }
       |
       |  Mark {
-      |    location: String @Widget(Select: header,banner,body)
+      |    location: String @Widget(Select: "header","banner","body")
       |    url
       |  }
       |} @Container(Simple)

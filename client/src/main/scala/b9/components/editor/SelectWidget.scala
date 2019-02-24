@@ -7,12 +7,13 @@ import japgolly.scalajs.react.ReactEventTypes
 import japgolly.scalajs.react.vdom.HtmlAttrs.onChange
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^._
+import meta.MetaSource
 import play.api.libs.json.JsString
 
 object SelectWidget extends Widget with ReactEventTypes {
   val name = "Select"
 
-  override def renderForm(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN]): VdomNode = {
+  override def renderForm(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN], metaSource: MetaSource): VdomNode = {
     val label = tree.rootLabel
     val value = label.value
 
@@ -31,7 +32,7 @@ object SelectWidget extends Widget with ReactEventTypes {
     <.select(
       keyAttr := ref(label),
       onChange ==> { (e: ReactEventFromInput) =>
-        updateCB(JsString(e.target.value))(label, labelLens(lens), dispatcher)
+        updateCB(JsString(e.target.value))(label, labelLens(lens), dispatcher, metaSource)
       },
       ^.value := selected,
       subs.toTagMod

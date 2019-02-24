@@ -4,13 +4,15 @@ import b9.Dispatcher
 import b9.TreeOps._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import meta.MetaSource
 
 
 object Editor {
 
-  def apply(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN]) = component(Props(tree, lens, dispatcher))
+  def apply(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN], metaSrc: MetaSource) =
+    component(Props(tree, lens, dispatcher, metaSrc))
 
-  case class Props(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN])
+  case class Props(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN], metaSrc: MetaSource)
 
   class Backend($: BackendScope[Props, Unit]) {
     def render(p: Props): VdomNode = {
@@ -18,9 +20,9 @@ object Editor {
       label.meta.widget flatMap { widget =>
         WidgetRegistry(widget.name, !widget.isLeaf)
       } map { w: Widget =>
-        w.render(p.tree, p.lens, p.dispatcher)
+        w.render(p.tree, p.lens, p.dispatcher, p.metaSrc)
       } getOrElse {
-        NotValidWidget.render(p.tree, p.lens, p.dispatcher)
+        NotValidWidget.render(p.tree, p.lens, p.dispatcher, p.metaSrc)
       }
     }
   }

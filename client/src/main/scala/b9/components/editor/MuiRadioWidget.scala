@@ -8,6 +8,7 @@ import japgolly.scalajs.react.raw.SyntheticEvent
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^._
 import meta.MetaAst.TypeRef
+import meta.MetaSource
 import org.scalajs.dom.html
 import play.api.libs.json._
 
@@ -29,7 +30,7 @@ object MuiRadioWidget extends Widget {
       case _ => JsString(v)
     } getOrElse(JsNull)
 
-  override def renderForm(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN]): VdomNode = {
+  override def renderForm(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN], metaSource: MetaSource): VdomNode = {
     val label = tree.rootLabel
     label.meta.widget map { w =>
       val boxes = w.parameters map { choice =>
@@ -41,7 +42,7 @@ object MuiRadioWidget extends Widget {
         value = JsValueToString(label.value),
         row = true,
         onChange = { (_: SyntheticEvent[html.Input], value: String) =>
-          update(v2Js(label, value))(label, labelLens(lens), dispatcher)
+          update(v2Js(label, value))(label, labelLens(lens), dispatcher, metaSource)
         }
       )(boxes:_*)
     } getOrElse EmptyVdom

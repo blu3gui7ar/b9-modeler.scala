@@ -31,15 +31,7 @@ object MetaAst {
   case class Widget(name: String, parameters: Seq[Value], isLeaf: Boolean = true) extends AstNode
   case class Value(name: String) extends AstNode
 
-  // case class Restrict(name: String, parameters: Seq[Value]) extends AstNode
-  sealed abstract class Restrict extends AstNode
-
-  case class DummyR() extends Restrict
-  case class NumberRangeR(min: Option[Int], max: Option[Int], minOpen: Boolean, maxOpen: Boolean) extends Restrict
-  case class RegexpR(regexp: String) extends Restrict
-  case class MultiChoicesR(choices: Seq[Value]) extends Restrict
-  case class SingleChoiceR(choices: Seq[Value]) extends Restrict
-  case class CustomR(exp: String) extends Restrict
+  case class Restrict(name: String, parameters: Seq[Value]) extends AstNode
 
   case class MacroRef(name: String) extends AstNode
 

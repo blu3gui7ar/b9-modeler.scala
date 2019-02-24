@@ -7,7 +7,7 @@ import b9.short.{IdNode, keyAttr, _}
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.HtmlAttrs._
 import japgolly.scalajs.react.vdom.svg_<^._
-import meta.MetaAst
+import meta.{MetaAst, MetaSource}
 import meta.MetaAst._
 import scalacss.ScalaCssReact._
 import monocle.std.tree._
@@ -17,7 +17,7 @@ import play.api.libs.json.JsNull
   * Created by blu3gui7ar on 2017/5/25.
   */
 object Joint {
-  case class Props(td: Dispatcher[TTN], gd: Dispatcher[GraphState], meta: MetaAst.Root, lens: TLens,
+  case class Props(td: Dispatcher[TTN], gd: Dispatcher[GraphState], metaSrc: MetaSource, lens: TLens,
                    slens: Option[SLens], current: IdNode[TTN], gs: GraphState)
 
   class Backend($: BackendScope[Props, Unit]) {
@@ -67,7 +67,7 @@ object Joint {
         CreateButton(name, 18 + 30 * idx, 10, true,
           dispatcher.dispatchCB {
             val expanded = MetaAst.expandMacro(meta)(macros)
-            val newNode = treeExtractor.create(name, Stream.empty, expanded, Some(JsNull), meta.t)(macros,types)
+            val newNode = treeExtractor.createT(name, Stream.empty, expanded, Some(JsNull), meta.t)(macros,types)
             newNode map { n =>
               (lens composeLens subForest).set(n +: node.subForest)
             } getOrElse(identity: TTN => TTN) //TODO error msg
@@ -99,9 +99,7 @@ object Joint {
       implicit val treeDisp = p.td
       implicit val graphDisp = p.gd
       implicit val graphState = p.gs
-      val metaRoot = p.meta
-      val types = MetaAst.types(metaRoot)
-      val macros = MetaAst.macros(metaRoot)
+      import p.metaSrc._
 
       val tn = p.current
       val parent = tn.parent
@@ -157,7 +155,7 @@ object Joint {
     .renderBackend[Backend]
     .build
 
-  def apply(td: Dispatcher[TTN], gd: Dispatcher[GraphState], meta: MetaAst.Root, lens: TLens, slens: Option[SLens],
+  def apply(td: Dispatcher[TTN], gd: Dispatcher[GraphState], metaSrc: MetaSource, lens: TLens, slens: Option[SLens],
             current: IdNode[TTN], gs: GraphState) =
-    component(Props(td, gd, meta, lens, slens, current, gs))
+    component(Props(td, gd, metaSrc, lens, slens, current, gs))
 }

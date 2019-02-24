@@ -22,7 +22,7 @@ object MetaParser {
   def Number[_: P] = P( Digit.rep(1).! ).map(_.toInt)
 
   def ValueTerm[_: P] =
-    P( CharIn("_a-zA-Z") ~ CharIn("_a-zA-Z0-9").rep ).!.map(MetaAst.Value)
+    P( "\"" ~/ (CharPred(_ != '"').rep).! ~ "\"".rep ).map(MetaAst.Value)
 
   def IdentTerm[_: P] =
     P( CharIn("_a-z") ~ CharIn("_a-zA-Z0-9").rep ).!.map(MetaAst.Ident)
@@ -62,19 +62,9 @@ object MetaParser {
   }
 
 //  def ValueDesc[_: P] = P( "@Value(" ~/ ValueTerm.rep(1, sep = ",") ~/ ")")
-//  def Restrictions[_: P] = P( "@Restrict(" ~/ Restriction.rep(1, sep = ",") ~/ ")")
-  def Restriction[_: P] : P[MetaAst.Restrict] = P( "@Restrict(" ~/ (Regexp | NumRange |  Custom) ~/ ")" )
-  /* MultiChoices | SingleChoice */
-
-  def EscapeSeq[_: P] = P( "\\" ~~ AnyChar )
-  def RegexpChar[_: P] = P( CharPred((c) => c != '/' && c != '\\') | EscapeSeq )
-  def Regexp[_: P] = P( "/" ~~ RegexpChar.repX.! ~~ "/" ).map(MetaAst.RegexpR)
-  def NumRange[_: P] = P( CharIn("[(").! ~/ Number.? ~ "," ~ Number.? ~ CharIn(")]").!).map {
-    case (open, min, max, close) => MetaAst.NumberRangeR(min, max, open == '(', close == ')')
+  def Restriction[_: P] = P( "@Restrict(" ~/ CharIn("a-zA-Z0-9_").rep(1).! ~ (":" ~ ValueTerm.rep(sep = ",")).? ~ ")").map {
+    case (name, params) => MetaAst.Restrict(name, params.getOrElse(Seq.empty))
   }
-  def Custom[_: P] = P( "Custom(" ~/ (!")" ~ AnyChar).rep.! ~/ ")" ).map(MetaAst.CustomR)
-//  val MultiChoices = P( "[" ~/ ValueTerm.rep(sep = ",") ~ "]").map(MetaAst.MultiChoicesR)
-//  val SingleChoice = P( "<" ~/ ValueTerm.rep(sep = ",") ~ ">").map(MetaAst.SingleChoiceR)
 
   def ContainerDesc[_: P] = P( "@Container(" ~/ CharIn("a-zA-Z0-9_").rep(1).! ~ (":" ~ ValueTerm.rep(sep = ",")).? ~ ")").map {
     case (name, params) => MetaAst.Widget(name, params.getOrElse(Seq.empty), false)
@@ -84,8 +74,7 @@ object MetaParser {
   }
 
   def BlockExpr[_: P] : P[Seq[MetaAst.AstNode]] = P(Semis.? ~ "{" ~/ Block ~ "}" )
-//  def Body[_: P] = Chunk.rep(sep = Semis)
-//  def BlockEnd[_: P] = Semis.? ~ &("}")
+
   def Block[_: P] = P(Semis.? ~ Chunk.rep(sep = Semis) ~ Semis.? ~ &("}"))
 
   def Chunk[_: P] = P(NoCut(Attr | Type | Macro | Comment))

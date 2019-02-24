@@ -13,8 +13,8 @@ class TreeToJson extends MetaTransformerTrait[TTN, String] {
 
   override def asSeq(item: Option[TTN]): Seq[TTN] = item.map(_.subForest).getOrElse(Seq.empty)
 
-  override def create(name: String, children: Stream[String], meta: AttrDef, value: Option[TTN], parentRef: Option[Reference])
-                     (implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]): Option[String] =
+  override def createT(name: String, children: Stream[String], meta: AttrDef, value: Option[TTN], parentRef: Option[Reference])
+                      (implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]): Option[String] =
     (for {
       tn <- value
       ref <- meta.t

@@ -24,7 +24,7 @@ trait Widget {
         Some("Wrong widget: " + w.toString)
       else
         None
-    } getOrElse Some("Widget not found")
+    } getOrElse Some("Widget not declared")
 
 
     <.div(

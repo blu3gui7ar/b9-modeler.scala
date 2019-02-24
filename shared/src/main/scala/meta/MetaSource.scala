@@ -2,7 +2,7 @@ package meta
 
 import fastparse.Parsed.{Failure, Success}
 import fastparse._
-import meta.MetaAst.{Root, Widget}
+import meta.MetaAst.Root
 
 class MetaSource(val metadata: String) {
 

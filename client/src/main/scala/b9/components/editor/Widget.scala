@@ -56,6 +56,7 @@ trait Widget {
     result match {
       case Some(ValidateResult(true, _)) => dispatcher.dispatch( lens.set( newNode ) )
       case Some(ValidateResult(_, msgs)) => println(msgs)
+      case _ => ()
     }
   }
 }

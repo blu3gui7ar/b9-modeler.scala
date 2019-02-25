@@ -22,7 +22,7 @@ class JsValueValidator extends MetaTransformerTrait[JsValue, ValidateResult] {
                       (implicit macros: Map[String, Macro], types: Map[String, AstNodeWithMembers]): Option[ValidateResult] = {
     val merged = meta.restricts.foldLeft(ValidateResult.success){ (result, restrict) =>
       val current = registry(restrict.name).map(_.validate(restrict, value))
-        .getOrElse(ValidateResult(false, Seq(value.toString + " failed on " + restrict.toString)))
+        .getOrElse(ValidateResult(false, Seq(value.toString + " failed on unknown " + restrict.toString)))
       ValidateResult.merge(result, current)
     }
 

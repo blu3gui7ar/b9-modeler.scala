@@ -45,7 +45,7 @@ object RadioWidget extends Widget {
       <.span(
         keyAttr := ref(label),
         boxes.toVdomArray
-      ).render
+      )
     } getOrElse EmptyVdom
   }
 }

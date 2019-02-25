@@ -25,14 +25,14 @@ object Sample {
       |  size: Size @Container(Simple)
       |  time: Time
       |  urlRoot
-      |  imgs: [[Img @Container(ExpansionPanel)] @Container(Simple)] @Container(ExpansionPanel) @Restrict(numRange: "[1,]")
+      |  imgs: [[Img @Container(ExpansionPanel)] @Container(Simple)] @Container(ExpansionPanel) @Restrict(sizeRange: "[1,]")
       |  effect: Effect
-      |  marks: <Mark> @Restrict(numRange: "[1,]")
+      |  marks: <Mark> @Restrict(sizeRange: "[1,]")
       |
       |  Size { height: %INT; width: %INT } @Container(ExpansionPanel)
       |  Time { start: %DATE; end: %DATE }
       |  Img {
-      |    id: %INT @Restrict(numRage: "(0, 100000)")
+      |    id: %INT @Restrict(numRange: "(0, 100000)")
       |    enable: %LANGS
       |    time: %DATE
       |    title: Nl
@@ -41,7 +41,7 @@ object Sample {
       |    type: String @Widget(Select: "link", "shuffle")
       |    areas: [Area]
       |  } @Container(Simple)
-      |  %LANGS = [String] @Widget(Checkbox: "en","de","fr","es","se","no","it","pt","da","fi","ru","nl") @Restrict(numRange: "[1","4]")
+      |  %LANGS = [String] @Widget(Checkbox: "en","de","fr","es","se","no","it","pt","da","fi","ru","nl") @Restrict(sizeRange: "[1,4]")
       |  Nl { en; de; fr; es; se; no; it; pt; da; fi; ru; nl } @Container(ExpansionPanel)
       |  Effect { type; event; auto: %BOOL; time: %DATE }
       |  Area {

@@ -35,16 +35,18 @@ object MuiRadioWidget extends Widget {
     label.meta.widget map { w =>
       val boxes = w.parameters map { choice =>
         val r = Radio(value = choice.name)()
-        FormControlLabel(value = choice.name, control = r.rawElement, label = choice.name)()
+        val vn: VdomNode = FormControlLabel(value = choice.name, control = r.rawElement, label = choice.name)()
+        vn
       }
-      RadioGroup(
+      val group: VdomNode = RadioGroup(
         name = ref(label),
         value = JsValueToString(label.value),
         row = true,
         onChange = { (_: SyntheticEvent[html.Input], value: String) =>
           update(v2Js(label, value))(label, labelLens(lens), dispatcher, metaSource)
         }
-      )(boxes:_*)
+      )(boxes: _*)
+      group
     } getOrElse EmptyVdom
   }
 }

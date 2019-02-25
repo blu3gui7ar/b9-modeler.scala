@@ -31,7 +31,7 @@ object Pages {
         ),
         link(
           rel := "stylesheet",
-          href := npmUrl("font-awesome/css/font-awesome.min.css")
+          href := npmUrl("@fortawesome/fontawesome-free/css/fontawesome.min.css")
         ),
         link(
           rel := "shortcut icon",

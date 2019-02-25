@@ -9,20 +9,19 @@ import meta.MetaSource
 
 object Editor {
 
+  def key(tree: TTN) = "editor-" + tree.rootLabel.uuid.toString
+
   def apply(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN], metaSrc: MetaSource) =
-    component(Props(tree, lens, dispatcher, metaSrc))
+    component.withKey(key(tree))(Props(tree, lens, dispatcher, metaSrc))
 
   case class Props(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN], metaSrc: MetaSource)
 
   class Backend($: BackendScope[Props, Unit]) {
     def render(p: Props): VdomNode = {
       val label = p.tree.rootLabel
-      label.meta.widget flatMap { widget =>
+      label.meta.widget map { widget =>
         WidgetRegistry(widget.name, !widget.isLeaf)
-      } map { w: Widget =>
-        w.render(p.tree, p.lens, p.dispatcher, p.metaSrc)
-      } getOrElse {
-        NotValidWidget.render(p.tree, p.lens, p.dispatcher, p.metaSrc)
+          .render(p.tree, p.lens, p.dispatcher, p.metaSrc)
       }
     }
   }

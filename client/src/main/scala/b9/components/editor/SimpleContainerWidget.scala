@@ -1,7 +1,6 @@
 package b9.components.editor
 
 import b9.TreeOps._
-import b9.short._
 import b9.{Dispatcher, ModelerCss}
 import japgolly.scalajs.react.ReactEventTypes
 import japgolly.scalajs.react.vdom.VdomNode
@@ -17,9 +16,7 @@ object SimpleContainerWidget extends Widget with ReactEventTypes {
   override def render(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN], metaSource: MetaSource): VdomNode = {
     val label = tree.rootLabel
     val subEditors = tree.subForest.map { node =>
-      Editor(node, lens composeLens subForest composeLens at(node), dispatcher, metaSource)(
-        keyAttr := "editor-" + label.uuid.toString,
-      )
+      Editor(node, lens composeLens subForest composeLens at(node), dispatcher, metaSource)
     }
     <.div(
       label.name,

@@ -1,7 +1,6 @@
 package facades
 
-import com.payalabs.scalajs.react.bridge.JsWriter
-import japgolly.scalajs.react.vdom.VdomElement
+//import com.payalabs.scalajs.react.bridge.JsWriter
 import play.api.libs.json._
 
 import scala.scalajs.js
@@ -23,14 +22,14 @@ package object materialui {
 //    }
   }
 
-  implicit val JsValueToJs: JsWriter[JsValue] = JsWriter { value: JsValue =>
-    value match {
-      case b: JsBoolean => b.value
-      case s: JsString => s.value
-      case o: JsObject => o.value
-      case a: JsArray => a.value
-      case n: JsNumber => n.value.toDouble
-      case _ => null
-    }
-  }
+//  implicit val JsValueToJs: JsWriter[JsValue] = JsWriter { value: JsValue =>
+//    value match {
+//      case b: JsBoolean => b.value
+//      case s: JsString => s.value
+//      case o: JsObject => o.value
+//      case a: JsArray => a.value
+//      case n: JsNumber => n.value.toDouble
+//      case _ => null
+//    }
+//  }
 }

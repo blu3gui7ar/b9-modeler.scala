@@ -1,7 +1,6 @@
 package b9.components.editor
 
 import b9.TreeOps._
-import b9.short._
 import b9.{Dispatcher, ModelerCss}
 import facades.materialui.{ExpansionPanel, ExpansionPanelDetails, ExpansionPanelSummary}
 import japgolly.scalajs.react.ReactEventTypes
@@ -20,9 +19,7 @@ object ExpansionPanelWidget extends Widget with ReactEventTypes {
   override def render(tree: TTN, lens: TLens, dispatcher: Dispatcher[TTN], metaSource: MetaSource): VdomNode = {
     val label = tree.rootLabel
     val subEditors = tree.subForest.map { node =>
-      Editor(node, lens composeLens subForest composeLens at(node), dispatcher, metaSource)(
-        keyAttr := "editor-" + label.uuid.toString,
-      )
+      Editor(node, lens composeLens subForest composeLens at(node), dispatcher, metaSource)
     }
 
 
@@ -30,7 +27,9 @@ object ExpansionPanelWidget extends Widget with ReactEventTypes {
       ExpansionPanelSummary()(
         label.name
       ),
-      ExpansionPanelDetails(classes = js.Dictionary("root" -> ModelerCss.panel.htmlClass))(subEditors.toTagMod)
+      ExpansionPanelDetails(classes = js.Dictionary("root" -> ModelerCss.panel.htmlClass))(
+        subEditors.toVdomArray
+      )
     )
   }
 }

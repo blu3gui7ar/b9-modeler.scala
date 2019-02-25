@@ -10,6 +10,9 @@ import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 scalacOptions ++= Seq("-feature")
 
 lazy val server = (project in file("server")).settings(
+  shouldOpenBrowser := true,
+  fork in run := true,
+  connectInput in run := true,
   scalaVersion := scalaV,
   scalaJSProjects := Seq(client),
   pipelineStages in Assets := Seq(scalaJSPipeline),
@@ -17,11 +20,11 @@ lazy val server = (project in file("server")).settings(
   // triggers scalaJSPipeline when using compile or continuous compilation
   compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
   libraryDependencies ++= Seq(
-    "com.typesafe.play" %% "play-slick" % "3.0.0-M3",
-    "com.typesafe.play" %% "play-slick-evolutions" % "3.0.0-M3",
-    "com.typesafe.slick" %% "slick" % "3.2.0",
-    "mysql" % "mysql-connector-java" % "6.0.6",
-    "com.lihaoyi" %% "scalatags" % "0.6.5",
+    "com.typesafe.play" %% "play-slick" % "3.0.0",
+    "com.typesafe.play" %% "play-slick-evolutions" % "3.0.0",
+    "com.typesafe.slick" %% "slick" % "3.3.0",
+    "mysql" % "mysql-connector-java" % "8.0.15",
+    "com.lihaoyi" %% "scalatags" % "0.6.7",
     guice,
 //    "com.vmunier" %% "scalajs-scripts" % "1.1.0", //not work with js bundler
 //    "org.webjars.npm" % "bulma" % "0.4.1",
@@ -29,11 +32,11 @@ lazy val server = (project in file("server")).settings(
     specs2 % Test,
     filters
   ),
-  npmAssets ++= NpmAssets.ofProject(client) { nodeModules => nodeModules / "font-awesome" ** "*" }.value,
+  npmAssets ++= NpmAssets.ofProject(client) { nodeModules => nodeModules / "@fortawesome" / "fontawesome-free" ** "*" }.value,
   npmAssets ++= NpmAssets.ofProject(client) { nodeModules => nodeModules / "bulma" ** "*" }.value
   // Compile the project before generating Eclipse files, so that generated .scala or .class files for views and routes are present
   // EclipseKeys.preTasks := Seq(compile in Compile)
-).enablePlugins(PlayScala, WebScalaJSBundlerPlugin).
+).enablePlugins(PlayScala, WebScalaJSBundlerPlugin, BrowserNotifierPlugin).
   dependsOn(sharedJvm)
 
 val monocleVersion = "1.5.0"
@@ -45,27 +48,27 @@ lazy val client = (project in file("client")).settings(
   useYarn := true,
   mainClass in Compile := Some("b9.ModelerApp"),
   libraryDependencies ++= Seq(
-    "com.github.japgolly.scalajs-react" %%% "core" % "1.3.1",
-    "com.github.japgolly.scalajs-react" %%% "ext-monocle" % "1.3.1",
+    "com.github.japgolly.scalajs-react" %%% "core" % "1.4.0",
+    "com.github.japgolly.scalajs-react" %%% "ext-monocle" % "1.4.0",
     "com.github.julien-truffaut" %%%  "monocle-core"  % monocleVersion,
     "com.github.julien-truffaut" %%%  "monocle-macro" % monocleVersion,
 //      "com.github.julien-truffaut" %%% "monocle-law"   % monocleVersion % Test,
     "io.monix" %%% "monix" % "3.0.0-RC2",
     "com.github.japgolly.scalacss" %%% "ext-react" % "0.5.5",
-    "com.payalabs" %%% "scalajs-react-bridge" % "0.7.0",
+//    "com.payalabs" %%% "scalajs-react-bridge" % "0.7.0",
 //    "com.payalabs" %%% "scalajs-react-mdl" % "0.2.0-SNAPSHOT",
     "org.scala-js" %%% "scalajs-dom" % "0.9.6"
   ),
   webpackBundlingMode := BundlingMode.LibraryOnly(),
   npmDependencies in Compile ++= Seq(
-    "react" -> "16.5.1",
-    "react-dom" -> "16.5.1",
-    "d3-hierarchy" -> "1.1.5",
-    "d3-shape" -> "1.2.0",
-    "font-awesome" -> "4.7.0",
+    "react" -> "16.7.0",
+    "react-dom" -> "16.7.0",
+    "d3-hierarchy" -> "1.1.8",
+    "d3-shape" -> "1.3.4",
+    "@fortawesome/fontawesome-free" -> "5.7.2",
     "@material-ui/core" -> "3.9.1",
-    "bulma" -> "0.4.1"
-  ), npmDevDependencies in Compile += "expose-loader" -> "0.7.1"
+    "bulma" -> "0.7.4"
+  ), npmDevDependencies in Compile += "expose-loader" -> "0.7.5"
 ).enablePlugins(ScalaJSBundlerPlugin, ScalaJSWeb).
   dependsOn(sharedJs)
 

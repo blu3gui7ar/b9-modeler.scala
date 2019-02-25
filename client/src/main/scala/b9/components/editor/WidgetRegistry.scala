@@ -25,7 +25,11 @@ object WidgetRegistry {
     w
   }
 
-  def apply(name: String, container: Boolean): Option[Widget] = {
+  def apply(name: String, container: Boolean): Widget = {
+    applyOption(name, container).getOrElse(NotValidWidget)
+  }
+
+  def applyOption(name: String, container: Boolean): Option[Widget] = {
     registry.get(name) match {
       case None => registry.get(NotFoundWidget.name)
       case Some(w) => if(w.container == container) Some(w) else registry.get(NotMatchWidget.name)

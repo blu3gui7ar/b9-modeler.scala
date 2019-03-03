@@ -3,13 +3,13 @@
 # ~~~~
 
 # Home page
-GET     /                           controllers.Application.index
+# GET     /                           controllers.Application.index
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
 
 # Keywords
-GET        /keywords                           controllers.KeywordController.index
+# GET        /keywords                           controllers.KeywordController.index
 
 # Modeler
 GET        /modeler                           controllers.Modeler.index
@@ -22,9 +22,9 @@ POST       /api/model                          controllers.ModelController.creat
 DELETE     /api/model/:name/:ver               controllers.ModelController.delete(name: String, ver: String)
 PATCH      /api/model/:name/:ver               controllers.ModelController.update(name: String, ver: String)
 
-GET        /api/model/:name/:ver/instances     controllers.ModelItemController.list(name: String, ver: String)
-GET        /api/model/:name/:ver/instance/:id  controllers.ModelItemController.get(name: String, ver: String, id: Int)
-POST       /api/model/:name/:ver/instance      controllers.ModelItemController.create(name: String, ver: String)
-DELETE     /api/model/:name/:ver/instance/:id  controllers.ModelItemController.delete(name: String, ver: String, id: Int)
-PATCH      /api/model/:name/:ver/instance/:id  controllers.ModelItemController.update(name: String, ver: String, id: Int)
+# GET        /api/model/:name/:ver/instances     controllers.ModelItemController.list(name: String, ver: String)
+# GET        /api/model/:name/:ver/instance/:id  controllers.ModelItemController.get(name: String, ver: String, id: Int)
+# POST       /api/model/:name/:ver/instance      controllers.ModelItemController.create(name: String, ver: String)
+# DELETE     /api/model/:name/:ver/instance/:id  controllers.ModelItemController.delete(name: String, ver: String, id: Int)
+# PATCH      /api/model/:name/:ver/instance/:id  controllers.ModelItemController.update(name: String, ver: String, id: Int)
 

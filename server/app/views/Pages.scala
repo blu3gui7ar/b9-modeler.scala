@@ -9,10 +9,10 @@ import scalatags.Text.all._
   */
 object Pages {
 
-  def bundleUrl(projectName: String): Option[String] = {
+  def bundleUrl(projectName: String, suffix: String = ""): Option[String] = {
 //    routes.Assets.versioned("client-" + (if (dev) "fastopt"  else "fullopt") + ".js").toString
     val name = projectName.toLowerCase
-    Seq(s"$name-opt-bundle.js", s"$name-fastopt-bundle.js")
+    Seq(s"$name-opt$suffix.js", s"$name-fastopt$suffix.js")
       .find(name => getClass.getResource(s"/public/$name") != null)
       .map(routes.Assets.versioned(_).url)
   }
@@ -31,7 +31,7 @@ object Pages {
         ),
         link(
           rel := "stylesheet",
-          href := npmUrl("font-awesome/css/font-awesome.min.css")
+          href := npmUrl("@fortawesome/fontawesome-free/css/fontawesome.min.css")
         ),
         link(
           rel := "shortcut icon",
@@ -41,6 +41,15 @@ object Pages {
       ),
       body()(
         div(id := shared.Apps.ModelerApp),
+        for { srcUrl <- bundleUrl("client", "-library") } yield script(
+          `type` := "text/javascript",
+          src := srcUrl
+        ),
+        script(
+          `type` := "text/javascript",
+          "var exports = window;",
+          "exports.require = window['ScalaJSBundlerLibrary'].require;"
+        ),
         for { srcUrl <- bundleUrl("client") } yield script(
           `type` := "text/javascript",
           src := srcUrl

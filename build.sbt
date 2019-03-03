@@ -1,19 +1,22 @@
-lazy val scalaV = "2.12.6"
 lazy val sharedJvm = shared.jvm
 lazy val sharedJs = shared.js
 
 // shadow sbt-scalajs' crossProject and CrossType from Scala.js 0.6.x
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
+lazy val commonSettings = Seq(
+  scalaVersion := "2.12.8",
+  organization := "blu3gui7ar"
+)
+
 // enablePlugins(DockerPlugin)
 
 scalacOptions ++= Seq("-feature")
 
-lazy val server = (project in file("server")).settings(
-  shouldOpenBrowser := true,
-  fork in run := true,
-  connectInput in run := true,
-  scalaVersion := scalaV,
+cancelable in Global := true
+
+lazy val server = (project in file("server")).settings(commonSettings).settings(
+  openBrowserUrl := "http://localhost:9000/modeler",
   scalaJSProjects := Seq(client),
   pipelineStages in Assets := Seq(scalaJSPipeline),
   // pipelineStages := Seq(digest, gzip),
@@ -32,17 +35,17 @@ lazy val server = (project in file("server")).settings(
     specs2 % Test,
     filters
   ),
+//  PlayKeys.playInteractionMode := play.sbt.StaticPlayNonBlockingInteractionMode,
   npmAssets ++= NpmAssets.ofProject(client) { nodeModules => nodeModules / "@fortawesome" / "fontawesome-free" ** "*" }.value,
   npmAssets ++= NpmAssets.ofProject(client) { nodeModules => nodeModules / "bulma" ** "*" }.value
   // Compile the project before generating Eclipse files, so that generated .scala or .class files for views and routes are present
   // EclipseKeys.preTasks := Seq(compile in Compile)
-).enablePlugins(PlayScala, WebScalaJSBundlerPlugin, BrowserNotifierPlugin).
-  dependsOn(sharedJvm)
+).enablePlugins(PlayScala, WebScalaJSBundlerPlugin, BrowserNotifierPlugin)
+  .dependsOn(sharedJvm)
 
 val monocleVersion = "1.5.0"
 
-lazy val client = (project in file("client")).settings(
-  scalaVersion := scalaV,
+lazy val client = (project in file("client")).settings(commonSettings).settings(
   // This is an application with a main method
   scalaJSUseMainModuleInitializer := true,// no need for scalajs-bundler
   useYarn := true,
@@ -74,8 +77,8 @@ lazy val client = (project in file("client")).settings(
 
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full)
 
-lazy val shared = (crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure) in file("shared")).settings(
-    scalaVersion := scalaV,
+lazy val shared = (crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure) in file("shared"))
+  .settings(commonSettings).settings(
     libraryDependencies ++= Seq(
       "org.scalaz" %%% "scalaz-core" % "7.2.17",
 //      "com.lihaoyi" %%% "upickle" % "0.4.4",
@@ -87,7 +90,9 @@ lazy val shared = (crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pur
 //      "com.github.kenbot" %% "goggles-dsl" % "1.0",
 //      "com.github.kenbot" %% "goggles-macros" % "1.0"
     )
-  ).jsConfigure(_ enablePlugins ScalaJSWeb)
+  )
+//  .jvmSettings(fork in run := true)
+  .jsConfigure(_ enablePlugins ScalaJSWeb)
 
 // loads the server project at sbt startup
 onLoad in Global ~= (_ andThen ("project server" :: _))

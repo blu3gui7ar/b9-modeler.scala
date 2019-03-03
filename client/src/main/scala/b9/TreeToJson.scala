@@ -19,16 +19,19 @@ class TreeToJson extends MetaTransformerTrait[TTN, String] {
       tn <- value
       ref <- meta.t
     } yield {
-      val body =  ref match {
-        case tr: TypeRef => types.get(tr.name) map { t =>
-          if (t.isSimple)
-            tn.rootLabel.value.toString
-          else
-            "{" + children.mkString(", ") + "}"
+      val body = if (meta.isLeaf)
+        Some(tn.rootLabel.value.toString)
+      else
+        ref match {
+          case tr: TypeRef => types.get(tr.name) map { t =>
+            if (t.isSimple)
+              tn.rootLabel.value.toString
+            else
+              "{" + children.mkString(",") + "}"
+          }
+          case _: ListRef => Some("[" + children.mkString(",") + "]")
+          case _: MapRef => Some("{" + children.mkString(", ") + "}")
         }
-        case _: ListRef => Some("[" + children.mkString(", ") + "]")
-        case _: MapRef => Some("{" + children.mkString(", ") + "}")
-      }
 
       parentRef match {
         case Some(_: ListRef) => body
